@@ -8,7 +8,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	namespace Private
 	{
 		// CRC64-ECMA
@@ -86,13 +86,13 @@ namespace Javelin
 	}
 
 //============================================================================
-	
+
 	#define JHASH_CRC64(x) (~Private::Crc64<sizeof(x) - 2>(x))
 	JEXPORT uint64_t Crc64(const void* p, size_t count);
 	JEXPORT uint64_t Crc64Iteration(uint64_t hash, const void* p, size_t count);
 	template<typename T> JINLINE uint64_t Crc64(const T& data) 							{ return Crc64(data.GetData(), data.GetNumberOfBytes()); 				}
 	template<typename T> JINLINE uint64_t Crc64Iteration(uint64_t hash, const T& data) 	{ return Crc64Iteration(hash, data.GetData(), data.GetNumberOfBytes()); }
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

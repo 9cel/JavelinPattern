@@ -26,7 +26,7 @@ const AlternateActionCondition* ZeroAlternateActionCondition::Create(const Opera
 	assert(operand->type == Operand::Type::Immediate
 		   || operand->type == Operand::Type::Register);
 	assert(operand->IsExpression());
-	
+
 	return new ZeroAlternateActionCondition(operand->expressionIndex);
 }
 
@@ -41,7 +41,7 @@ void ZeroAlternateActionCondition::WriteByteCode(std::vector<uint8_t> &result, A
 	case 64: actionType = arm64Assembler::ActionType::Imm0B8Condition; break;
 	default: return;
 	}
-	
+
 	ImmediateAlternateActionCondition::WriteByteCode(result, context, action, (int)actionType);
 }
 
@@ -86,7 +86,7 @@ void AdrpAlternateActionCondition::WriteByteCode(std::vector<uint8_t> &result, A
 void LiteralAction::WriteByteCode(std::vector<uint8_t> &result, ActionWriteContext &context) const
 {
 	if(bytes.size() == 0) return;
-	
+
 	if(bytes.size() <= 32 && bytes.size() % 4 == 0)
 	{
 		static_assert((int) arm64Assembler::ActionType::Literal4 == 1, "Unexpected literal value");
@@ -120,14 +120,14 @@ bool AlignAction::Simplify(Common::ListAction *parent, size_t index)
 			if(parent) parent->RemoveActionAtIndex(index);
 			return true;
 		}
-	
+
         std::vector<uint8_t> bytes;
         while((fixedLength & 3) != 0)
         {
             bytes.push_back(0);
             --fixedLength;
         }
-        
+
 		while(fixedLength)
 		{
             const uint32_t nopOpcode = 0xd503201f;
@@ -135,7 +135,7 @@ bool AlignAction::Simplify(Common::ListAction *parent, size_t index)
 			bytes.insert(bytes.end(), nop, nop+4);
             fixedLength -= 4;
 		}
-		
+
 		parent->ReplaceActionAtIndex(index, new LiteralAction(bytes));
 		return true;
 	}
@@ -145,7 +145,7 @@ bool AlignAction::Simplify(Common::ListAction *parent, size_t index)
 void AlignAction::WriteByteCode(std::vector<uint8_t> &result, ActionWriteContext &context) const
 {
     if (isFixed && fixedLength == 0) return;
-    
+
 	result.push_back((int) arm64Assembler::ActionType::Align);
 	int data = alignment - 1;
 	assert(data == (uint8_t) data);
@@ -232,7 +232,7 @@ bool PatchLabelAction::Simplify(Common::ListAction *parent, size_t index)
 	if(!hasFixedDelta) return false;
 
 	assert(index > 0);
-	
+
 	size_t literalActionIndex = index - 1;
 	Action *previousAction;
 	int offset = delay;
@@ -255,10 +255,10 @@ bool PatchLabelAction::Simplify(Common::ListAction *parent, size_t index)
 
 	assert(previousAction->IsLiteralAction()
 		   && previousAction->GetMaximumLength() >= offset);
-	
+
 	LiteralAction *literal = (LiteralAction*) previousAction;
     std::vector<uint8_t>& literalBytes = literal->GetLiteralData();
-	
+
 	switch(relEncoding)
 	{
 	case RelEncoding::Rel26:
@@ -275,12 +275,12 @@ bool PatchLabelAction::Simplify(Common::ListAction *parent, size_t index)
 			static_assert(sizeof(Opcode) == 4, "Opcode should be 4 bytes");
 			Opcode opcode;
 			memcpy(&opcode, literalBytes.data() + literalBytes.size() - 4, 4);
-			
+
 			int32_t rel = opcode.offset;
 			rel += int32_t(delta / 4);
             assert(BitUtility::IsValidSignedImmediate(rel, 26));
 			opcode.offset = rel;
-			
+
 			memcpy(literalBytes.data() + literalBytes.size() - 4, &opcode, 4);
 			break;
 		}
@@ -299,12 +299,12 @@ bool PatchLabelAction::Simplify(Common::ListAction *parent, size_t index)
 			static_assert(sizeof(Opcode) == 4, "Opcode should be 4 bytes");
 			Opcode opcode;
 			memcpy(&opcode, literalBytes.data() + literalBytes.size() - 4, 4);
-			
+
 			int32_t rel = opcode.offset;
 			rel += int32_t(delta / 4);
             assert(BitUtility::IsValidSignedImmediate(rel, 19));
 			opcode.offset = rel;
-			
+
 			memcpy(literalBytes.data() + literalBytes.size() - 4, &opcode, 4);
 			break;
 		}
@@ -328,13 +328,13 @@ bool PatchLabelAction::Simplify(Common::ListAction *parent, size_t index)
 			static_assert(sizeof(Opcode) == 4, "Opcode should be 4 bytes");
 			Opcode opcode;
 			memcpy(&opcode, literalBytes.data() + literalBytes.size() - 4, 4);
-			
+
 			int32_t rel = (opcode.offsetHi << 2) | opcode.offsetLo;
 			rel += int32_t(delta);
             assert(BitUtility::IsValidSignedImmediate(rel, 21));
 			opcode.offsetLo = rel;
 			opcode.offsetHi = rel >> 2;
-			
+
 			memcpy(literalBytes.data() + literalBytes.size() - 4, &opcode, 4);
 			break;
 		}
@@ -353,12 +353,12 @@ bool PatchLabelAction::Simplify(Common::ListAction *parent, size_t index)
 			static_assert(sizeof(Opcode) == 4, "Opcode should be 4 bytes");
 			Opcode opcode;
 			memcpy(&opcode, literalBytes.data() + literalBytes.size() - 4, 4);
-			
+
 			int32_t rel = opcode.offset;
 			rel += int32_t(delta / 4);
             assert(BitUtility::IsValidSignedImmediate(rel, 14));
 			opcode.offset = rel;
-			
+
 			memcpy(literalBytes.data() + literalBytes.size() - 4, &opcode, 4);
 			break;
 		}
@@ -398,7 +398,7 @@ bool PatchNameLabelAction::ResolveRelativeAddresses(ActionContext &context)
 
 	// Already resolved!
 	if(hasFixedDelta) return false;
-	
+
 	ActionContext::NamedLabelMap::const_iterator it = context.namedLabels.find(value);
 	if(it == context.namedLabels.end()) return false;
 	hasFoundTarget = true;
@@ -407,14 +407,14 @@ bool PatchNameLabelAction::ResolveRelativeAddresses(ActionContext &context)
 
 	// Do not resolve ADRP or Imm12
 	if(relEncoding == RelEncoding::Adrp || relEncoding == RelEncoding::Imm12) return false;
-	
+
 	const ActionOffset anchorOffset = context.offset;
 	const ActionOffset targetOffset = it->second;
-	
+
 	ssize_t maximumDelta = targetOffset.totalMaximumOffset - anchorOffset.totalMaximumOffset;
 	ssize_t minimumDelta = targetOffset.totalMinimumOffset - anchorOffset.totalMinimumOffset;
 	if(maximumDelta != minimumDelta) return false;
-	
+
 	hasFixedDelta = true;
 	delta = minimumDelta + delay;
 	return true;
@@ -426,7 +426,7 @@ void PatchNameLabelAction::WriteByteCode(std::vector<uint8_t> &result, ActionWri
 	{
 		throw AssemblerException("Local named label %s unresolved\n", value.c_str());
 	}
-	
+
 	uint32_t labelId = GetLabelIdForNamed(labelOperand.labelName.c_str());
 	if(global)
 	{
@@ -443,12 +443,12 @@ void PatchNameLabelAction::WriteByteCode(std::vector<uint8_t> &result, ActionWri
 		case JumpType::Name:
 		case JumpType::BackwardOrForward:
 			throw AssemblerException("Internal error: Unexpected jumpType");
-				
+
 		case JumpType::Forward:
             context.AddForwardLabelReference(labelOperand.reference);
 			result.push_back((int) arm64Assembler::ActionType::PatchLabelForward);
 			break;
-				
+
 		case JumpType::Backward:
 			result.push_back((int) arm64Assembler::ActionType::PatchLabelBackward);
 			break;
@@ -468,7 +468,7 @@ void PatchNumericLabelAction::Dump() const
 bool PatchNumericLabelAction::ResolveRelativeAddresses(ActionContext &context)
 {
 	Inherited::ResolveRelativeAddresses(context);
-	
+
 	if(!global)
 	{
 		if(context.forwards)
@@ -488,10 +488,10 @@ bool PatchNumericLabelAction::ResolveRelativeAddresses(ActionContext &context)
 			}
 		}
 	}
-	
+
 	// Already resolved!
 	if(hasFixedDelta) return false;
-	
+
 	if(context.forwards)
 	{
 		if(jumpType == JumpType::Forward) return false;
@@ -500,7 +500,7 @@ bool PatchNumericLabelAction::ResolveRelativeAddresses(ActionContext &context)
 	{
 		if(jumpType == JumpType::Backward) return false;
 	}
-	
+
 	ActionContext::NumericLabelMap::const_iterator it = context.numericLabels.find(global ? value ^ -1 : value);
 	if(it == context.numericLabels.end()) return false;
 	hasFoundTarget = true;
@@ -509,14 +509,14 @@ bool PatchNumericLabelAction::ResolveRelativeAddresses(ActionContext &context)
 
 	// Do not resolve ADRP or Imm12
 	if(relEncoding == RelEncoding::Adrp || relEncoding == RelEncoding::Imm12) return false;
-	
+
 	const ActionOffset anchorOffset = context.offset;
 	const ActionOffset targetOffset = it->second;
-	
+
 	ssize_t maximumDelta = targetOffset.totalMaximumOffset - anchorOffset.totalMaximumOffset;
 	ssize_t minimumDelta = targetOffset.totalMinimumOffset - anchorOffset.totalMinimumOffset;
 	if(maximumDelta != minimumDelta) return false;
-	
+
 	hasFixedDelta = true;
 	delta = minimumDelta + delay;
 	return true;
@@ -577,7 +577,7 @@ void PatchNumericLabelAction::WriteByteCode(std::vector<uint8_t> &result, Action
 PatchExpressionLabelAction::PatchExpressionLabelAction(RelEncoding relEncoding, int offset, const LabelOperand &labelOperand)
 : PatchLabelAction(true, relEncoding, offset, labelOperand)
 {
-	
+
 }
 
 void PatchExpressionLabelAction::Dump() const
@@ -591,10 +591,10 @@ void PatchExpressionLabelAction::Dump() const
 bool PatchExpressionLabelAction::ResolveRelativeAddresses(ActionContext &context)
 {
 	Inherited::ResolveRelativeAddresses(context);
-	
+
 	// Already resolved!
 	if(hasFixedDelta) return false;
-	
+
 	if(context.forwards)
 	{
 		if(labelOperand.jumpType == JumpType::Forward) return false;
@@ -603,7 +603,7 @@ bool PatchExpressionLabelAction::ResolveRelativeAddresses(ActionContext &context
 	{
 		if(labelOperand.jumpType == JumpType::Backward) return false;
 	}
-	
+
 	ActionContext::ExpressionLabelMap::const_iterator it = context.expressionLabels.find(labelOperand.expressionIndex);
 	if(it == context.expressionLabels.end()) return false;
 	hasFoundTarget = true;
@@ -612,14 +612,14 @@ bool PatchExpressionLabelAction::ResolveRelativeAddresses(ActionContext &context
 
 	// Do not resolve ADRP or Imm12
 	if(relEncoding == RelEncoding::Adrp || relEncoding == RelEncoding::Imm12) return false;
-	
+
 	const ActionOffset anchorOffset = context.offset;
 	const ActionOffset targetOffset = it->second;
-	
+
 	ssize_t maximumDelta = targetOffset.totalMaximumOffset - anchorOffset.totalMaximumOffset;
 	ssize_t minimumDelta = targetOffset.totalMinimumOffset - anchorOffset.totalMinimumOffset;
 	if(maximumDelta != minimumDelta) return false;
-	
+
 	hasFixedDelta = true;
 	delta = minimumDelta + delay;
 	return true;
@@ -698,12 +698,12 @@ PatchOpcodeAction::PatchOpcodeAction(Sign aSign,
   expressionIndex(aExpressionIndex)
 {
 	int totalBits = numberOfBits + valueShift;
-	
+
 	int expressionWidth = totalBits <= 8 ? 8 :
 						  totalBits <= 16 ? 16 :
 						  totalBits <= 32 ? 32 :
 						  64;
-	
+
 	assembler.UpdateExpressionBitWidth(expressionIndex, expressionWidth);
 }
 
@@ -716,7 +716,7 @@ bool PatchOpcodeAction::CanGroup(Action *other) const
 {
 	const PatchOpcodeAction *otherPatch = dynamic_cast<const PatchOpcodeAction*>(other);
 	if(!otherPatch) return false;
-	
+
 	return expressionIndex == otherPatch->expressionIndex
 	       && numberOfBits == otherPatch->numberOfBits
 		   && bitOffset == otherPatch->bitOffset
@@ -732,17 +732,17 @@ void PatchOpcodeAction::WriteByteCode(std::vector<uint8_t> &result, ActionWriteC
 	else
 	{
 		int totalBits = numberOfBits + valueShift;
-		
+
 		int shift = valueShift;
 		int additionalOffset = 0;
-		
+
 		while(shift >= 8)
 		{
 			++additionalOffset;
 			totalBits -= 8;
 			shift -= 8;
 		}
-		
+
 		switch(sign)
 		{
 		case Signed:
@@ -761,16 +761,16 @@ void PatchOpcodeAction::WriteByteCode(std::vector<uint8_t> &result, ActionWriteC
 			else result.push_back((int) arm64Assembler::ActionType::MaskedPatchB4Opcode);
 			break;
 		}
-		
+
 		// 8 bit patching writes a mask instead of number of bits.
 		if(totalBits <= 8) result.push_back((1 << numberOfBits) - 1);
 		else result.push_back(numberOfBits);
-		
+
 		result.push_back(bitOffset);
 		result.push_back(shift);
 		WriteExpressionOffset(result, context, expressionIndex, additionalOffset);
 	}
-	
+
 	WriteSigned16(result, -delay);
 }
 
@@ -796,7 +796,7 @@ bool PatchLogicalImmediateOpcodeAction::CanGroup(Action *other) const
 {
 	const PatchLogicalImmediateOpcodeAction *otherPatch = dynamic_cast<const PatchLogicalImmediateOpcodeAction*>(other);
 	if(!otherPatch) return false;
-	
+
 	return expressionIndex == otherPatch->expressionIndex
 			&& numberOfBits == otherPatch->numberOfBits;
 }
@@ -845,7 +845,7 @@ MovExpressionImmediateAction::MovExpressionImmediateAction(int aBitWidth, int aR
 {
 	assembler.UpdateExpressionBitWidth(expressionIndex, bitWidth);
 }
-	
+
 void MovExpressionImmediateAction::Dump() const
 {
 	printf(", mov(%c%d, {%d})", bitWidth == 32 ? 'w' : 'x', registerIndex, expressionIndex);
@@ -874,9 +874,9 @@ void AlternateAction::WriteByteCode(std::vector<uint8_t> &result, ActionWriteCon
 	//   ...
 	//   [ConditionN] [ActionN] [EndAlternate]
 	// End:
-	
+
 	Action *previousAction = context.previousAction;
-	
+
 	std::vector<uint8_t> bytes;
 	for(size_t i = alternateList.size(); i != 0;)
 	{

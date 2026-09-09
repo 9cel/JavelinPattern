@@ -18,7 +18,7 @@ namespace Javelin::PatternInternal
 		{
 			uint32_t	maximumNumberOfStates;
 			uint32_t	possibleIndex[1];
-			
+
 			static size_t GetSizeRequiredForNumberOfStates(uint32_t numberOfStates) { return sizeof(UpdateCache) + sizeof(uint32_t) * numberOfStates; }
 		};
 
@@ -34,16 +34,16 @@ namespace Javelin::PatternInternal
 			IS_START_OF_SEARCH			= 0x40,
 
 			WAS_MASK					= 0x30,
-			
+
 			IS_END_OF_LINE_MASK			= 0x200,
 			IS_END_OF_INPUT_MASK		= 0x400,
 			IS_START_OF_INPUT_MASK		= 0x800,		// These are << 8 of the above
 			WAS_WORD_CHARACTER_MASK		= 0x1000,
 			WAS_END_OF_LINE_MASK		= 0x2000,
 			IS_START_OF_SEARCH_MASK		= 0x4000,
-			
+
 			ASSERT_MASK					= 0x7800,
-			
+
 			IS_SEARCH					= 0x10000,
 			IS_MATCH					= 0x20000,
 			HAS_EMPTY_STATES			= 0x40000,		// Used by Dfa
@@ -59,16 +59,16 @@ namespace Javelin::PatternInternal
 
 		// For forward processing
 		static const uint32_t END_OF_INPUT = 256;
-		
+
 		// For reverse processing
 		static const uint32_t START_OF_INPUT  = 256;
 
 		uint32_t	stateFlags;
 		uint32_t	numberOfStates;
 		uint32_t	stateList[1];
-		
+
 		static size_t GetSizeRequiredForNumberOfStates(uint32_t numberOfStates) { return sizeof(NfaState) - sizeof(uint32_t) + numberOfStates * sizeof(uint32_t); }
-		
+
 		// range.min is the current character. range.max is the relevancy interval.
 		void Process(NfaState& outResult, const PatternData& patternData, CharacterRange& range, uint32_t flags, UpdateCache &updateCache) const;
 		void AddNextState(const PatternData& patternData, uint32_t pc, CharacterRange& range, UpdateCache &updateCache, int nextFlags);
@@ -82,7 +82,7 @@ namespace Javelin::PatternInternal
 
 	private:
 		static uint32_t ConvertFlagsToNextFlags(uint32_t flags) { return (flags << 4) & (WAS_MASK | STATE_ADDITION_DISABLED); }
-		
+
 		bool AddEntry(uint32_t pc, UpdateCache &updateCache);
 		bool AddEntryNoMatchCheck(uint32_t pc, UpdateCache &updateCache);
 		void AddEntryNoCheck(uint32_t pc);

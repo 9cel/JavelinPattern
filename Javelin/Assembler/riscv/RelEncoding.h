@@ -17,7 +17,7 @@ namespace Javelin::riscvAssembler {
         Imm12,                // For add following auipc.
         CBDelta,              // e.g. c.beq
         CJDelta,              // e.g. c.jal
-        
+
         Rel64,                // For .quad labels
     };
 

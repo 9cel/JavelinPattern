@@ -13,7 +13,7 @@ namespace Javelin::PatternInternal
 	{
 	public:
 		virtual ~TokenizerBase() { }
-		
+
 		virtual const Token&	PeekCurrentToken() const = 0;
 		virtual TokenType		PeekCurrentTokenType() const = 0;
 

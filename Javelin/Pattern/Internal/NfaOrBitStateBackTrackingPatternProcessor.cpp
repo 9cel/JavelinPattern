@@ -15,7 +15,7 @@ public:
 	NfaOrBitStateBackTrackingPatternProcessor(DataBlock&& dataBlock);
 	NfaOrBitStateBackTrackingPatternProcessor(const void* data, size_t length);
 	~NfaOrBitStateBackTrackingPatternProcessor();
-	
+
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
@@ -27,7 +27,7 @@ private:
 	PatternProcessor*		pikeNfaProcessor;
 	PatternProcessor*		bitStateBackTrackingProcessor;
 	DataBlock				dataStore;
-	
+
 	void Set(const void* data, size_t length);
 };
 

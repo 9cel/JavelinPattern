@@ -108,7 +108,7 @@ namespace Javelin::Assembler::arm64::Register
 	constexpr RegisterOperand B29(29, 0, MatchB);
 	constexpr RegisterOperand B30(30, 0, MatchB);
 	constexpr RegisterOperand B31(31, 0, MatchB);
-	
+
 	constexpr RegisterOperand H0(0, 0x31, MatchH);
 	constexpr RegisterOperand H1(1, 0x31, MatchH);
 	constexpr RegisterOperand H2(2, 0x31, MatchH);
@@ -240,7 +240,7 @@ namespace Javelin::Assembler::arm64::Register
 	constexpr RegisterOperand Q29(29, 0x4, MatchQ);
 	constexpr RegisterOperand Q30(30, 0x4, MatchQ);
 	constexpr RegisterOperand Q31(31, 0x4, MatchQ);
-	
+
 	constexpr RegisterOperand V0_B(0, 0, MatchVB);
 	constexpr RegisterOperand V1_B(1, 0, MatchVB);
 	constexpr RegisterOperand V2_B(2, 0, MatchVB);
@@ -306,7 +306,7 @@ namespace Javelin::Assembler::arm64::Register
 	constexpr RegisterOperand V29_4B(29, 0, MatchV4B);
 	constexpr RegisterOperand V30_4B(30, 0, MatchV4B);
 	constexpr RegisterOperand V31_4B(31, 0, MatchV4B);
-	
+
 	constexpr RegisterOperand V0_8B(0, 0, MatchV8B);
 	constexpr RegisterOperand V1_8B(1, 0, MatchV8B);
 	constexpr RegisterOperand V2_8B(2, 0, MatchV8B);
@@ -405,7 +405,7 @@ namespace Javelin::Assembler::arm64::Register
 	constexpr RegisterOperand V29_H(29, 1, MatchVH);
 	constexpr RegisterOperand V30_H(30, 1, MatchVH);
 	constexpr RegisterOperand V31_H(31, 1, MatchVH);
-	
+
 	constexpr RegisterOperand V0_2H(0, 1, MatchV2H);
 	constexpr RegisterOperand V1_2H(1, 1, MatchV2H);
 	constexpr RegisterOperand V2_2H(2, 1, MatchV2H);
@@ -471,7 +471,7 @@ namespace Javelin::Assembler::arm64::Register
 	constexpr RegisterOperand V29_4H(29, 1, MatchV4H);
 	constexpr RegisterOperand V30_4H(30, 1, MatchV4H);
 	constexpr RegisterOperand V31_4H(31, 1, MatchV4H);
-	
+
 	constexpr RegisterOperand V0_8H(0, 5, MatchV8H);
 	constexpr RegisterOperand V1_8H(1, 5, MatchV8H);
 	constexpr RegisterOperand V2_8H(2, 5, MatchV8H);
@@ -537,7 +537,7 @@ namespace Javelin::Assembler::arm64::Register
 	constexpr RegisterOperand V29_S(29, 2, MatchVS);
 	constexpr RegisterOperand V30_S(30, 2, MatchVS);
 	constexpr RegisterOperand V31_S(31, 2, MatchVS);
-	
+
 	constexpr RegisterOperand V0_2S(0, 2, MatchV2S);
 	constexpr RegisterOperand V1_2S(1, 2, MatchV2S);
 	constexpr RegisterOperand V2_2S(2, 2, MatchV2S);
@@ -570,7 +570,7 @@ namespace Javelin::Assembler::arm64::Register
 	constexpr RegisterOperand V29_2S(29, 2, MatchV2S);
 	constexpr RegisterOperand V30_2S(30, 2, MatchV2S);
 	constexpr RegisterOperand V31_2S(31, 2, MatchV2S);
-	
+
 	constexpr RegisterOperand V0_4S(0, 6, MatchV4S);
 	constexpr RegisterOperand V1_4S(1, 6, MatchV4S);
 	constexpr RegisterOperand V2_4S(2, 6, MatchV4S);
@@ -702,7 +702,7 @@ namespace Javelin::Assembler::arm64::Register
 	constexpr RegisterOperand V29_2D(29, 0x17, MatchV2D);
 	constexpr RegisterOperand V30_2D(30, 0x17, MatchV2D);
 	constexpr RegisterOperand V31_2D(31, 0x17, MatchV2D);
-	
+
 	constexpr RegisterOperand V0_1Q(0, 0, MatchV1Q);
 	constexpr RegisterOperand V1_1Q(1, 0, MatchV1Q);
 	constexpr RegisterOperand V2_1Q(2, 0, MatchV1Q);
@@ -735,7 +735,7 @@ namespace Javelin::Assembler::arm64::Register
 	constexpr RegisterOperand V29_1Q(29, 0, MatchV1Q);
 	constexpr RegisterOperand V30_1Q(30, 0, MatchV1Q);
 	constexpr RegisterOperand V31_1Q(31, 0, MatchV1Q);
-	
+
 //============================================================================
 } // namespace Javelin::Assembler::arm64::Register
 //============================================================================
@@ -752,7 +752,7 @@ namespace Javelin::Assembler::arm64
 	RegisterMap::RegisterMap()
 	{
 		using namespace Register;
-		
+
 		(*this)["w0"] = &W0;
 		(*this)["w1"] = &W1;
 		(*this)["w2"] = &W2;
@@ -923,7 +923,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["s29"] = &S29;
 		(*this)["s30"] = &S30;
 		(*this)["s31"] = &S31;
-		
+
 		(*this)["d0"] = &D0;
 		(*this)["d1"] = &D1;
 		(*this)["d2"] = &D2;
@@ -989,7 +989,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["q29"] = &Q29;
 		(*this)["q30"] = &Q30;
 		(*this)["q31"] = &Q31;
-		
+
 		(*this)["v0.b"] = &V0_B;
 		(*this)["v1.b"] = &V1_B;
 		(*this)["v2.b"] = &V2_B;
@@ -1022,7 +1022,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["v29.b"] = &V29_B;
 		(*this)["v30.b"] = &V30_B;
 		(*this)["v31.b"] = &V31_B;
-		
+
 		(*this)["v0.4b"] = &V0_4B;
 		(*this)["v1.4b"] = &V1_4B;
 		(*this)["v2.4b"] = &V2_4B;
@@ -1055,7 +1055,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["v29.4b"] = &V29_4B;
 		(*this)["v30.4b"] = &V30_4B;
 		(*this)["v31.4b"] = &V31_4B;
-		
+
 		(*this)["v0.8b"] = &V0_8B;
 		(*this)["v1.8b"] = &V1_8B;
 		(*this)["v2.8b"] = &V2_8B;
@@ -1154,7 +1154,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["v29.h"] = &V29_H;
 		(*this)["v30.h"] = &V30_H;
 		(*this)["v31.h"] = &V31_H;
-		
+
 		(*this)["v0.2h"] = &V0_2H;
 		(*this)["v1.2h"] = &V1_2H;
 		(*this)["v2.2h"] = &V2_2H;
@@ -1220,7 +1220,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["v29.4h"] = &V29_4H;
 		(*this)["v30.4h"] = &V30_4H;
 		(*this)["v31.4h"] = &V31_4H;
-		
+
 		(*this)["v0.8h"] = &V0_8H;
 		(*this)["v1.8h"] = &V1_8H;
 		(*this)["v2.8h"] = &V2_8H;
@@ -1286,7 +1286,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["v29.s"] = &V29_S;
 		(*this)["v30.s"] = &V30_S;
 		(*this)["v31.s"] = &V31_S;
-		
+
 		(*this)["v0.2s"] = &V0_2S;
 		(*this)["v1.2s"] = &V1_2S;
 		(*this)["v2.2s"] = &V2_2S;
@@ -1319,7 +1319,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["v29.2s"] = &V29_2S;
 		(*this)["v30.2s"] = &V30_2S;
 		(*this)["v31.2s"] = &V31_2S;
-		
+
 		(*this)["v0.4s"] = &V0_4S;
 		(*this)["v1.4s"] = &V1_4S;
 		(*this)["v2.4s"] = &V2_4S;
@@ -1385,7 +1385,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["v29.d"] = &V29_D;
 		(*this)["v30.d"] = &V30_D;
 		(*this)["v31.d"] = &V31_D;
-		
+
 		(*this)["v0.1d"] = &V0_1D;
 		(*this)["v1.1d"] = &V1_1D;
 		(*this)["v2.1d"] = &V2_1D;
@@ -1514,7 +1514,7 @@ namespace Javelin::Assembler::arm64
 		(*this)["regv2d"] = { 0x17, MatchV2D };
 		(*this)["regv1q"] = { 0, MatchV1Q };
 	}
-	
+
 //============================================================================
 } // Javelin::Assembler::arm64
 //============================================================================

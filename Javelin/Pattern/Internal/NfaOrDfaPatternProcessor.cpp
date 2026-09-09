@@ -15,7 +15,7 @@ class NfaOrDfaPatternProcessor final : public PatternProcessor
 public:
 	NfaOrDfaPatternProcessor(const void* data, size_t length);
 	~NfaOrDfaPatternProcessor();
-	
+
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
@@ -30,7 +30,7 @@ private:
 	const void*					data;
 	size_t						length;
 	Mutex 						nfaCreationLock;
-	
+
 	void CreateNfaProcessor() const;
 };
 

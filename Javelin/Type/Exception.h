@@ -29,7 +29,7 @@ namespace Javelin
 //============================================================================
 
 	class String;
-	
+
 //============================================================================
 
 	enum class ExceptionCategory : unsigned short
@@ -38,7 +38,7 @@ namespace Javelin
 		Stream,
 		Network,
 	};
-	
+
 	enum class GeneralExceptionType
 	{
 		Unknown,
@@ -48,7 +48,7 @@ namespace Javelin
 		UnexpectedResult,		// Return value isn't as expected
 		UnsupportedFeature,		// Valid, but not supported
 	};
-	
+
 	enum class StreamExceptionType
 	{
 		Unknown,
@@ -57,7 +57,7 @@ namespace Javelin
 		CannotSeek,
 		EndOfStream,
 	};
-	
+
 	enum class NetworkExceptionType
 	{
 		Unknown,
@@ -67,9 +67,9 @@ namespace Javelin
 		HostUnreachable,
 		TimeOut,
 	};
-	
-//============================================================================	
-	
+
+//============================================================================
+
 	struct Exception
 	{
 		ExceptionCategory 	category;
@@ -115,7 +115,7 @@ namespace Javelin
 		typedef Exception Inherited;
 
 		StreamException(StreamExceptionType reason) : Inherited(ExceptionCategory::Stream, (short) reason) { }
-		
+
 		bool IsEndOfStream() const { return reason == (short) StreamExceptionType::EndOfStream; }
 		StreamExceptionType GetReason() const { return (StreamExceptionType) reason; }
 

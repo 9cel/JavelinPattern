@@ -26,7 +26,7 @@ typedef void* jp_bytecode_t;
 
 #define JP_OPTION_UTF8                      0x100   // Without this flag, text is treated as ASCII
 
-#define JP_OPTION_GLOB_SYNTAX               0x400   // With this flag, ? is treated as [^/], * as [^/]* and ** as .*  
+#define JP_OPTION_GLOB_SYNTAX               0x400   // With this flag, ? is treated as [^/], * as [^/]* and ** as .*
                                                     // You will probably combine this with JP_OPTION_ANCHORED
 
 #define JP_OPTION_ANCHORED                  0x800
@@ -104,6 +104,6 @@ void jp_stack_growth_handler_set(void* (*allocate_function)(size_t), void (*free
 
 #ifdef __cplusplus
 }
-#endif 
+#endif
 
 //============================================================================

@@ -22,7 +22,7 @@ namespace Javelin::PatternInternal
 	class CaptureComponent;
 	class CounterComponent;
 	class IComponent;
-	
+
 	class Compiler
 	{
 	public:
@@ -35,14 +35,14 @@ namespace Javelin::PatternInternal
 		uint32_t 			GetNumberOfCaptures() const		{ return numberOfCaptures;	}
 		const DataBlock&	GetByteCode() const				{ return byteCode;			}
 		LiteralPrefilter TakeLiteralPrefilter() { return std::move(literalPrefilter); }
-		
+
 	private:
 		IComponent* CompileCapture(int options);
 		IComponent*	CompilePattern(int options);
 		IComponent* CompileGroup(int &options);
 		IComponent* CompileAtom(int options);
 		IComponent* CompileAtomQuantifier(IComponent* atom, int options);
-	
+
 		DataBlock					byteCode;
 		LiteralPrefilter literalPrefilter;
 		String						pattern;
@@ -58,7 +58,7 @@ namespace Javelin::PatternInternal
 		InstructionList				instructionList;
 
 		void PrintInformation(ICharacterWriter& output, IComponent* headComponent) const;
-		
+
 		// Returns true if coalescing has occured and the component is not required.
 		static bool CoalesceComponent(CounterComponent* previousComponent, IComponent* component);
 		void ResolveRecurseComponents();

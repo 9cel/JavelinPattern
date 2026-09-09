@@ -48,22 +48,22 @@ void DfaMemoryManager::PreAllocate(size_t numberOfBytes, DfaProcessorBase& dfaPr
 {
 	processorList.Synchronize([&] {
 		processorList.MoveToFront(&dfaProcessor);
-		
+
 		totalAllocation += numberOfBytes;
 		dfaProcessor.stateMemoryAllocated += numberOfBytes;
-		
+
 		switch(mode)
 		{
 		case DfaMemoryManagerMode::Unlimited:
 			break;
-			
+
 		case DfaMemoryManagerMode::GlobalLimit:
 			if(totalAllocation >= limit)
 			{
 				ResetAllProcessors(dfaProcessor);
 			}
 			break;
-			
+
 		case DfaMemoryManagerMode::PerPatternLimit:
 			if(dfaProcessor.stateMemoryAllocated >= limit)
 			{
@@ -110,9 +110,9 @@ void DfaMemoryManager::ResetAllProcessors(DfaProcessorBase& originator)
 	{
 		DfaProcessorBase& processor = *it;
 		++it;
-		
+
 		if(processor.stateMemoryAllocated == 0) return;
-		
+
 		processor.ResetStates(&processor == &originator);
 		if(processor.stateMemoryAllocated > 0)
 		{

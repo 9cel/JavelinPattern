@@ -28,7 +28,7 @@ const InstructionMap InstructionMap::instance;
 		.opcodes = { ops },												\
 		.opcodePrefix = 0,												\
 	}
-	
+
 #define DECLARE_PREFIXED_CANDIDATE(operand_list, op_width, enc, opcode_data, prefix, ops...) \
 	{																	\
 		.operandMatchMasks = { UNWRAP operand_list },					\
@@ -1546,11 +1546,11 @@ InstructionMap::InstructionMap()
 	(*this)["xchg"] = &XCHG;
 	(*this)["xlatb"] = &XLATB;
 	(*this)["xor"] = &XOR;
-	
+
 	INSERT_CC_INSTRUCTIONS(cmov, CMOVCC);
 	INSERT_CC_INSTRUCTIONS(set, SETCC);
 	INSERT_CC_INSTRUCTIONS(j, JCC);
-	
+
 	// x87
 	(*this)["f2xm1"] = &F2XM1;
 	(*this)["fabs"] = &FABS;
@@ -1848,7 +1848,7 @@ InstructionMap::InstructionMap()
 	(*this)["aesenclast"] = &AESENCLAST;
 	(*this)["aesimc"] = &AESIMC;
 	(*this)["aeskeygenassist"] = &AESKEYGENASSIST;
-	
+
 	// AVX
 	(*this)["vmovd"] = &VMOVD;
 	(*this)["vmovdqa"] = &VMOVDQA;

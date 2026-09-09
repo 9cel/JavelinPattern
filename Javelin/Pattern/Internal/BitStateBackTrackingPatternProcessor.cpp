@@ -18,15 +18,15 @@ class BitStateBackTrackingPatternProcessor final : public PatternProcessor
 {
 private:
 	static constexpr size_t MAXIMUM_BITS = 32768;
-	
+
 public:
 	BitStateBackTrackingPatternProcessor(const void* data, size_t length);
 	BitStateBackTrackingPatternProcessor(DataBlock&& dataBlock);
 	~BitStateBackTrackingPatternProcessor();
-	
+
 	virtual bool CanUseFullMatchProgram(size_t inputLength) const 					{ return fullMatchAlwaysFits || CanUsePartialMatchProgram(inputLength); }
 	virtual bool CanUsePartialMatchProgram(size_t inputLength) const final 			{ return !numberOfBitStateInstructions || inputLength < MAXIMUM_BITS/numberOfBitStateInstructions; }
-	
+
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
@@ -36,7 +36,7 @@ public:
 
 private:
 	struct ProcessData;
-	
+
 	bool			fullMatchAlwaysFits;
 	bool			matchRequiresEndOfInput;
 	uint8_t			numberOfCaptures;
@@ -47,9 +47,9 @@ private:
 	uint32_t		fullMatchStartingInstruction;
 	DataBlock		dataStore;
 	ExpandedJumpTables	expandedJumpTables;
-	
+
 	const void* Process(uint32_t pc, const unsigned char* p, ProcessData& processData) const;
-	
+
 	void Set(const void* data, size_t length);
 };
 
@@ -61,7 +61,7 @@ struct BitStateBackTrackingPatternProcessor::ProcessData
 	const unsigned char* 			pEnd;
 	const char**					captures;
 	StaticBitTable<MAXIMUM_BITS>	stateTracker;
-	
+
 	ProcessData(bool aIsFullMatch, uint32_t numberOfBitStateInstructions, const void* data, size_t length, size_t offset, const char** aCaptures)
 	: stateTracker(NO_INITIALIZE)
 	{
@@ -149,38 +149,38 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::AnyByte)
 		if(p == processData.pEnd) return nullptr;
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::AssertStartOfInput)
 		if(p != processData.pStart) return nullptr;
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::AssertEndOfInput)
 		if(p != processData.pEnd) return nullptr;
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::AssertStartOfLine)
 		if(p != processData.pStart && p[-1] != '\n') return nullptr;
 		++pc;
 		goto Loop;
-		
+
 	CASE(InstructionType::AssertEndOfLine)
 		if(p != processData.pEnd && *p != '\n') return nullptr;
 		++pc;
 		goto Loop;
-		
+
 	CASE(InstructionType::AssertStartOfSearch)
 		if(p != processData.pSearchStart) return nullptr;
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::AssertWordBoundary)
 		if(p != processData.pEnd && Character::IsWordCharacter(*p))
 		{
@@ -194,7 +194,7 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::AssertNotWordBoundary)
 		if(p != processData.pEnd && Character::IsWordCharacter(*p))
 		{
@@ -208,14 +208,14 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::Byte)
 		if(p == processData.pEnd) return nullptr;
 		if(*p != instruction.data) return nullptr;
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::ByteEitherOf2)
 		if(p == processData.pEnd) return nullptr;
 		if(*p != (instruction.data & 0xff)
@@ -223,7 +223,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::ByteEitherOf3)
 		if(p == processData.pEnd) return nullptr;
 		if(*p != (instruction.data & 0xff)
@@ -232,7 +232,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-		
+
 	CASE(InstructionType::ByteRange)
 		if(p == processData.pEnd) return nullptr;
 		else
@@ -245,7 +245,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::ByteBitMask)
 		if(p == processData.pEnd) return nullptr;
 		{
@@ -255,7 +255,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::ByteJumpTable)
 		if(p == processData.pEnd) return nullptr;
 		else
@@ -266,7 +266,7 @@ Loop:
 			++p;
 			goto Loop;
 		}
-			
+
 	CASE(InstructionType::ByteJumpMask)
 		if(p == processData.pEnd) return nullptr;
 		else
@@ -277,7 +277,7 @@ Loop:
 			++p;
 			goto Loop;
 		}
-			
+
 	CASE(InstructionType::ByteJumpRange)
 		if(p == processData.pEnd) return nullptr;
 		else
@@ -288,14 +288,14 @@ Loop:
 			++p;
 			goto Loop;
 		}
-			
+
 	CASE(InstructionType::ByteNot)
 		if(p == processData.pEnd) return nullptr;
 		if(*p == instruction.data) return nullptr;
 		++p;
 		++pc;
 		goto Loop;
-		
+
 	CASE(InstructionType::ByteNotEitherOf2)
 		if(p == processData.pEnd) return nullptr;
 		if(*p == (instruction.data & 0xff)
@@ -303,7 +303,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-		
+
 	CASE(InstructionType::ByteNotEitherOf3)
 		if(p == processData.pEnd) return nullptr;
 		if(*p == (instruction.data & 0xff)
@@ -312,7 +312,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-		
+
 	CASE(InstructionType::ByteNotRange)
 		if(p == processData.pEnd) return nullptr;
 		else
@@ -338,7 +338,7 @@ Loop:
 		}
 		if(pc == TypeData<uint32_t>::Maximum()) return nullptr;
 		goto Loop;
-			
+
 	CASE(InstructionType::DispatchMask)
 		if(p == processData.pEnd)
 		{
@@ -352,7 +352,7 @@ Loop:
 		}
 		if(pc == TypeData<uint32_t>::Maximum()) return nullptr;
 		goto Loop;
-			
+
 	CASE(InstructionType::DispatchRange)
 		if(p == processData.pEnd)
 		{
@@ -366,7 +366,7 @@ Loop:
 		}
 		if(pc == TypeData<uint32_t>::Maximum()) return nullptr;
 		goto Loop;
-		
+
 	CASE(InstructionType::Fail)
 		return nullptr;
 
@@ -379,10 +379,10 @@ Loop:
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p == processData.pEnd) return nullptr;
 				if(*p == c) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -390,7 +390,7 @@ Loop:
 			pc = instruction.data >> 8;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::FindByte, true):
 		{
 			unsigned char c = instruction.data & 0xff;
@@ -400,7 +400,7 @@ Loop:
 			pc = instruction.data >> 8;
 			goto Loop;
 		}
-			
+
 	CASE(InstructionType::PropagateBackwards)
 		if(processData.captures != nullptr)
 		{
@@ -409,26 +409,26 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case MakeCase(InstructionType::SearchByte, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
-			
+
 			unsigned char c = instruction.data & 0xff;
 			unsigned offset = instruction.data >> 8;
 
 			// Note: don't offset bitIndex!
 			p += offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p == processData.pEnd) return nullptr;
 				if(*p == c) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -436,15 +436,15 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByte, true):
 		{
 			unsigned char c = instruction.data & 0xff;
 			unsigned offset = instruction.data >> 8;
-			
+
 			const unsigned char* pSearch = p+offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			size_t remaining = processData.pEnd - pSearch;
 			pSearch = (const unsigned char*) memchr(pSearch, c, remaining);
 			if(!pSearch) return nullptr;
@@ -452,24 +452,24 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf2, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p == processData.pEnd) return nullptr;
 				if(*p == data->bytes[0] || *p == data->bytes[1]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -477,38 +477,38 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf2, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteEitherOf2(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf3, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p == processData.pEnd) return nullptr;
 				if(*p == data->bytes[0] || *p == data->bytes[1] || *p == data->bytes[2]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -516,38 +516,38 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf3, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteEitherOf3(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf4, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p == processData.pEnd) return nullptr;
 				if(*p == data->bytes[0] || *p == data->bytes[1] || *p == data->bytes[2] || *p == data->bytes[3]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -555,39 +555,39 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf4, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteEitherOf4(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf5, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p == processData.pEnd) return nullptr;
 				if(*p == data->bytes[0] || *p == data->bytes[1] || *p == data->bytes[2] || *p == data->bytes[3]
 				   || *p == data->bytes[4]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -595,39 +595,39 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf5, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteEitherOf5(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf6, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p == processData.pEnd) return nullptr;
 				if(*p == data->bytes[0] || *p == data->bytes[1] || *p == data->bytes[2] || *p == data->bytes[3]
 				   || *p == data->bytes[4] || *p == data->bytes[5]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -635,39 +635,39 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf6, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteEitherOf6(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf7, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p == processData.pEnd) return nullptr;
 				if(*p == data->bytes[0] || *p == data->bytes[1] || *p == data->bytes[2] || *p == data->bytes[3]
 				   || *p == data->bytes[4] || *p == data->bytes[5] || *p == data->bytes[6]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -675,39 +675,39 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf7, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteEitherOf7(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf8, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p == processData.pEnd) return nullptr;
 				if(*p == data->bytes[0] || *p == data->bytes[1] || *p == data->bytes[2] || *p == data->bytes[3]
 				   || *p == data->bytes[4] || *p == data->bytes[5] || *p == data->bytes[6] || *p == data->bytes[7]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -715,38 +715,38 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteEitherOf8, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteEitherOf8(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBytePair, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p+1 >= processData.pEnd) return nullptr;
 				if(p[0] == data->bytes[0] && p[1] == data->bytes[1]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -754,39 +754,39 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBytePair, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindBytePair(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBytePair2, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p+1 >= processData.pEnd) return nullptr;
 				if((p[0] == data->bytes[0] || p[0] == data->bytes[1])
 				   && (p[1] == data->bytes[2] || p[1] == data->bytes[3])) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -794,39 +794,39 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBytePair2, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindBytePair2(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBytePair3, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p+1 >= processData.pEnd) return nullptr;
 				if((p[0] == data->bytes[0] || p[0] == data->bytes[1] || p[0] == data->bytes[2])
 				   && (p[1] == data->bytes[3] || p[1] == data->bytes[4] || p[1] == data->bytes[5])) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -834,39 +834,39 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBytePair3, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindBytePair3(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBytePair4, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p+1 >= processData.pEnd) return nullptr;
 				if((p[0] == data->bytes[0] || p[0] == data->bytes[1] || p[0] == data->bytes[2] || p[0] == data->bytes[3])
 				   && (p[1] == data->bytes[4] || p[1] == data->bytes[5] || p[1] == data->bytes[6] || p[1] == data->bytes[7])) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -874,38 +874,38 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBytePair4, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindBytePair4(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteTriplet, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p+1 >= processData.pEnd) return nullptr;
 				if(p[0] == data->bytes[0] && p[1] == data->bytes[1] && p[2] == data->bytes[2]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -913,40 +913,40 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteTriplet, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteTriplet(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteTriplet2, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p+1 >= processData.pEnd) return nullptr;
 				if((p[0] == data->bytes[0] || p[0] == data->bytes[1])
 				   && (p[1] == data->bytes[2] || p[1] == data->bytes[3])
 				   && (p[2] == data->bytes[4] || p[2] == data->bytes[5])) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -954,38 +954,38 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteTriplet2, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteTriplet2(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteRange, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p >= processData.pEnd) return nullptr;
 				if(p[0] >= data->bytes[0] && p[0] <= data->bytes[1]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -993,41 +993,41 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteRange, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteRange(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteRangePair, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += data->offset;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p+1 >= processData.pEnd) return nullptr;
 				if(p[0] >= data->bytes[0]
 				   && p[0] <= data->bytes[1]
 				   && p[1] >= data->bytes[2]
 				   && p[1] <= data->bytes[3]) break;
-				
+
 				++p;
 				bitIndex += numberOfBitStateInstructions;
 			}
@@ -1035,39 +1035,39 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchByteRangePair, true):
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			pSearch = (const unsigned char*) FindByteRangePair(pSearch, data->GetAllBytes(), processData.pEnd);
 			if(!pSearch) return nullptr;
 			p = pSearch-data->offset;
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBoyerMoore, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(instruction.data);
-			
+
 			// Note: don't offset bitIndex!
 			p += searchData->length;
 			if(p >= processData.pEnd) return nullptr;
-			
+
 			for(;;)
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p >= processData.pEnd) return nullptr;
 				uint32_t adjust = *p;
 				if(adjust == 0) break;
-				
+
 				p += adjust;
 				bitIndex += adjust*numberOfBitStateInstructions;
 			}
@@ -1075,7 +1075,7 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchBoyerMoore, true):
 		{
 			const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(instruction.data);
@@ -1084,12 +1084,12 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchShiftOr, false):
 		{
 			uint32_t bitIndex = bitStateLookup[pc] + (numberOfBitStateInstructions * (uint32_t) (p-processData.pSearchStart));
 			const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(instruction.data);
-			
+
 			uint32_t testMask = 1 << searchData->length;
 			uint32_t state = (uint32_t) -1;
 
@@ -1097,9 +1097,9 @@ Loop:
 			{
 				if(processData.stateTracker[bitIndex]) return nullptr;
 				processData.stateTracker.SetBit(bitIndex);
-				
+
 				if(p >= processData.pEnd) return nullptr;
-				
+
 				state = (state << 1) | searchData->data[*p];
 				if((state & testMask) == 0) break;
 
@@ -1110,7 +1110,7 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case MakeCase(InstructionType::SearchShiftOr, true):
 		{
 			const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(instruction.data);
@@ -1119,19 +1119,19 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	CASE(InstructionType::Jump)
 		pc = instruction.data;
 		goto Loop;
-			
+
 	CASE(InstructionType::Match)
 		if(processData.isFullMatch)	return p == processData.pEnd ? p : nullptr;
 		else return p;
-			
+
 	CASE(InstructionType::ProgressCheck)
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::SaveNoRecurse)
 		if(processData.captures != nullptr)
 		{
@@ -1141,7 +1141,7 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	CASE(InstructionType::Save)
 		if(processData.captures == nullptr)
 		{
@@ -1159,7 +1159,7 @@ Loop:
 			else processData.captures[saveIndex] = backup;
 			return nullptr;
 		}
-			
+
 	CASE(InstructionType::Split)
 		{
 			const ByteCodeSplitData* split = patternData.GetData<ByteCodeSplitData>(instruction.data);
@@ -1172,14 +1172,14 @@ Loop:
 			pc = split->targetList[numberOfTargets-1];
 			goto Loop;
 		}
-		
+
 	CASE(InstructionType::SplitMatch)
 		{
 			const uint32_t* splitData = patternData.GetData<uint32_t>(instruction.data);
 			pc = (!processData.isFullMatch || p == processData.pEnd) ? splitData[0] : splitData[1];
 			goto Loop;
 		}
-			
+
 	CASE(InstructionType::SplitNextN)
 		{
 			const void* result = Process(pc+1, p, processData);
@@ -1187,7 +1187,7 @@ Loop:
 			pc = instruction.data;
 			goto Loop;
 		}
-		
+
 	CASE(InstructionType::SplitNNext)
 		{
 			const void* result = Process(instruction.data, p, processData);
@@ -1195,15 +1195,15 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	CASE(InstructionType::SplitNextMatchN)
 		pc = (!processData.isFullMatch || p == processData.pEnd) ? pc+1 : instruction.data;
 		goto Loop;
-		
+
 	CASE(InstructionType::SplitNMatchNext)
 		pc = (!processData.isFullMatch || p == processData.pEnd) ? instruction.data : pc+1;
 		goto Loop;
-		
+
 	default:
 		JERROR("Unhandled instruction");
 		return nullptr;

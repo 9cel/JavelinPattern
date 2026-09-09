@@ -23,18 +23,18 @@ namespace Javelin::Assembler
 			Note,
 			Error,
 		};
-		
+
 		Type type = Error;
 		int lineNumber = -1;
 		int fileIndex = 0;
 		std::string message;
-		
+
 		// Formats the error as "<filename>:<lineNumber>: error: message" if lineNumber != -1.
 		// Else returns "error: message".
 		std::string GetLogString(const std::vector<std::string> &filenameList) const;
 		const std::string &GetTypeString() const;
 	};
-	
+
 	class AssemblerException : public std::vector<AssemblerExceptionLine>
 	{
 	public:
@@ -46,7 +46,7 @@ namespace Javelin::Assembler
 		void AddContext(const std::string &str);
 		void AddContext(int lineNumber, int fileIndex, const std::string &str);
 	};
-	
+
 #undef JASM_CHECK_PRINTF_FORMAT
 
 //============================================================================

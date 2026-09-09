@@ -16,7 +16,7 @@ CodeSegmentSource::CodeSegmentSource(const CodeSegmentData &aData, int aIndent)
 int CodeSegmentSource::ReadByte()
 {
 	if(index >= data.size()) return EOF;
-	
+
 	const std::string& s = data[index].line;
 	if(offset >= s.size())
 	{
@@ -24,24 +24,24 @@ int CodeSegmentSource::ReadByte()
 		++index;
 		return '\n';
 	}
-	
+
 	return (uint8_t) s[offset++];
 }
 
 int CodeSegmentSource::PeekByte()
 {
 	if(index >= data.size()) return EOF;
-	
+
 	const std::string& s = data[index].line;
 	if(offset >= s.size()) return '\n';
-	
+
 	return (uint8_t) s[offset];
 }
 
 void CodeSegmentSource::SkipByte()
 {
 	if(index >= data.size()) return;
-	
+
 	const std::string& s = data[index].line;
 	if(offset >= s.size())
 	{

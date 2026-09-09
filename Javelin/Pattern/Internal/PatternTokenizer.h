@@ -29,10 +29,10 @@ namespace Javelin::PatternInternal
 			Counter,
 			Literal
 		};
-		
+
 		bool		useUtf8;
 		Phase 		phase;
-		
+
 		union
 		{
 			Utf8Pointer	p;
@@ -49,7 +49,7 @@ namespace Javelin::PatternInternal
 		// Used for decoding character classes, eg. [a-z\n\t]
 		Character 	GetCharacter();
 		Character	GetEscapedCharacter();
-		
+
 		char 		PeekCharacter();
 		inline void ConsumeCharacter();
 	};

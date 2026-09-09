@@ -24,7 +24,7 @@ void JitForwardReferenceMap::Reserve(uint32_t size)
 
 	// For a load factor of ~0.75, increase by 3/8
 	size += (size >> 2) + (size >> 3) + 1;
-	
+
 	// Round up to power of 2.
 	uint32_t t = size-1;
 	t |= (t >> 1);
@@ -46,7 +46,7 @@ void JitForwardReferenceMap::Reserve(uint32_t size)
 JitForwardReferenceData* JitForwardReferenceMap::Add(uint32_t label)
 {
 	assert(label != NO_LABEL);
-	
+
 	JitForwardReferenceData* newData;
 	if(headFree)
 	{
@@ -58,7 +58,7 @@ JitForwardReferenceData* JitForwardReferenceMap::Add(uint32_t label)
 		newData = &pool[poolFreeIndex++];
 	}
 	newData->label = label;
-	
+
 	uint32_t key;
 	for(key = label & lengthMask;; key = (key+1) & lengthMask)
 	{
@@ -81,7 +81,7 @@ JitForwardReferenceData* JitForwardReferenceMap::Add(uint32_t label)
 void JitForwardReferenceMap::Add(uint32_t label, uint8_t *p, uint32_t data)
 {
 	assert(label != NO_LABEL);
-	
+
 	JitForwardReferenceData* newData;
 	if(headFree)
 	{
@@ -118,7 +118,7 @@ void JitForwardReferenceMap::Remove(JitForwardReferenceMapLookupResult result, J
 {
 	tail->next = headFree;
 	headFree = result.reference;
-	
+
 	int holeIndex = result.keyIndex;
 
 	uint32_t offset = 1;
@@ -127,7 +127,7 @@ void JitForwardReferenceMap::Remove(JitForwardReferenceMapLookupResult result, J
 	{
 		uint32_t index = poolIndices[scanToEnd];
 		if(index == NO_LABEL) break;
-		
+
 		uint32_t hashIndex = pool[index].label & lengthMask;
 		if(((scanToEnd - hashIndex) & lengthMask) >= offset)
 		{

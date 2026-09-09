@@ -16,10 +16,10 @@ namespace Javelin::Assembler::riscv
 	{
 	public:
 		static const RoundingModeMap& GetInstance() { return instance; }
-		
+
 	private:
         RoundingModeMap();
-		
+
 		static const RoundingModeMap instance;
 	};
 

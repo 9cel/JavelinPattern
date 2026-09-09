@@ -53,7 +53,7 @@ namespace Javelin::PatternInternal
 			SearchByteRangePair,
 			SearchBoyerMoore,
 			SearchShiftOr,
-			
+
 			SearchByte0WithAssert,
 			SearchByteWithAssert,
 			SearchByteEitherOf2WithAssert,
@@ -75,66 +75,66 @@ namespace Javelin::PatternInternal
 			SearchShiftOrWithAssert,
 			SearchByteNotRange,
 		};
-		
+
 		// Reset counter replaces a SpinLock, bool isResetting and uint32_t activeThreadCount
 		// The lower 31 bits represent the number of active threads in this pattern
 		// The top bit (sign bit) represents if the states are resetting
 		mutable Atomic<int32_t>		resetCounter 				= 0;
 		mutable Atomic<uint64_t>	bytesProcessedSinceReset	= 0;
 		SpinLock					resetLock;									// Used whenever flipping sign bit of resetCounter
-		
+
 		volatile bool				hasFailed					= false;		// Set to true when too many resets
 		uint8_t						numberOfSelfOriginatedResets = 0;
-		
+
 		PatternData					patternData;
 		uint32_t					numberOfInstructions;
 		std::vector<uint32_t>	minimumRemainingLengths;
 		void CalculateMinimumRemainingLengths();
-		
+
 		RecursiveMutex				populateLock;
 		Semaphore					waitForResetBeginSemaphore;
 		Semaphore					waitForResetEndSemaphore;
 		size_t						stateMemoryAllocated = 0;
-		
+
 		class State;
 		typedef Map<NfaStateKey, State*> NfaToDfaMap;
 		mutable NfaToDfaMap			nfaToDfaMap;
-		
+
 		void FreeAllStates();
-		
+
 		void PopulateState(State* state) const;
 		void ResetStates(bool selfOriginated);
 		void HandleStateReset(State* state) const;
 
 		virtual void ClearStartingStates() = 0;
 		void ClearNfaToDfaMap();
-		
+
 		void BeginMatch() const;
 		void EndMatch() const;
 		void BeginPopulate() const;
 		void EndPopulate() const;
-		
+
 		State* GetStateForNfaState(NfaState& state) const;
-		
+
 		static const unsigned char* NoSearchHandler(const unsigned char* p, const void* data, const unsigned char* pStop);
 		static const unsigned char* SearchByte0Handler(const unsigned char* p, const void* data, const unsigned char* pStop);
 		static const unsigned char* FindByteNotRangeForward(const unsigned char* p, const void* data, const unsigned char* end);
 		static const unsigned char* FindByteNotRangeReverse(const unsigned char* p, const void* data, const unsigned char* stop);
-		
+
 		virtual SearchHandler GetSearchHandler(SearchHandlerEnum value, State* state) const = 0;
-		
+
 		virtual void ProcessNfaState(NfaState& result, const NfaState& state, const PatternData& patternData, CharacterRange& relevancyInterval, int flags, void* updateCache) const = 0;
 		virtual const uint8_t* GetCharacterFlags() const = 0;
-		
+
 		enum class SearchMode
 		{
 			Full,
 			Partial,
 		};
-		
+
 	private:
 		IntrusiveListNode			listNode;									// Used by DfaMemoryManager to track all DfaPatternProcessors
-		
+
 		friend class DfaMemoryManager;
 	};
 

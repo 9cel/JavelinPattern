@@ -22,7 +22,7 @@ void JitLabelMap::Reserve(uint32_t size)
 
 	// For a load factor of ~0.75, increase by 3/8
 	size += (size >> 2) + (size >> 3);
-	
+
 	// Round up to power of 2.
 	uint32_t t = size-1;
 	t |= (t >> 1);
@@ -84,5 +84,5 @@ void JitLabelMap::Clear()
 		memset(data, 0xff, (lengthMask+1) * sizeof(Data));
 	}
 }
-	
+
 //============================================================================

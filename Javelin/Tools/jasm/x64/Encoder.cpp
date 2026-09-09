@@ -30,7 +30,7 @@ union ModRM
 		IndirectDisplacement32 = 2,
 		Register = 3,
 	};
-	
+
 	struct
 	{
 		uint8_t rm  : 3;
@@ -141,7 +141,7 @@ static void ProcessOperandWidth(ListAction& listAction,
 								REX &rex)
 {
 	if(encodingVariant.operationWidth == instruction.defaultWidth) return;
-	
+
 	switch(encodingVariant.operationWidth)
 	{
 	case 0:
@@ -240,12 +240,12 @@ static void EncodeRRI(Assembler &assembler,
 	//   [prefix] | [REX] | opcodes | ModR/M | [Immediate]
 	// prefix can be literal encoded.
 	// REX, opcodes, ModR/M can be literal if reg and rm are constant.
-	
+
 	REX rex = { .value = 0 };
 	ModRM modRM = { .value = 0 };
-	
+
 	ProcessOperandWidth(listAction, instruction, encodingVariant, rex);
-	
+
 	modRM.mod = ModRM::Mod::Register;
 	modRM.reg = reg->index;
 	modRM.rm = rm->index;
@@ -305,7 +305,7 @@ static void EncodeRMI(Assembler &assembler,
 	modRM.reg = reg->index;
 	if(reg->RequiresREX()) rex.constant4 = 4;
 	if(reg->index & 8) rex.r = 1;
-	
+
 	if(rm->base)
 	{
 		modRM.rm = rm->base->index;
@@ -315,7 +315,7 @@ static void EncodeRMI(Assembler &assembler,
 			rex.b = 1;
 		}
 	}
-	
+
 	int32_t displacement = rm->displacement ? (int32_t) rm->displacement->value : 0;
 	if(rm->scale)
 	{
@@ -357,7 +357,7 @@ static void EncodeRMI(Assembler &assembler,
 			Log::Error("RIP cannot be used in this address expression");
 		}
 	}
-	
+
 	// It is necessary to set modRM.mod even for displacement expressions since
 	// the hint for RIP vs RBP for the assembler is in the modRM.mod field
 	int writeDisplacementBytes = 0;
@@ -387,7 +387,7 @@ static void EncodeRMI(Assembler &assembler,
 	{
 		assembler.UpdateExpressionBitWidth(rm->displacement->expressionIndex, 32);
 	}
-	
+
 	if(!reg->IsExpression()
 	    && (!rm->base || !rm->base->IsExpression())
 		&& (!rm->index || !rm->index->IsExpression())
@@ -453,7 +453,7 @@ static void EncodeRMI(Assembler &assembler,
 		std::vector<uint8_t> bytes;
 		if(rex.value) bytes.push_back(rex.value);
 		bytes.insert(bytes.end(), encodingVariant.opcodes, encodingVariant.opcodes+encodingVariant.opcodeLength);
-		
+
 		bytes.push_back(modRM.value);
 		if(requiresSIB) bytes.push_back(sib.value);
 		listAction.Append(new LiteralAction(bytes));
@@ -472,7 +472,7 @@ static void EncodeRMI(Assembler &assembler,
 											  rm->displacement ? rm->displacement->expressionIndex : 0,
 											  encodingVariant.GetOpcodeVector()));
 	}
-	
+
 	if(imm) AppendImmediateOperand(listAction, encodingMatchMasks[2], imm);
 }
 
@@ -487,13 +487,13 @@ static void EncodeRLI(Assembler &assembler,
 {
 	assert(reg && reg->type == Operand::Type::Register);
 	assert(labelOperand && labelOperand->type == Operand::Type::Label);
-	
+
 	// Encoding is:
 	//   [Legacy Prefixes] | [REX] | Opcodes | ModR/M | [Displacement] | [Immediate]
 
 	REX rex = { .value = 0 };
 	ModRM modRM = { .value = 0 };
-	
+
 	ProcessOperandWidth(listAction, instruction, encodingVariant, rex);
 
 	modRM.mod = ModRM::Mod::IndirectDisplacement0;	// actually displacement 4 for special case of RIP
@@ -506,7 +506,7 @@ static void EncodeRLI(Assembler &assembler,
 	{
 		if(reg->IsHighByte()) throw AssemblerException("High byte registers cannot be used with REX");
 	}
-	
+
 	if(reg->IsExpression())
 	{
 		listAction.Append(new DynamicOpcodeR(rex.value,
@@ -524,7 +524,7 @@ static void EncodeRLI(Assembler &assembler,
 		bytes.push_back(modRM.value);
 		listAction.Append(new LiteralAction(bytes));
 	}
-	
+
 	std::vector<uint8_t> bytes;
 	uint8_t offsetBytes[4] = {};
 	if(labelOperand->displacement)
@@ -542,7 +542,7 @@ static void EncodeRLI(Assembler &assembler,
 
 	int immediateWidth = 0;
 	if(imm) immediateWidth = AppendImmediateOperand(listAction, encodingMatchMasks[2], imm);
-	
+
 	int patchBytes = 4;
 	Action *patchAction = labelOperand->CreatePatchAction(patchBytes, patchBytes+immediateWidth);
 	listAction.Append(patchAction);
@@ -643,7 +643,7 @@ static void EncodeRVRI(Assembler &assembler,
 
 	vex3B3.w = (encodingVariant.opcodeData & 0x10) ? 1 : 0;
 	vex3B3.pp = encodingVariant.GetAvxPrefixValue();
-	
+
 	const uint8_t *p;
 	uint32_t opcodeLength;
 	vex3B2.mmmmm = encodingVariant.GetAvxMmValue(p, opcodeLength);
@@ -711,20 +711,20 @@ static void EncodeRVMI(Assembler &assembler,
 	if(reg0->index & 8) vex3B2.r = 1;
 	vex3B3.vvvv = reg1->index;
 	if(encodingVariant.operationWidth == 256) vex3B3.l = 1;
-	
+
 	vex3B3.w = (encodingVariant.opcodeData & 0x10) ? 1 : 0;
 	vex3B3.pp = encodingVariant.GetAvxPrefixValue();
 
 	const uint8_t *p;
 	uint32_t opcodeLength;
 	vex3B2.mmmmm = encodingVariant.GetAvxMmValue(p, opcodeLength);
-	
+
 	if(rm->base)
 	{
 		modRM.rm = rm->base->index;
 		if(rm->base->index & 8) vex3B2.b = 1;
 	}
-	
+
 	int32_t displacement = rm->displacement ? (int32_t) rm->displacement->value : 0;
 	if(rm->scale)
 	{
@@ -757,7 +757,7 @@ static void EncodeRVMI(Assembler &assembler,
 			Log::Error("RIP cannot be used in this address expression");
 		}
 	}
-	
+
 	// It is necessary to set modRM.mod even for displacement expressions since
 	// the hint for RIP vs RBP for the assembler is in the modRM.mod field
 	int writeDisplacementBytes = 0;
@@ -787,7 +787,7 @@ static void EncodeRVMI(Assembler &assembler,
 	{
 		assembler.UpdateExpressionBitWidth(rm->displacement->expressionIndex, 32);
 	}
-	
+
 	if(!reg0->IsExpression()
 	   && !reg1->IsExpression()
 	   && (!rm->base || !rm->base->IsExpression())
@@ -842,7 +842,7 @@ static void EncodeRVMI(Assembler &assembler,
 		// Everything is a constant except for the displacement,
 		// and the displacement has a qualified imm size.
 		// Everything is constant.
-		
+
 		Action *expressionAction = nullptr;
 		switch(rm->displacement->matchBitfield)
 		{
@@ -871,9 +871,9 @@ static void EncodeRVMI(Assembler &assembler,
 			bytes.push_back(kOpcodeVEX2);
 			bytes.push_back(vex3B2.value ^ vex3B3.value ^ 0xf9);
 		}
-		
+
 		bytes.insert(bytes.end(), p, p+opcodeLength);
-		
+
 		bytes.push_back(modRM.value);
 		if(requiresSIB) bytes.push_back(sib.value);
 		listAction.Append(new LiteralAction(bytes));
@@ -894,7 +894,7 @@ static void EncodeRVMI(Assembler &assembler,
 											   rm->displacement ? rm->displacement->expressionIndex : 0,
 											   {p, p+opcodeLength}));
 	}
-	
+
 	if(imm) AppendImmediateOperand(listAction, encodingMatchMasks[3], imm);
 }
 
@@ -911,14 +911,14 @@ static void EncodeRVLI(Assembler &assembler,
 	assert(reg0 && reg0->type == Operand::Type::Register);
 	assert(reg1 && reg1->type == Operand::Type::Register);
 	assert(labelOperand && labelOperand->type == Operand::Type::Label);
-	
+
 	// Encoding is:
 	//   | [VEX2|VEX3] | Opcodes | ModR/M | [Displacement] | [Immediate]
 
 	VEX3B2 vex3B2 = { .value = 0 };
 	VEX3B3 vex3B3 = { .value = 0 };
 	ModRM modRM = { .value = 0 };
-	
+
 	modRM.mod = ModRM::Mod::IndirectDisplacement0;	// actually displacement 4 for special case of RIP
 	modRM.reg = reg0->index;
 	modRM.rm = kModRMRipRelative;
@@ -926,10 +926,10 @@ static void EncodeRVLI(Assembler &assembler,
 	if(reg0->index & 8) vex3B2.r = 1;
 	vex3B3.vvvv = reg1->index;
 	if(encodingVariant.operationWidth == 256) vex3B3.l = 1;
-	
+
 	vex3B3.w = (encodingVariant.opcodeData & 0x10) ? 1 : 0;
 	vex3B3.pp = encodingVariant.GetAvxPrefixValue();
-	
+
 	const uint8_t *p;
 	uint32_t opcodeLength;
 	vex3B2.mmmmm = encodingVariant.GetAvxMmValue(p, opcodeLength);
@@ -980,10 +980,10 @@ static void EncodeRVLI(Assembler &assembler,
 
 	int immediateWidth = 0;
 	if(imm) immediateWidth = AppendImmediateOperand(listAction, encodingMatchMasks[3], imm);
-	
+
 	int patchBytes = 4;
 	Action *patchAction = labelOperand->CreatePatchAction(patchBytes, patchBytes+immediateWidth);
-	
+
 	listAction.Append(patchAction);
 }
 
@@ -1003,7 +1003,7 @@ static void Encode_R_V_RML_I(Assembler &assembler,
 	assert(rm->type == Operand::Type::Register
 		   || rm->type == Operand::Type::Memory
 		   || rm->type == Operand::Type::Label);
-	
+
 	switch(rm->type)
 	{
 	case Operand::Type::Register:
@@ -1053,22 +1053,22 @@ static void EncodeDirectMemory(Assembler &assembler,
 							   const ImmediateOperand *imm)
 {
 	assert(reg && reg->type == Operand::Type::Register);
-	
+
 	if(encodingVariant.opcodePrefix)
 	{
 		listAction.Append(new LiteralAction({encodingVariant.opcodePrefix}));
 	}
-	
+
 	REX rex = { .value = 0 };
 	ProcessOperandWidth(listAction, instruction, encodingVariant, rex);
-	
+
 	if(reg->IsExpression())
 	{
 		throw AssemblerException("FD Encoding (Direct memory) cannot use a register expression target");
 	}
-	
+
 	if(reg->RequiresREX()) rex.constant4 = 4;
-	
+
 	std::vector<uint8_t> bytes;
 	if(rex.value)
 	{
@@ -1078,7 +1078,7 @@ static void EncodeDirectMemory(Assembler &assembler,
 				 encodingVariant.opcodes,
 				 encodingVariant.opcodes+encodingVariant.opcodeLength);
 	listAction.Append(new LiteralAction(bytes));
-	
+
 	if(!imm)
 	{
 		uint8_t v[8] = { };
@@ -1107,7 +1107,7 @@ static void EncodeOI(Assembler &assembler,
 					 const ImmediateOperand *imm)
 {
 	assert(reg && reg->type == Operand::Type::Register);
-	
+
 	if(encodingVariant.opcodePrefix)
 	{
 		listAction.Append(new LiteralAction({encodingVariant.opcodePrefix}));
@@ -1126,7 +1126,7 @@ static void EncodeOI(Assembler &assembler,
 	{
 		if(reg->RequiresREX()) rex.constant4 = 4;
 		if(reg->index & 8) rex.b = 1;
-		
+
 		std::vector<uint8_t> bytes;
 		if(rex.value)
 		{
@@ -1139,7 +1139,7 @@ static void EncodeOI(Assembler &assembler,
 		bytes.back() += reg->index & 7;
 		listAction.Append(new LiteralAction(bytes));
 	}
-	
+
 	if(imm) AppendImmediateOperand(listAction, encodingMatchMasks[1], imm);
 }
 
@@ -1150,9 +1150,9 @@ static void EncodeD_Label(Assembler &assembler,
 						  const LabelOperand *labelOperand)
 {
 	assert(labelOperand->type == Operand::Type::Label);
-	
+
 	std::vector<uint8_t> bytes = encodingVariant.GetOpcodeVector();
-	
+
 	if(encodingVariant.opcodePrefix)
 	{
 		bytes.push_back(encodingVariant.opcodePrefix);
@@ -1160,7 +1160,7 @@ static void EncodeD_Label(Assembler &assembler,
 
 	uint64_t lastOperandMatchMask = encodingVariant.GetLastOperandMatchMask();
 	MatchBitIndex matchBitIndex = (MatchBitIndex) __builtin_ctzll(lastOperandMatchMask);
-	
+
 	int8_t patchBytes = 0;
 	switch(matchBitIndex)
 	{
@@ -1179,7 +1179,7 @@ static void EncodeD_Label(Assembler &assembler,
 		throw AssemblerException("Internal error: unexpected relative size");
 	}
 	Action *patchAction = labelOperand->CreatePatchAction(patchBytes, patchBytes);
-	
+
 	listAction.Append(new LiteralAction(bytes));
 	listAction.Append(patchAction);
 }
@@ -1192,7 +1192,7 @@ static void EncodeD_ImmExpression(Assembler &assembler,
 {
 	assert(immOperand->type == Operand::Type::Immediate
 		   && immOperand->IsExpression());
-	
+
 	std::vector<uint8_t> bytes = encodingVariant.GetOpcodeVector();
 
 	if(encodingVariant.opcodePrefix)
@@ -1202,7 +1202,7 @@ static void EncodeD_ImmExpression(Assembler &assembler,
 
 	uint64_t lastOperandMatchMask = encodingVariant.GetLastOperandMatchMask();
 	MatchBitIndex matchBitIndex = (MatchBitIndex) __builtin_ctzll(lastOperandMatchMask);
-	
+
 	int8_t patchBytes = 0;
 	switch(matchBitIndex)
 	{
@@ -1244,7 +1244,7 @@ namespace Javelin::Assembler::x64::Encoders
 			   || operands[1]->type == Operand::Type::Memory
 			   || operands[1]->type == Operand::Type::Label);
 		assert(operands[2]->type == Operand::Type::Immediate);
-		
+
 		EncodeR_RM_I(assembler,
 					 listAction,
 					 instruction,
@@ -1270,7 +1270,7 @@ namespace Javelin::Assembler::x64::Encoders
 
 		ImmediateOperand imm((int64_t)encodingVariant.opcodeData);
 		imm.matchBitfield = MatchImm8;
-		
+
 		uint64_t matchMasks[3] =
 		{
 			encodingVariant.operandMatchMasks[0],
@@ -1287,7 +1287,7 @@ namespace Javelin::Assembler::x64::Encoders
 					 operands[1],
 					 &imm);
 	}
-	
+
 	static void MRI(Assembler &assembler,
 					ListAction& listAction,
 					const Instruction& instruction,
@@ -1301,7 +1301,7 @@ namespace Javelin::Assembler::x64::Encoders
 			   || operands[0]->type == Operand::Type::Label);
 		assert(operands[1]->type == Operand::Type::Register);
 		assert(operands[2]->type == Operand::Type::Immediate);
-		
+
 		EncodeR_RM_I(assembler,
 					 listAction,
 					 instruction,
@@ -1326,7 +1326,7 @@ namespace Javelin::Assembler::x64::Encoders
 		assert(operands[1]->type == Operand::Type::Register);
 
 		uint64_t matchMasks[2] = { encodingVariant.operandMatchMasks[1], encodingVariant.operandMatchMasks[0] };
-		
+
 		EncodeR_RM_I(assembler,
 					 listAction,
 					 instruction,
@@ -1371,7 +1371,7 @@ namespace Javelin::Assembler::x64::Encoders
 		assert(operands[0]->type == Operand::Type::Register
 			   || operands[0]->type == Operand::Type::Memory
 			   || operands[0]->type == Operand::Type::Label);
-		
+
 		const RegisterOperand reg(encodingVariant.opcodeData, 0);
 
 		uint64_t matchMasks[2] =
@@ -1379,7 +1379,7 @@ namespace Javelin::Assembler::x64::Encoders
 			encodingVariant.operandMatchMasks[0],
 			encodingVariant.operandMatchMasks[0]
 		};
-		
+
 		EncodeR_RM_I(assembler,
 					 listAction,
 					 instruction,
@@ -1433,7 +1433,7 @@ namespace Javelin::Assembler::x64::Encoders
 		assert(operands[1]->type == Operand::Type::Memory);
 		const MemoryOperand *memoryOperand = (MemoryOperand *) operands[1];
 		assert(memoryOperand->IsDirectMemoryAdddress());
-		
+
 		EncodeDirectMemory(assembler,
 						   listAction,
 						   instruction,
@@ -1441,7 +1441,7 @@ namespace Javelin::Assembler::x64::Encoders
 						   (RegisterOperand*) operands[0],
 						   memoryOperand->displacement);
 	}
-	
+
 	static void TD(Assembler &assembler,
 				   ListAction& listAction,
 				   const Instruction& instruction,
@@ -1453,7 +1453,7 @@ namespace Javelin::Assembler::x64::Encoders
 		assert(operands[0]->type == Operand::Type::Memory);
 		const MemoryOperand *memoryOperand = (MemoryOperand *) operands[0];
 		assert(memoryOperand->IsDirectMemoryAdddress());
-		
+
 		EncodeDirectMemory(assembler,
 						   listAction,
 						   instruction,
@@ -1461,7 +1461,7 @@ namespace Javelin::Assembler::x64::Encoders
 						   (RegisterOperand*) operands[1],
 						   memoryOperand->displacement);
 	}
-	
+
 	static void I(Assembler &assembler,
 				  ListAction& listAction,
 				  const Instruction& instruction,
@@ -1489,7 +1489,7 @@ namespace Javelin::Assembler::x64::Encoders
 		assert(numberOfOperands >= 2);
 		assert(operands[0]->type == Operand::Type::Immediate);
 		assert(operands[1]->type == Operand::Type::Immediate);
-		
+
 		if(encodingVariant.opcodePrefix)
 		{
 			listAction.Append(new LiteralAction({encodingVariant.opcodePrefix}));
@@ -1510,7 +1510,7 @@ namespace Javelin::Assembler::x64::Encoders
 		assert(numberOfOperands == 2);
 		assert(operands[0]->type == Operand::Type::Register);
 		assert(operands[1]->type == Operand::Type::Immediate);
-		
+
 		EncodeOI(assembler,
 				 listAction,
 				 instruction,
@@ -1529,7 +1529,7 @@ namespace Javelin::Assembler::x64::Encoders
 	{
 		assert(numberOfOperands >= 1);
 		assert(operands[0]->type == Operand::Type::Register);
-		
+
 		EncodeOI(assembler,
 				 listAction,
 				 instruction,
@@ -1547,7 +1547,7 @@ namespace Javelin::Assembler::x64::Encoders
 				   const Operand *const *operands)
 	{
 		assert(numberOfOperands == 2);
-		
+
 		EncodeOI(assembler,
 				 listAction,
 				 instruction,
@@ -1617,7 +1617,7 @@ namespace Javelin::Assembler::x64::Encoders
 						 operands[2],
 						 nullptr);
 	}
-	
+
 	static void RVMI(Assembler &assembler,
 					 ListAction& listAction,
 					 const Instruction& instruction,
@@ -1643,7 +1643,7 @@ namespace Javelin::Assembler::x64::Encoders
 						 operands[2],
 						 (const ImmediateOperand *)operands[3]);
 	}
-	
+
 	static void RMV(Assembler &assembler,
 					ListAction& listAction,
 					const Instruction& instruction,
@@ -1675,7 +1675,7 @@ namespace Javelin::Assembler::x64::Encoders
 						 operands[1],
 						 nullptr);
 	}
-	
+
 	static void VM(Assembler &assembler,
 				   ListAction& listAction,
 				   const Instruction& instruction,
@@ -1691,7 +1691,7 @@ namespace Javelin::Assembler::x64::Encoders
 
 
 		const RegisterOperand reg(encodingVariant.opcodeData & 0xf, 0);
-		
+
 		uint64_t matchMasks[3] =
 		{
 			encodingVariant.operandMatchMasks[0],
@@ -1709,7 +1709,7 @@ namespace Javelin::Assembler::x64::Encoders
 						 operands[1],
 						 nullptr);
 	}
-	
+
 	static void vRMI(Assembler &assembler,
 					ListAction& listAction,
 					const Instruction& instruction,
@@ -1744,7 +1744,7 @@ namespace Javelin::Assembler::x64::Encoders
 						 operands[1],
 						 (const ImmediateOperand *)operands[2]);
 	}
-	
+
 	static void vRM(Assembler &assembler,
 					ListAction& listAction,
 					const Instruction& instruction,
@@ -1778,7 +1778,7 @@ namespace Javelin::Assembler::x64::Encoders
 						 operands[1],
 						 nullptr);
 	}
-	
+
 	static void vMR(Assembler &assembler,
 					ListAction& listAction,
 					const Instruction& instruction,
@@ -1847,7 +1847,7 @@ namespace Javelin::Assembler::x64::Encoders
 						 operands[1],
 						 (const ImmediateOperand *)operands[2]);
 	}
-	
+
 //============================================================================
 } // namespace Encoders
 //============================================================================

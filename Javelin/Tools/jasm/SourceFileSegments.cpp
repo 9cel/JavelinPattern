@@ -49,7 +49,7 @@ void SourceFileSegments::AddSegmentsFromFile(File &f)
 	while(!f.IsEof())
 	{
 		Line line = GetLine(f.ReadLine());
-		
+
 		if(line.type == Line::Type::Assembler
 		   && GetIncludePath(line.line, &includePath))
 		{
@@ -126,14 +126,14 @@ void SourceFileSegments::AddSegment(CodeSegment::ContentType type, CodeSegment::
 		back()->contents.push_back({false, lineNumber, line, fileIndex});
 		return;
 	}
-	
+
 	// If the whole line is a comment, then add it to the code segment.
 	if(size() > 0 && IsAllComment(line))
 	{
 		back()->contents.push_back({false, lineNumber, line, fileIndex});
 		return;
 	}
-	
+
 	CodeSegment *codeSegment;
 	if (size() > 0 && back()->contentType == type && back()->segment == segment)
 	{
@@ -167,7 +167,7 @@ void SourceFileSegments::AddLineToSegment(CodeSegment::Segment segment, const Li
 
 	CodeSegment::ContentType segmentType = (line.type == Line::Type::Literal || line.type == Line::Type::Whitespace) ?
 		CodeSegment::ContentType::Literal : CodeSegment::ContentType::Assembler;
-	
+
 	CodeSegment *codeSegment;
 	if (size() > 0 && back()->contentType == segmentType && back()->segment == segment)
 	{
@@ -179,7 +179,7 @@ void SourceFileSegments::AddLineToSegment(CodeSegment::Segment segment, const Li
 		codeSegment->indent = (int32_t) line.offset;
 		push_back(codeSegment);
 	}
-	
+
 	codeSegment->contents.push_back({line.type == Line::Type::Preprocessor, lineNumber, line.line, fileIndex});
 }
 
@@ -213,7 +213,7 @@ bool SourceFileSegments::IsAllComment(const std::string& line)
 SourceFileSegments::Line SourceFileSegments::GetLine(const std::string& line)
 {
 	Line result;
-	
+
 	size_t length = line.size();
 	for(size_t i = 0; i < length; ++i)
 	{
@@ -256,15 +256,15 @@ bool SourceFileSegments::GetIncludePath(const std::string& line, std::string *in
 		else break;
 	}
 	size_t includeStringLength = sizeof(".include") - 1;
-	
+
 	if(offset + includeStringLength > line.size()) return false;
 	if(memcmp(line.data()+offset, ".include", includeStringLength) != 0) return false;
-	
+
 	offset += includeStringLength;
-	
+
 	while(offset < line.size() && Character::IsWhitespace(line[offset])) ++offset;
 	if(offset == line.size()) return false;
-	
+
 	size_t end = line.size();
 	while(end > offset && Character::IsWhitespace(line[end-1])) --end;
 	*includePath = line.substr(offset, end-offset);

@@ -53,7 +53,7 @@ void GlobTokenizer::ProcessTokens()
 		currentToken.type = TokenType::ZeroOrMoreMaximal;
 		phase = Phase::General;
 		return;
-			
+
 	case Phase::General:
 		switch(PeekCharacter())
 		{
@@ -76,7 +76,7 @@ void GlobTokenizer::ProcessTokens()
 				currentToken.rangeList.Append('/');
 			}
 			return;
-				
+
 		case '?':
 			ConsumeCharacter();
 			currentToken.type = TokenType::NotRange;
@@ -104,7 +104,7 @@ void GlobTokenizer::ProcessTokens()
 			while(PeekCharacter() != ']')
 			{
 				CharacterRange interval;
-				
+
 				JVERIFY(PeekCharacter() != '\0');
 				interval.min = GetCharacter();
 				if(PeekCharacter() == '-' && pUC+1 < pUCEnd && pUC[1] != ']')
@@ -118,7 +118,7 @@ void GlobTokenizer::ProcessTokens()
 				}
 				currentToken.rangeList.Add(interval);
 			}
-				
+
 			if(currentToken.rangeList.GetCount() == 1)
 			{
 				if(currentToken.type == TokenType::Range

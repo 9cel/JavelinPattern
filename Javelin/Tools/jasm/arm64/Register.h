@@ -16,10 +16,10 @@ namespace Javelin::Assembler::arm64
 	{
 	public:
 		static const RegisterMap& GetInstance() { return instance; }
-		
+
 	private:
 		RegisterMap();
-		
+
 		static const RegisterMap instance;
 	};
 
@@ -30,12 +30,12 @@ namespace Javelin::Assembler::arm64
 		uint32_t		registerData;
 		MatchBitfield 	matchBitField;
 	};
-	
+
 	class ParameterizedRegisterMap : public std::unordered_map<std::string, ParameterizedRegister>
 	{
 	public:
 		ParameterizedRegisterMap();
-		
+
 		static const ParameterizedRegisterMap instance;
 	};
 

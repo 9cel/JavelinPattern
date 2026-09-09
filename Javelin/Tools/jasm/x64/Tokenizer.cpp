@@ -61,25 +61,25 @@ NextToken:
 	currentLineNumber = source.GetCurrentLineNumber();
 	currentFileIndex = source.GetCurrentFileIndex();
 	while(Character::IsIgnorableWhitespace(c)) c = source.ReadByte();
-	
+
 	switch(c)
 	{
 	case '(':
 		c = ' ';
 		return Token(Token::Type::OpenParenthesis);
-		
+
 	case ')':
 		c = ' ';
 		return Token(Token::Type::CloseParenthesis);
-		
+
 	case '[':
 		c = ' ';
 		return Token(Token::Type::OpenSquareBracket);
-		
+
 	case ']':
 		c = ' ';
 		return Token(Token::Type::CloseSquareBracket);
-			
+
 	case '.':
 		{
 			Token result(Token::Type::Preprocessor);
@@ -96,23 +96,23 @@ NextToken:
 	case ',':
 		c = ' ';
 		return Token(Token::Type::Comma);
-		
+
 	case ':':
 		c = ' ';
 		return Token(Token::Type::Colon);
-		
+
 	case ';':
 		c = ' ';
 		return Token(Token::Type::Semicolon);
-		
+
 	case '+':
 		c = ' ';
 		return Token(Token::Type::Add);
-		
+
 	case '-':
 		c = ' ';
 		return Token(Token::Type::Subtract);
-		
+
 	case '*':
 		c = ' ';
 		return Token(Token::Type::Star);
@@ -134,7 +134,7 @@ NextToken:
 			return Token(Token::Type::Equals);
 		}
 		else return Token(Token::Type::Unknown);
-			
+
 	case '<':
 		c = source.ReadByte();
 		if(c == '=')
@@ -192,14 +192,14 @@ NextToken:
 			}
 		}
 		return Token(Token::Type::Divide);
-			
+
 	case EOF:
 		return Token(Token::Type::EndOfFile);
-		
+
 	case '\n':
 		c = ' ';
 		return Token(Token::Type::Newline);
-			
+
 	case '\'':
 		{
 			int64_t value = 0;
@@ -211,7 +211,7 @@ NextToken:
 					c = ' ';
 					break;
 				}
-				
+
 				if(c == '\n' || c == EOF)
 				{
 					Log::Error("Unexpected character inside character literal.");
@@ -246,7 +246,7 @@ NextToken:
 			}
 			return Token(value, activeLabelScopeId);
 		}
-			
+
 	case '{':
 		{
 			Token expression(Token::Type::Expression);
@@ -306,7 +306,7 @@ NextToken:
 				{
 					return Token(value, activeLabelScopeId);
 				}
-				
+
 				for(;;)
 				{
 					c = source.ReadByte();
@@ -327,7 +327,7 @@ NextToken:
 				{
 					double dValue = value;
 					int divisorExponent = 0;
-					
+
 					if(c == '.')
 					{
 						for(;;)
@@ -361,7 +361,7 @@ NextToken:
 			}
 			return Token(value, activeLabelScopeId);
 		}
-			
+
 	default:
 		{
 			if(!Character::IsWordCharacter(c))
@@ -369,14 +369,14 @@ NextToken:
 				c = ' ';
 				return Token(Token::Type::Unknown);
 			}
-			
+
 			Token result(Token::Type::Identifier);
 			do
 			{
 				result.sValue.push_back(c);
 				c = source.ReadByte();
 			} while(Character::IsWordCharacter(c));
-			
+
 			InstructionMap::const_iterator inst_it = InstructionMap::GetInstance().find(result.sValue);
 			if(inst_it != InstructionMap::GetInstance().end())
 			{
@@ -392,7 +392,7 @@ NextToken:
 					result.reg = reg_it->second;
 				}
 			}
-			
+
 			return result;
 		}
 	}

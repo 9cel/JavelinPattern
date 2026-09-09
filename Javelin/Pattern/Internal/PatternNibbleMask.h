@@ -9,7 +9,7 @@
 namespace Javelin::PatternInternal
 {
 //============================================================================
-	
+
 	struct NibbleMask
 	{
 	public:
@@ -25,26 +25,26 @@ namespace Javelin::PatternInternal
 
 		void 		CopyMaskToTarget(void* target)	const	{ memcpy(target, lowNibbleMask, 32); }
 		const void* GetNibbleMask() const					{ return lowNibbleMask; }
-		
+
 		void Merge(const NibbleMask& from, int numberOfChannels);
 		void MergeToChannel(const NibbleMask& from, int channel);
 		void MergeInternalChannel(int toChannel, int fromChannel);
-		
+
 		NibbleMask operator>>(int i) const;
 
 		uint32_t CalculateMergeCost(int thisBit, const NibbleMask& other, int otherBit) const;
-		
+
 		bool ContainsVowel(int bitIndex) const;
-		
+
 	private:
 		uint32_t numberOfBitsUsed = 0;
 
 		uint8_t lowNibbleMask[16];
 		uint8_t highNibbleMask[16];
-		
+
 		void UpdateNibbleMask(uint32_t lookupValue, Map<uint32_t, uint32_t>& lowNibbleToBitIndexMap, uint8_t& highNibbleMaskValue);
 	};
-	
+
 //============================================================================
 } // namespace Javelin::PatternInternal
 //============================================================================

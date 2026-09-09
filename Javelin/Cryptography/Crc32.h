@@ -8,7 +8,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	namespace Private
 	{
 		static constexpr unsigned CRC32_TABLE[256] =
@@ -53,7 +53,7 @@ namespace Javelin
 	}
 
 //============================================================================
-	
+
 	#define JHASH_CRC32(x) (~Private::Crc32<sizeof(x) - 2>((const unsigned char*) x))
 	JEXPORT unsigned Crc32(const void* p, size_t count);
 	template<typename T> JINLINE unsigned Crc32(const T& data) 						{ return Crc32(data.GetData(), data.GetNumberOfBytes()); }

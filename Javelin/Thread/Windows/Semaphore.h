@@ -17,7 +17,7 @@ namespace Javelin
 
 		void JCALL BeginLock()	const	{ WaitForSingleObject(handle, INFINITE);	}
 		void JCALL EndLock()	const	{ ReleaseSemaphore(handle, 1, NULL);		}
-		
+
 	private:
 		mutable HANDLE	handle;
 	};

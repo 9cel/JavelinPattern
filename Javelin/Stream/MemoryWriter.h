@@ -5,7 +5,7 @@
 
 //============================================================================
 
-namespace Javelin 
+namespace Javelin
 {
 //============================================================================
 
@@ -13,7 +13,7 @@ namespace Javelin
 	{
 	public:
 		JEXPORT MemoryWriter(void* destination, size_t maximumLength);
-	
+
 		// From IWriter
 		JEXPORT bool   JCALL CanSeek() const final;
 		JEXPORT void   JCALL Seek(long long offset, SeekType whence = SeekType::Current) final;
@@ -26,7 +26,7 @@ namespace Javelin
 		JEXPORT size_t JCALL WriteAvailable(const void *data, size_t dataSize) final;
 		JEXPORT void   JCALL WriteBlock(const void *data, size_t dataSize) final;
 		JEXPORT void   JCALL WriteByte(unsigned char c) final;
-		
+
 	private:
 		unsigned char*	base;
 		size_t			position;

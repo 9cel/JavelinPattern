@@ -21,7 +21,7 @@ namespace Javelin
 		static void Run(void (*threadFunction)(void*), void* threadParameter);
 
 		static void Sleep(unsigned milliseconds);
-		
+
 		void*	Join();
 
 	private:

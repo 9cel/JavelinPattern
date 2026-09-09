@@ -24,15 +24,15 @@ namespace Javelin::Assembler::arm64
 	public:
 		Assembler();
 		~Assembler();
-		
+
 		void AssembleSegment(const CodeSegment &segment, const std::vector<std::string> &filenameList);
-		
+
 		void Dump() const;
-		
+
 		void UpdateExpressionBitWidth(int index, int value);
-		
+
 		void Write(FILE *f, int startingLine, int *expectedFileIndex, const std::vector<std::string> &filenameList) const;
-		
+
 		int AddExpression(const std::string& expression, int maxBitWidth, int sourceLine, int fileIndex);
 		const std::string &GetExpression(int expressionIndex) const { return expressionList[expressionIndex-1].expression; }
 		int GetExpressionSourceLine(int expressionIndex) const { return expressionList[expressionIndex-1].sourceLine; }
@@ -40,7 +40,7 @@ namespace Javelin::Assembler::arm64
 
 	private:
 		ListAction rootListAction;
-		
+
 		struct Expression
 		{
 			int 		maxBitWidth;
@@ -54,17 +54,17 @@ namespace Javelin::Assembler::arm64
 		bool isDataSegment;
 		int segmentIndent = 0;
 		int labelReference = 0;
-		
+
 		typedef std::unordered_map<std::string, int> ExpressionToIndexMap;
 		ExpressionToIndexMap expressionToIndexMap;
-		
+
 		void ParseSegment(Tokenizer &tokenizer, const std::vector<std::string> &filenameList);
 		void ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token token);
 		void ParseIf(ListAction& listAction, Tokenizer &tokenizer, const std::vector<std::string> &filenameList);
 		const AlternateActionCondition *ParseCondition(Tokenizer &tokenizer);
 		void ParsePreprocessor(ListAction& listAction, Tokenizer &tokenizer, const Token &token, const std::vector<std::string> &filenameList);
 		void ParseInstruction(ListAction& listAction, Tokenizer &tokenizer, const Token &token);
-		
+
 		void UpdateExpressionList();
 		RegisterOperand *ParseRegisterExpression(Tokenizer &tokenizer, AutoDeleteVector &temporaryOperands, const Token &token, int registerData, MatchBitfield matchBitField);
 

@@ -13,7 +13,7 @@ namespace Javelin::PatternInternal
 	{
 	public:
 		Amd64DfaPatternProcessor(const void* data, size_t length) : DfaPatternProcessor(data, length) { }
-		
+
 	private:
 		SearchHandler GetSearchHandler(SearchHandlerEnum value, State* state) const override;
 

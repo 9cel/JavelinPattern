@@ -39,21 +39,21 @@ ReverseProcessor* ReverseProcessor::Create(const void* data, size_t length, bool
 	{
 	case PatternProcessorType::Anchored:
 		return ReverseProcessor::CreateAnchoredReverseProcessor();
-		
+
 	case PatternProcessorType::BackTracking:
 		return ReverseProcessor::CreateBackTrackingReverseProcessor(data, length);
-		
+
 	case PatternProcessorType::FixedLength:
 		return ReverseProcessor::CreateFixedLengthReverseProcessor(data, length);
-		
+
 	case PatternProcessorType::OnePass:
 		return allowCaptures ?
 			ReverseProcessor::CreateOnePassReverseProcessor(data, length) :
 			ReverseProcessor::CreateBackTrackingReverseProcessor(data, length);
-		
+
 	case PatternProcessorType::ScanAndCapture:
 		return ReverseProcessor::CreateNfaOrDfaReverseProcessor(data, length);
-		
+
 	default:
 		JERROR("Unexpected reverse processor type");
 		return nullptr;

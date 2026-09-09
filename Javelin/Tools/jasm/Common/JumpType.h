@@ -19,18 +19,18 @@ namespace Javelin::Assembler
             Forward,
             BackwardOrForward,
         };
-        
+
         JumpType() = default;
         constexpr JumpType(Value aValue) : value(aValue) { }
-        
+
         const char* ToString() const        { return JUMP_TYPES[(int) value]; }
-        
+
         // Allow switch and comparisons.
         constexpr operator Value() const    { return value; }
-        
+
         // Prevent usage: if(jumpType)
         explicit operator bool() = delete;
-        
+
     private:
         Value value;
 

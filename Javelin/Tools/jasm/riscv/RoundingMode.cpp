@@ -30,7 +30,7 @@ const RoundingModeMap RoundingModeMap::instance;
 RoundingModeMap::RoundingModeMap()
 {
     using namespace RoundingMode;
-    
+
     (*this)["rne"] = &RNE;
     (*this)["rtz"] = &RTZ;
     (*this)["rdn"] = &RDN;

@@ -20,15 +20,15 @@ namespace Javelin::Assembler
             RiscV,
 			X64,
 		};
-        
+
 		AssemblerType(Type aType) : type(aType) { }
 		AssemblerType(const std::string& type);
 
 		operator Type() const { return type; }
 		explicit operator bool() const = delete;
-		
+
 		constexpr bool IsValid() const { return type != Unknown; }
-		
+
 	private:
 		Type type;
 
@@ -46,16 +46,16 @@ namespace Javelin::Assembler
             Always,
             Never,
         };
-        
+
         RiscVCMode(Value aValue) : value(aValue) { }
 
         operator Value() const { return value; }
         explicit operator bool() const = delete;
-        
+
     private:
         Value value;
     };
-	
+
 	/// Configuration that needs to be specified on the command line
 	class CommandLine
 	{
@@ -75,10 +75,10 @@ namespace Javelin::Assembler
         RiscVCMode          GetRiscVCMode() const                   { return riscVCMode; }
 
 		void SetAssemblerType(AssemblerType aAssemblerType)			{ assemblerType = aAssemblerType; }
-		
+
 	private:
 		static CommandLine* instance;
-		
+
 		void ShowHelpTextAndExit(int errorLevel=0);
 		void ShowVersionTextAndExit();
 		void ProcessLogLevel(const char* levelName);
@@ -93,7 +93,7 @@ namespace Javelin::Assembler
 		const char*		inputFilename 				= nullptr;
 		const char*		assemblerVariableName		= "assembler";
 	};
-	
+
 //============================================================================
 }  // Javelin::Assembler
 //============================================================================

@@ -18,12 +18,12 @@ namespace Javelin::PatternInternal
 	{
 	public:
 		DfaReverseProcessor(const void* data, size_t length);
-		
+
 		const void* Match(const void* data, size_t length, size_t startOffset, const void* matchEnd, const char **captures, bool matchIsAnchored) const override;
 
 	private:
 		uint32_t	startingInstruction;
-		
+
 		enum StartingIndex
 		{
 			EndOfInput,
@@ -32,10 +32,10 @@ namespace Javelin::PatternInternal
 			NotWordAfter,
 			Count
 		};
-		
+
 		mutable State *volatile		anchoredStartingStates[StartingIndex::Count] = { nullptr, nullptr, nullptr, nullptr };
 		mutable State *volatile		unanchoredStartingStates[StartingIndex::Count] = { nullptr, nullptr, nullptr, nullptr };
-		
+
 		void ClearStartingStates() override;
 		JNOINLINE State* CreateStartingState(size_t startingIndex, bool matchIsAnchored) const;
 		void ProcessNfaState(NfaState& result, const NfaState& state, const PatternData& patternData, CharacterRange& relevancyInterval, int flags, void* updateCache) const override;

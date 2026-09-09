@@ -39,7 +39,7 @@ namespace
 	{
 	public:
 		Program(PatternProcessorType aType) : type(aType) { }
-		
+
 		enum Condition
 		{
 			Above   		= 7,
@@ -56,7 +56,7 @@ namespace
 			Sign			= 8,
 			Zero			= 4,
 		};
-		
+
 		void Call(int location);
 		void LoadConstantPointer(const void* p);
 		void Jump(int location);
@@ -69,19 +69,19 @@ namespace
 		void ComparePToPStop();
 		void CheckPToPStop(int pc);
 		void ExitIfNot0();
-		
+
 		void JumpIf(int condition, int location);
 		uint32_t JumpIfLong(int condition);
 		uint32_t JumpIfShort(int condition);
 		uint32_t JumpShort();
 		void JumpIfAndMarkPatch(int condition, int pc);
-		
+
 		void FailIf(int condition)		{ JumpIf(condition, 1); }
 		void FailIfNotEqual()			{ FailIf(NotEqual); }
 		void FailIfEqual()				{ FailIf(Equal); }
 		void FailIfAbove()				{ FailIf(Above); }
 		void FailIfBelow()				{ FailIf(Below); }
-		
+
 		void CallAndMarkPatch(int pc)	{ Call(0); MarkPatch(pc); }
 		void JumpAndMarkPatch(int pc)	{ Jump(0); MarkPatch(pc); }
 		void MarkPatch(uint32_t destination) { patchList.Append(PatchEntry{uint32_t(GetCount()), destination}); }
@@ -118,12 +118,12 @@ namespace
 		void AdjustP(int32_t value);
 		void AdjustBitDataPointer(int32_t offset);
 		void ClearProgressCheckTable(uint32_t numberOfProgressChecks);
-		
+
 		// Destroys EAX!!
 		void LoadValueIntoXmm(uint32_t value, uint8_t xmmIndex, bool useAvx);
 		void LoadXmmValueFromPointer(uint32_t index);
 		void CallPointer();
-		
+
 		void DoBitStateCheck(int bitOffset);
 
 		void Return();
@@ -131,15 +131,15 @@ namespace
 		void EndStackGuard();
 		void DoStackGuardCheck();
 		void WriteStackGuardList();
-		
+
 		void Dispatch();
-		
+
 		struct PatchEntry
 		{
 			uint32_t	location;
 			uint32_t	pc;
 		};
-		
+
 		Table<PatchEntry> 		patchList;
 		Table<uint32_t>			stackGuardList;
 		PatternProcessorType 	type;
@@ -163,7 +163,7 @@ protected:
 	DataBlock		dataStore;
 	void*			fullMatchProgram;
 	void*			partialMatchProgram;
-	
+
 
 private:
 	struct ExpandedJumpTables
@@ -173,7 +173,7 @@ private:
 		void Populate(const PatternData& patternData, size_t numberOfInstructions, const void* codeBase, const Table<uint32_t>& instructionOffsets, PatternProcessorType type);
 		const void* GetJumpTable(size_t pc) const 					{ return jumpTableForPcList[pc]; }
 		const void* GetData(size_t pc) const	 					{ return dataForPcList[pc]; }
-		
+
 	private:
 		Table<const void*>	jumpTable;
 		Table<const void**>	jumpTableForPcList;
@@ -183,7 +183,7 @@ private:
 	void*				mapRegion;
 	size_t				mapRegionLength;
 	ExpandedJumpTables	expandedJumpTables;
-	
+
 	void GroupPEndCheck(uint32_t pc, const PatternData& patternData, Program& program, bool skipCheck);
 	void Set(const void* data, size_t length, PatternProcessorType type, int bytesForBitState);
 	void MakeProgramExecutable(const Program& program);
@@ -196,9 +196,9 @@ void Amd64ProcessorBase::ExpandedJumpTables::Allocate(const PatternData& pattern
 	jumpTableForPcList.SetAll(nullptr);
 	dataForPcList.SetCount(numberOfInstructions);
 	dataForPcList.SetAll((nullptr));
-	
+
 	OpenHashSet<uint32_t> bitMaskOffsets;
-	
+
 	size_t jumpTableSize = 0;
 	for(size_t pc = 0; pc < numberOfInstructions; ++pc)
 	{
@@ -212,12 +212,12 @@ void Amd64ProcessorBase::ExpandedJumpTables::Allocate(const PatternData& pattern
 				jumpTableSize += 256 / sizeof(void*);
 			}
 			break;
-			
+
 		case InstructionType::ByteJumpTable:
 		case InstructionType::DispatchTable:
 			jumpTableSize += 256;
 			break;
-			
+
 		case InstructionType::SearchByteEitherOf4:
 		case InstructionType::SearchByteEitherOf5:
 		case InstructionType::SearchByteEitherOf6:
@@ -236,7 +236,7 @@ void Amd64ProcessorBase::ExpandedJumpTables::Allocate(const PatternData& pattern
 				jumpTableSize += 64 / sizeof(void*);
 			}
 			break;
-			
+
 		case InstructionType::SearchBoyerMoore:
 			{
 				const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(patternData[pc].data);
@@ -264,10 +264,10 @@ void Amd64ProcessorBase::ExpandedJumpTables::Allocate(const PatternData& pattern
 	}
 	if(jumpTableSize) jumpTableSize += 4;
 	jumpTable.SetCount(jumpTableSize);
-	
+
 	// Record the offsets
 	Map<uint32_t, const void**> bitMaskMap;
-	
+
 	const void** p = jumpTable.GetData();
 	if(((size_t) p & 31) != 0) p = (const void**) ((size_t) p + (-(size_t) p & 31));
 	for(size_t pc = 0; pc < numberOfInstructions; ++pc)
@@ -288,13 +288,13 @@ void Amd64ProcessorBase::ExpandedJumpTables::Allocate(const PatternData& pattern
 				p += 256 / sizeof(void*);
 			}
 			break;
-				
+
 		case InstructionType::ByteJumpTable:
 		case InstructionType::DispatchTable:
 			jumpTableForPcList[pc] = p;
 			p += 256;
 			break;
-			
+
 		case InstructionType::SearchByteEitherOf4:
 		case InstructionType::SearchByteEitherOf5:
 		case InstructionType::SearchByteEitherOf6:
@@ -306,7 +306,7 @@ void Amd64ProcessorBase::ExpandedJumpTables::Allocate(const PatternData& pattern
 				p += 32 / sizeof(void*);
 			}
 			break;
-				
+
 		case InstructionType::SearchBytePair3:
 		case InstructionType::SearchBytePair4:
 			if(Machine::SupportsAvx())
@@ -326,7 +326,7 @@ void Amd64ProcessorBase::ExpandedJumpTables::Allocate(const PatternData& pattern
 				}
 			}
 			break;
-				
+
 		case InstructionType::SearchShiftOr:
 			if(Machine::SupportsAvx())
 			{
@@ -348,7 +348,7 @@ void Amd64ProcessorBase::ExpandedJumpTables::Allocate(const PatternData& pattern
 void Amd64ProcessorBase::ExpandedJumpTables::Populate(const PatternData& patternData, size_t numberOfInstructions, const void* codeBase, const Table<uint32_t>& instructionOffsets, PatternProcessorType type)
 {
 	const char* pCodeBase = (const char*) codeBase;
-	
+
 	// Populate the data
 	for(size_t pc = 0; pc < numberOfInstructions; ++pc)
 	{
@@ -395,7 +395,7 @@ void Amd64ProcessorBase::ExpandedJumpTables::Populate(const PatternData& pattern
 				}
 			}
 			break;
-				
+
 		case InstructionType::SearchByteEitherOf2:
 		case InstructionType::SearchByteEitherOf3:
 		case InstructionType::SearchByteEitherOf4:
@@ -409,7 +409,7 @@ void Amd64ProcessorBase::ExpandedJumpTables::Populate(const PatternData& pattern
 				{
 					const ByteCodeSearchByteData* searchData = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
 					int numberOfBytes = int(instruction.type) - int(InstructionType::SearchByteEitherOf2) + 2;
-					
+
 					NibbleMask nibbleMask;
 					for(int i = 0; i < numberOfBytes; ++i)
 					{
@@ -437,7 +437,7 @@ void Amd64ProcessorBase::ExpandedJumpTables::Populate(const PatternData& pattern
 					else
 					{
 						int numberOfBytePairs = int(instruction.type) - int(InstructionType::SearchBytePair) + 1;
-						
+
 						NibbleMask nibbleMask[2];
 						for(int i = 0; i < numberOfBytePairs; ++i)
 						{
@@ -450,13 +450,13 @@ void Amd64ProcessorBase::ExpandedJumpTables::Populate(const PatternData& pattern
 				}
 			}
 			break;
-			
+
 		case InstructionType::SearchBoyerMoore:
 			if(dataForPcList[pc] != nullptr)
 			{
 				const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(instruction.data);
 				unsigned char* p = (unsigned char*) dataForPcList[pc];
-				
+
 				for(int c = 0; c < 256; ++c)
 				{
 					p[c] = searchData->data[c];
@@ -489,14 +489,14 @@ private:
 public:
 	OnePassAmd64PatternProcessor(const void* data, size_t length) : Inherited(data, length, PatternProcessorType::OnePass, 0) { }
 	OnePassAmd64PatternProcessor(DataBlock&& dataBlock) : Inherited((DataBlock&&) dataBlock, PatternProcessorType::OnePass, 0) { }
-	
+
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const;
 	virtual Interval<const void*> LocatePartialMatch(const void* data, size_t length, size_t offset) const;
 	virtual const void* PopulateCaptures(const void* data, size_t length, size_t offset, const char **captures) const;
-	
+
 private:
 	struct ProcessData
 	{
@@ -504,7 +504,7 @@ private:
 		int32_t					recurseValue;
 		const unsigned char* 	pStart;
 		const unsigned char* 	pSearchStart;
-		
+
 		ProcessData(bool aIsPartialMatch, const void* data, size_t length, size_t offset)
 		{
 			isPartialMatch	= aIsPartialMatch;
@@ -521,11 +521,11 @@ class BitStateAmd64PatternProcessor final : public PatternProcessor, public Amd6
 private:
 	typedef Amd64ProcessorBase Inherited;
 	static constexpr size_t MAXIMUM_BITS = 2048;	// 256 bytes
-	
+
 public:
 	BitStateAmd64PatternProcessor(const void* data, size_t length) : BitStateAmd64PatternProcessor(data, length, GetBytesForBitState(data)) { }
 	BitStateAmd64PatternProcessor(DataBlock&& dataBlock) : BitStateAmd64PatternProcessor((DataBlock&&) dataBlock, GetBytesForBitState(dataBlock.GetData())) 	{ }
-	
+
 	virtual bool CanUseFullMatchProgram(size_t inputLength) const 					{ return fullMatchAlwaysFits || CanUsePartialMatchProgram(inputLength); }
 	virtual bool CanUsePartialMatchProgram(size_t inputLength) const final 			{ return !numberOfBitStateBytes || inputLength < MAXIMUM_BITS/8/numberOfBitStateBytes; }
 
@@ -535,17 +535,17 @@ public:
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const;
 	virtual Interval<const void*> LocatePartialMatch(const void* data, size_t length, size_t offset) const;
 	virtual const void* PopulateCaptures(const void* data, size_t length, size_t offset, const char **captures) const;
-	
+
 private:
 	bool			fullMatchAlwaysFits;
 	uint32_t 		numberOfBitStateBytes;
-	
+
 	BitStateAmd64PatternProcessor(const void* data, size_t length, int bytesForBitState) : Inherited(data, length, PatternProcessorType::BitState, bytesForBitState) { Set(data, bytesForBitState); }
 	BitStateAmd64PatternProcessor(DataBlock&& dataBlock, int bytesForBitState) : Inherited((DataBlock&&) dataBlock, PatternProcessorType::BitState, bytesForBitState) { Set(dataStore.GetData(), bytesForBitState); }
-	
+
 	static int GetBytesForBitState(const void* data);
 	void Set(const void* data, int bytesForBitState);
-	
+
 	struct ProcessData
 	{
 		bool							isPartialMatch;
@@ -554,7 +554,7 @@ private:
 		const void*						pStackCheck;
 		void*							pLastStackAlloc;
 		StaticBitTable<MAXIMUM_BITS>	stateTracker;
-		
+
 		ProcessData(bool aIsPartialMatch, uint32_t numberOfBitStateBytes, const void* data, size_t length, size_t offset)
 		: stateTracker(NO_INITIALIZE)
 		{
@@ -571,7 +571,7 @@ class BackTrackingAmd64PatternProcessor final : public PatternProcessor, public 
 {
 private:
 	typedef Amd64ProcessorBase Inherited;
-	
+
 public:
 	BackTrackingAmd64PatternProcessor(const void* data, size_t length) : Inherited(data, length, PatternProcessorType::BackTracking, 0)  { Set(data); }
 	BackTrackingAmd64PatternProcessor(DataBlock&& dataBlock) : Inherited((DataBlock&&) dataBlock, PatternProcessorType::BackTracking, 0) { Set(dataStore.GetData()); }
@@ -582,12 +582,12 @@ public:
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const;
 	virtual Interval<const void*> LocatePartialMatch(const void* data, size_t length, size_t offset) const;
 	virtual const void* PopulateCaptures(const void* data, size_t length, size_t offset, const char **captures) const;
-	
+
 private:
 	uint32_t				numberOfProgressChecks;
 
 	void Set(const void* data);
-	
+
 	struct ProcessData
 	{
 		bool					isPartialMatch;
@@ -597,7 +597,7 @@ private:
 		const void*				pStackCheck;
 		void*					pLastStackAlloc;
 		const unsigned char*	progressCheck[1];
-		
+
 		ProcessData(bool aIsPartialMatch, const void* data, size_t length, size_t offset, uint32_t numberOfProgressChecks)
 		{
 			isPartialMatch	= aIsPartialMatch;
@@ -605,7 +605,7 @@ private:
 			pStart 			= (const unsigned char*) data;
 			pSearchStart	= pStart + offset;
 		}
-	};	
+	};
 	typedef const void*	(*ProgramType)(ProcessData& processData, const void* p, const unsigned char* pEnd, const char** captures);
 };
 
@@ -663,7 +663,7 @@ void Program::PopP()
 	{
 		AppendNoExpand(0x41, 0x58);			// popq %r8
 	}
-	
+
 	AppendNoExpand(0x5e); 					// popq %rsi
 }
 
@@ -672,7 +672,7 @@ void Program::IncrementP()
 //	Append(0x0f, 0x0d, 0x46, 0x40);	// prefetch 0x40(%rsi)
 //	Append(0x48, 0xff, 0xc6); 		// incq %rsi
 	Append(0x48, 0x83, 0xc6, 0x01);	// addq   $0x1, %rsi
-	
+
 	if(type == PatternProcessorType::BitState)
 	{
 		Append(0x4d, 0x01, 0xc8);	// addq %r9, %r8
@@ -689,7 +689,7 @@ void Program::IncrementPForPc(int pc)
 	{
 		size_t step = checkPEndPc-checkStartPc;
 		AdjustP(step);
-		
+
 		if(type == PatternProcessorType::BitState)
 		{
 			AdjustBitDataPointer(step * bytesForBitState);
@@ -843,7 +843,7 @@ void Program::ReadLongWithOffset(int32_t offset)
     }
     else if(offset < 128)
     {
-        Append(0x8b, 0x46, offset);                   // // movl $offset(%rsi), %eax        
+        Append(0x8b, 0x46, offset);                   // // movl $offset(%rsi), %eax
     }
     else
     {
@@ -1142,7 +1142,7 @@ void Program::PatchOffset(uint32_t afterInstruction, uint32_t destination)
 bool Program::RewindIfAdjustP(int p)
 {
 	if(p == 0) return false;
-	
+
 	if(-128 <= p && p < 128)
 	{
 		if(GetCount() < 4) return false;
@@ -1167,7 +1167,7 @@ bool Program::RewindIfAdjustP(int p)
 void Program::AdjustP(int32_t value)
 {
 	if(value == 0) return;
-	
+
 	if(-128 <= value && value < 128)
 	{
 		Append(0x48, 0x83, 0xc6, value);					// addq $value, %rsi
@@ -1183,9 +1183,9 @@ void Program::AdjustP(int32_t value)
 void Program::LoadValueIntoXmm(uint32_t value, uint8_t xmmIndex, bool useAvx)
 {
     JASSERT(xmmIndex < 8);  // The encodings below only work for xmm0-xmm7
-    
+
 	Append(0xb8); AppendData(&value, 4);					// movl  {value}, %eax
-	
+
 	if(useAvx)
 	{
 		Append(0xc5, 0xf9, 0x6e, 0xc0 + 8*xmmIndex);	// vmovd  %eax, %xmm#
@@ -1201,7 +1201,7 @@ void Program::LoadXmmValueFromPointer(uint32_t index)
 	if(index == 0)
 	{
 		Append(0xc4, 0xc1, 0x79, 0x6f, 0x02);			// vmovdqa (%r10), %xmm0
-	
+
 	}
 	else
 	{
@@ -1255,7 +1255,7 @@ void Program::EndStackGuard()
 		Return();
 		return;
 	}
-	
+
 	Append(0x48, 0x83, 0x7f, 0x20, 0x00);						// cmpq   $0x0, 0x20(%rdi)
 	uint32_t cleanupPatch = JumpIfShort(NotEqual);
 	Return();
@@ -1284,12 +1284,12 @@ void Program::WriteStackGuardList()
 		const Pattern::StackGrowthHandler* stackGrowthHandler = Pattern::GetStackGrowthHandler();
 
 		PatchLong(offset);
-		
+
 		Append(0xff, 0x77, 0x18);									// pushq  0x18(%rdi)
 
 		Append(0x48, 0x83, 0x7f, 0x20, 0x00);						// cmpq   $0x0, 0x20(%rdi)
 		uint32_t reuseAllocationPatch = JumpIfShort(NotEqual);
-		
+
 		Append(0x57, 0x56, 0x52, 0x51);								// pushq %rdi, %rsi, %rdx, %rcx
 		if(type == PatternProcessorType::BitState)
 		{
@@ -1319,35 +1319,35 @@ void Program::WriteStackGuardList()
 		uint32_t swapStackPatch = JumpIfShort(Program::NotZero);
 		Append(0x8f, 0x47, 0x18);									// popq   0x18(%rdi)
 		Fail();
-		
+
 		PatchShort(reuseAllocationPatch);
 		Append(0x48, 0x8b, 0x47, 0x20);								// movq   0x20(%rdi), %rax
 		Append(0x48, 0xc7, 0x47, 0x20, 0, 0, 0, 0)			;		// movq   $0x0, 0x20(%rdi)
-		
+
 		PatchShort(swapStackPatch);
-		
+
 		uint32_t guardBand = STACK_GUARD_BAND;
 		Append(0x4c, 0x8d, 0x90); AppendData(&guardBand, 4);		// leaq   0x1234(%rax), %r10
 		Append(0x4c, 0x89, 0x57, 0x18);								// movq   %r10, 0x18(%rdi)
 		Append(0x48, 0xc7, 0x47, 0x20, 0, 0, 0, 0);					// movq   $0x0, 0x20(%rdi)
-		
+
 		uint32_t topOfStack = STACK_GROWTH_SIZE - sizeof(void*);
 		Append(0x48, 0x89, 0xa0); AppendData(&topOfStack, 4);		// movq   %rsp, TOP_OF_STACK(%rax)
 		Append(0x48, 0x8d, 0xa0); AppendData(&topOfStack, 4);		// leaq   TOP_OF_STACK(%rax), %rsp
 		// We're now on a new stack
-		
+
 		Call(offset);
 
 		// Returning from the call..
 		Append(0x48, 0x83, 0x7f, 0x20, 0x00);						// cmpq   $0x0, 0x20(%rdi)
 		uint32_t noFreePatch = JumpIfShort(Equal);
-		
+
 		Append(0x50, 0x57, 0x56, 0x52, 0x51);						// pushq %rax, %rdi, %rsi, %rdx, %rcx
 		if(type == PatternProcessorType::BitState)
 		{
 			Append(0x41, 0x50, 0x41, 0x51);							// pushq %r8, %r9
 		}
-		
+
 		Append(0x55);												// pushq  %rbp
 		Append(0x48, 0x89, 0xe5);									// movq   %rsp, %rbp
 		Append(0x48, 0x83, 0xe4, 0xf0);								// andq   $-0x10, %rsp
@@ -1365,9 +1365,9 @@ void Program::WriteStackGuardList()
 			Append(0x41, 0x59, 0x41, 0x58);							// popq %r9, %r8
 		}
 		Append(0x59, 0x5a, 0x5e, 0x5f, 0x58);						// popq %rcx, %rdx, %rsi, %rdi, %rax
-		
+
 		PatchShort(noFreePatch);
-		
+
 		int32_t baseOfStack = -topOfStack;
 		Append(0x4c, 0x8d, 0x94, 0x24); AppendData(&baseOfStack, 4);	// leaq   -0x12345678(%rsp), %r10
 		Append(0x48, 0x8b, 0x24, 0x24);       							// movq   (%rsp), %rsp
@@ -1383,7 +1383,7 @@ void Amd64ProcessorBase::GroupPEndCheck(uint32_t pc, const PatternData& patternD
 {
 	// We don't need a numberOfInstructions check, because a byte consumer will always have
 	// a subsequent instruction, eg. fail, success, match
-	
+
 	static constexpr EnumSet<InstructionType, uint64_t> COMBINE_PEND_CHECK_INSTRUCTIONS
 	{
 		InstructionType::AdvanceByte,
@@ -1398,18 +1398,18 @@ void Amd64ProcessorBase::GroupPEndCheck(uint32_t pc, const PatternData& patternD
 		InstructionType::ByteNotEitherOf3,
 		InstructionType::ByteNotRange
 	};
-	
+
 	if(pc < program.checkPEndPc
 	   || !COMBINE_PEND_CHECK_INSTRUCTIONS.Contains(patternData[pc].type)) return;
-	
+
 	if(patternData[pc].type == InstructionType::AdvanceByte) return;
-	
+
 	uint32_t pcEnd = pc+1;
 	while(patternData[pcEnd].isSingleReference
 		  && COMBINE_PEND_CHECK_INSTRUCTIONS.Contains(patternData[pcEnd].type)) ++pcEnd;
-	
+
 	if(pcEnd - pc < 2) return;
-	
+
 	program.checkStartPc = pc;
 	program.checkPEndPc = pcEnd;
 	if(!skipCheck)
@@ -1443,10 +1443,10 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 	allowPartialMatch = !header->flags.matchRequiresEndOfInput;
 	numberOfCaptures = header->numberOfCaptures;
 	expandedJumpTables.Allocate(patternData, numberOfInstructions);
-	
+
 	Table<uint32_t> instructionOffsets;
 	instructionOffsets.SetCount(numberOfInstructions);
-	
+
 	// Start off by appending a fail.
 	Program program(type);
 	program.bytesForBitState = bytesForBitState;
@@ -1457,17 +1457,17 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 	program.Return();
 
 	int bitStateOffset = 0;
-	
+
 	// Now step through each instruction
 	for(uint32_t pc = 0; pc < numberOfInstructions; ++pc)
 	{
 		// Force instructions not to be 32 byte aligned to differentiate between jump table address and code address
 		if(type != PatternProcessorType::BitState && (program.GetCount() & 31) == 0) program.Nop(1);
-		
+
 		ByteCodeInstruction instruction = patternData[pc];
 
 		instructionOffsets[pc] = uint32_t(program.GetCount());
-		
+
 		if(type == PatternProcessorType::BitState
 		   && !instruction.isSingleReference)
 		{
@@ -1475,14 +1475,14 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 		}
 
 		GroupPEndCheck(pc, patternData, program, header->IsFixedLength() && header->IsAnchored());
-		
+
 		switch(instruction.type)
 		{
 		case InstructionType::AdvanceByte:
 			//	++p;
 			program.IncrementPForPc(pc);
 			break;
-			
+
 		case InstructionType::AnyByte:
 			//	if(p == pEnd) return nullptr;
 			//	++p;
@@ -1493,21 +1493,21 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.Append(0x53);										// pushq  %rbx
 				program.Append(0x48, 0x89, 0xf3);							// movq   %rsi, %rbx
 				program.Append(0x48, 0x89, 0xd6);							// movq   %rdx, %rsi
-				
+
 				uint32_t loopPoint = program.GetCount();
 				program.Append(0x48, 0x39, 0xf3);							// cmpq   %rsi, %rbx
 				uint32_t fail = program.JumpIfShort(Program::Above);
-				
+
 				program.PushP();
 				program.CallAndMarkPatch(patternData.GetMaximalJumpTargetForPc(pc));
 				program.PopP();
 				program.AdjustP(-1);
 				program.TestValue();
 				program.JumpIf(Program::Zero, loopPoint);
-				
+
 				program.Append(0x5b);              							// popq   %rbx
 				program.Return();
-				
+
 				program.PatchShort(fail);
 				program.Append(0x5b);              							// popq   %rbx
 				program.Fail();
@@ -1530,16 +1530,16 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			program.ComparePToPStop();
 			program.FailIfNotEqual();
 			break;
-				
+
 		case InstructionType::AssertStartOfLine:
 		//	if(p != pStart && p[-1] != '\n') return nullptr;
 			{
 				program.ComparePToPStart();
 				uint32_t next = program.JumpIfShort(Program::Equal);
-				
+
 				program.CompareByteWithOffset('\n', -1);
 				program.FailIf(Program::NotEqual);
-				
+
 				program.PatchShort(next);
 			}
 			break;
@@ -1549,10 +1549,10 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			{
 				program.ComparePToPStop();
 				uint32_t next = program.JumpIfShort(Program::Equal);
-				
+
 				program.CompareCurrentByte('\n');
 				program.FailIf(Program::NotEqual);
-				
+
 				program.PatchShort(next);
 			}
 			break;
@@ -1581,11 +1581,11 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.LoadConstantPointer(PatternProcessorBase::WORD_MASK);
 					program.ComparePToPStop();
 					uint32_t atEnd = program.JumpIfShort(Program::Equal);
-					
+
 					program.ReadByte();
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIfEqual();
-					
+
 					program.PatchShort(atEnd);
 				}
 				break;
@@ -1595,13 +1595,13 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.LoadConstantPointer(PatternProcessorBase::WORD_MASK);
 					program.ComparePToPStop();
 					program.FailIf(Program::Equal);
-					
+
 					program.ReadByte();
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIfNotEqual();
 				}
 				break;
-					
+
 			case ByteCodeWordBoundaryHint::NextIsWordOnly:
 				{
 					program.LoadConstantPointer(PatternProcessorBase::WORD_MASK);
@@ -1615,13 +1615,13 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.PatchShort(atStart);
 				}
 				break;
-					
+
 			case ByteCodeWordBoundaryHint::NextIsNotWordOnly:
 				{
 					program.LoadConstantPointer(PatternProcessorBase::WORD_MASK);
 					program.ComparePToPStart();
 					program.FailIf(Program::Equal);
-					
+
 					program.ReadByteWithOffset(-1);
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIfNotEqual();
@@ -1635,7 +1635,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					uint32_t atEnd = program.JumpIfShort(Program::Equal);
 					program.ComparePToPStart();
 					uint32_t atStart = program.JumpIfShort(Program::Equal);
-					
+
 					program.Append(0x0f, 0xb6, 0x06);				// movzbl (%rsi), %eax
 					program.Append(0x44, 0x0f, 0xb6, 0x5e, 0xff);	// movzbl -0x1(%rsi), %r11d
 					program.Append(0x41, 0x8a, 0x04, 0x02);			// movb   (%r10,%rax), %al
@@ -1643,13 +1643,13 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.Append(0x41, 0x38, 0xc3);        		// cmpb   %al, %r11b
 					program.FailIfEqual();
 					uint32_t next = program.JumpShort();
-					
+
 					program.PatchShort(atStart);					// atStart:
 					program.ReadByte();
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIfNotEqual();
 					uint32_t next2 = program.JumpShort();
-					
+
 					program.PatchShort(atEnd);						// atEnd:
 					program.ComparePToPStart();
 					program.FailIfEqual();
@@ -1680,53 +1680,53 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.LoadConstantPointer(PatternProcessorBase::WORD_MASK);
 					program.ComparePToPStop();
 					program.FailIf(Program::Equal);
-					
+
 					program.ReadByte();
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIfNotEqual();
 				}
 				break;
-					
+
 			case ByteCodeWordBoundaryHint::PreviousIsNotWordOnly:
 				{
 					program.LoadConstantPointer(PatternProcessorBase::WORD_MASK);
 					program.ComparePToPStop();
 					uint32_t atEnd = program.JumpIfShort(Program::Equal);
-					
+
 					program.ReadByte();
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIfEqual();
-					
+
 					program.PatchShort(atEnd);
 				}
 				break;
-					
+
 			case ByteCodeWordBoundaryHint::NextIsWordOnly:
 				{
 					program.LoadConstantPointer(PatternProcessorBase::WORD_MASK);
 					program.ComparePToPStart();
 					program.FailIf(Program::Equal);
-					
+
 					program.ReadByteWithOffset(-1);
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIfNotEqual();
 				}
 				break;
-					
+
 			case ByteCodeWordBoundaryHint::NextIsNotWordOnly:
 				{
 					program.LoadConstantPointer(PatternProcessorBase::WORD_MASK);
 					program.ComparePToPStart();
 					uint32_t atStart = program.JumpIfShort(Program::Equal);
-					
+
 					program.ReadByteWithOffset(-1);
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIfEqual();
-					
+
 					program.PatchShort(atStart);
 				}
 				break;
-					
+
 			default:
 				{
 					program.LoadConstantPointer(PatternProcessorBase::WORD_MASK);
@@ -1735,7 +1735,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.ReadByte();
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					uint32_t endIsWordCharacter = program.JumpIfShort(Program::Equal);
-					
+
 					// DoesNotHaveWordCharacterAtEnd:
 					program.PatchShort(atEnd);
 					program.ComparePToPStart();
@@ -1744,7 +1744,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIf(Program::NotEqual);
 					uint32_t success = program.JumpShort();
-					
+
 					// HasWordCharacterAtEnd:
 					program.PatchShort(endIsWordCharacter);
 					program.ComparePToPStart();
@@ -1752,19 +1752,19 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.ReadPreviousByte();
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
 					program.FailIf(Program::Equal);
-					
+
 					program.PatchShort(atStart);
 					program.PatchShort(success);
 				}
 				break;
 			}
 			break;
-				
+
 		case InstructionType::AssertStartOfSearch:
 			program.ComparePToPSearchStart();
 			program.FailIfNotEqual();
 			break;
-				
+
 		case InstructionType::AssertRecurseValue:
 		// if(processData.recurseValue != instruction.data) return nullptr;
 			{
@@ -1773,7 +1773,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.FailIfNotEqual();
 			}
 			break;
-				
+
 		case InstructionType::BackReference:
 		//	{
 		//		uint32_t index = instruction.data*2;
@@ -1791,7 +1791,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			{
 				uint32_t captureOffset1 = instruction.data*16;
 				uint32_t captureOffset2 = instruction.data*16+8;
-				
+
 				program.Append(0x57, 0x51);													// pushq  %rdi, %rcx
 				program.Append(0x48, 0x8b, 0xb9); program.AppendData(&captureOffset1, 4);	// movq   offset(%rcx), %rdi
 				program.Append(0x48, 0x8b, 0x89); program.AppendData(&captureOffset2, 4);	// movq   offset(%rcx), %rcx
@@ -1801,14 +1801,14 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.Append(0x48, 0x39, 0xc2);											// cmpq   %rax, %rdx
 				uint32_t patch2 = program.JumpIfShort(Program::Below);
 				program.Append(0xf3, 0xa6);													// rep cmpsb
-				
+
 				program.PatchShort(patch1);
 				program.PatchShort(patch2);
 				program.Append(0x59, 0x5f);													// popq   %rcx, %rdi
 				program.FailIfNotEqual();													// This will catch both of the Below cases above.
 			}
 			break;
-				
+
 		case InstructionType::Byte:
         case InstructionType::ByteEitherOf2:
 			{
@@ -1818,7 +1818,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					ByteEitherOf2,
 					ByteRange
 				};
-				
+
 				int repeat = 1;
 				int numberOfConsecutiveBytes = 1;
 				RepeatType repeatType = RepeatType::Byte;
@@ -1833,7 +1833,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 							++numberOfConsecutiveBytes;
 						}
 						continue;
-						
+
 					case InstructionType::ByteEitherOf2:
 						if(repeatType == RepeatType::Byte) repeatType = RepeatType::ByteEitherOf2;
 						if(repeatType == RepeatType::ByteEitherOf2
@@ -1844,7 +1844,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 							continue;
 						}
 						break;
-						
+
 					case InstructionType::ByteRange:
 						if(repeatType == RepeatType::Byte) repeatType = RepeatType::ByteRange;
 						if(repeatType == RepeatType::ByteRange
@@ -1854,7 +1854,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 							continue;
 						}
 						break;
-						
+
 					default:
 						break;
 					}
@@ -1862,14 +1862,14 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				}
 
 				if(repeat >= 4 && repeatType == RepeatType::ByteRange) goto InstructionTypeByteRange;
-				
+
 				int currentOffset = 0;
 				int extraOffset = 0;
 				if(pc < program.checkPEndPc)
 				{
 					extraOffset += pc - program.checkStartPc;
 				}
-				
+
 				for(;currentOffset+4 <= numberOfConsecutiveBytes; currentOffset += 4)
 				{
 					uint32_t data = 0;
@@ -1882,7 +1882,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						case InstructionType::Byte:
 							data |= instr.data << (8*i);
 							break;
-							
+
 						case InstructionType::ByteEitherOf2:
 							{
 								int valueA = instr.value      & 0xff;
@@ -1892,13 +1892,13 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 								mask |= xorValue << (8*i);
 							}
 							break;
-							
+
 						default:
 							JERROR("Unexpected");
 							JUNREACHABLE;
 						}
 					}
-					
+
 					if(mask == 0)
 					{
 						program.CompareLongWithOffset(data, currentOffset+extraOffset);
@@ -1921,7 +1921,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
                         program.CompareByteWithOffset(instr.data, currentOffset+extraOffset);
                         program.FailIf(Program::NotEqual);
                         break;
-                        
+
                     case InstructionType::ByteEitherOf2:
                         {
                             uint8_t valueA = instr.data    & 0xff;
@@ -1944,18 +1944,18 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
                             }
                         }
                         break;
-                        
+
                     default:
                         JERROR("Unexpected");
                         JUNREACHABLE;
-                            
+
                     }
 				}
 				pc += numberOfConsecutiveBytes-1;
 				program.IncrementPForPc(pc);
 			}
 			break;
-				
+
 		case InstructionType::ByteBitMask:
 			//	if(p == pEnd) return nullptr;
 			//	else
@@ -1971,7 +1971,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 
 				program.LoadConstantPointer(bitMaskData);
 				program.CheckPToPStop(pc);
-				
+
 				int repeat = 1;
 				while(pc+repeat < numberOfInstructions
 					  && patternData[pc+repeat].type == InstructionType::ByteBitMask
@@ -1980,7 +1980,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					++repeat;
 				}
-				
+
 				int i = 0;
 				for(; i+2 <= repeat; i += 2)
 				{
@@ -1992,7 +1992,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.FailIf(Program::Zero);
 					program.IncrementPForPc(pc+i+1);
 				}
-				
+
 				for(; i < repeat; ++i)
 				{
 					program.ReadByteForPc(pc+i);
@@ -2000,11 +2000,11 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.FailIf(Program::NotEqual);
 					program.IncrementPForPc(pc+i);
 				}
-				
+
 				pc += repeat-1;
 			}
 			break;
-				
+
 		case InstructionType::ByteEitherOf3:
 			//	if(p == pEnd) return nullptr;
 			//	if(*p != (instruction.data & 0xff)
@@ -2058,7 +2058,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				for(; i+4 <= repeat; i += 4)
 				{
 					program.ReadLongWithOffset(extraOffset+i);
-					
+
 					uint32_t minValues = 0;
 					uint32_t maxValues = 0;
 					for(int j = 0; j < 4; ++j)
@@ -2070,16 +2070,16 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 
 					program.Append(0x41, 0xba);
 					program.AppendData(&maxValues, 4);				// movl {maxValues}, %r10d
-					
+
 					program.Append(0x41, 0x29, 0xc2);				// subl %eax, %r10d
-					
+
 					program.SubtractValue(minValues);
-					
+
 					program.Append(0x44, 0x09, 0xd0);				// orl %r10d, %eax
 					program.Append(0xa9, 0x80, 0x80, 0x80, 0x80);	// testl $0x80808080, %eax
 					program.FailIf(Program::NotZero);
 				}
-				
+
 				for(; i < repeat; ++i)
 				{
 					Interval<uint8_t> range = patternData[pc+i].GetRange();
@@ -2088,26 +2088,26 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.CompareValue(range.GetSize());
 					program.FailIfAbove();
 				}
-				
+
 				pc += repeat-1;
 				program.IncrementPForPc(pc);
 			}
 			break;
-			
+
 		case InstructionType::ByteNot:
 			//	if(p == pEnd) return nullptr;
 			//	if(*p == instruction.data) return nullptr;
 			{
 				int offset = 0;
 				if(pc < program.checkPEndPc) offset = pc-program.checkStartPc;
-				
+
 				program.CheckPToPStop(pc);
 				program.CompareByteWithOffset(instruction.data, offset);
 				program.FailIfEqual();
 				program.IncrementP();
 			}
 			break;
-			
+
 		case InstructionType::ByteNotEitherOf2:
 			//	if(p == pEnd) return nullptr;
 			//	if(*p == (instruction.data & 0xff)
@@ -2120,7 +2120,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			program.CompareByte(instruction.data>>8 & 0xff);
 			program.FailIfEqual();
 			break;
-				
+
 		case InstructionType::ByteNotEitherOf3:
 			//	if(p == pEnd) return nullptr;
 			//	if(*p == (instruction.data & 0xff)
@@ -2136,7 +2136,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			program.CompareByte(instruction.data>>16 & 0xff);
 			program.FailIfEqual();
 			break;
-			
+
 		case InstructionType::ByteNotRange:
 			//	if(p == pEnd) return nullptr;
 			//	else
@@ -2159,7 +2159,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.FailIf(Program::BelowOrEqual);
 			}
 			break;
-				
+
 		case InstructionType::ByteJumpTable:
 			//	if(p == pEnd) return nullptr;
 			//	else
@@ -2176,7 +2176,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 
 				const ByteCodeJumpTableData* data = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
 				bool useJumpDispatch = (data->numberOfTargets <= 3);
-				
+
 				if(useJumpDispatch)
 				{
 					program.LoadConstantPointer(data->jumpTable);
@@ -2195,7 +2195,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				if(useJumpDispatch)
 				{
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
-					
+
 					if(data->pcData[0] == TypeData<uint32_t>::Maximum())
 					{
 						program.FailIf(Program::Below);
@@ -2205,7 +2205,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						if(data->pcData[0] == pc) program.JumpIf(Program::Below, checkedRepeat);
 						else program.JumpIfAndMarkPatch(Program::Below, data->pcData[0]);
 					}
-					
+
 					if(data->pcData[1] == pc+1)
 					{
 						if(data->pcData[2] == pc) program.JumpIf(Program::Above, checkedRepeat);
@@ -2241,7 +2241,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				}
 			}
 			break;
-				
+
 		case InstructionType::ByteJumpMask:
 			//	if(p == processData.pEnd) return nullptr;
 			//	else
@@ -2251,7 +2251,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			//		if(pc == TypeData<uint32_t>::Maximum()) return nullptr;
 			//		++p;
 			//		goto Loop;
-			//	}				
+			//	}
 			{
 				const ByteCodeJumpMaskData* data = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
 				const void* jumpTableData = expandedJumpTables.GetJumpTable(pc);
@@ -2310,12 +2310,12 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					{
 						program.JumpIfAndMarkPatch(Program::NotZero, data->pcData[0]);
 					}
-					
+
 					program.JumpAndMarkPatch(data->pcData[1]);
 				}
 			}
 			break;
-				
+
 		case InstructionType::ByteJumpRange:
 			//	if(p == processData.pEnd) return nullptr;
 			//	else
@@ -2329,18 +2329,18 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			//	}
 			{
 				const ByteCodeJumpRangeData* data = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
-				
+
 				program.CheckPToPStop(pc);
 				uint32_t repeat = program.GetCount();
 				program.ReadByte();
 				program.IncrementP();
-				
+
 				program.SubtractValue(data->range.min);
 				program.CompareValue(data->range.GetSize());
 				// Flags are:
 				// Above if outside the range
 				// BelowOrEqual if inside the range
-				
+
 				if(data->pcData[0] == pc)
 				{
 					program.JumpIfAndMarkPatch(Program::BelowOrEqual, data->pcData[1]);
@@ -2388,12 +2388,12 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					{
 						program.JumpIfAndMarkPatch(Program::Above, data->pcData[0]);
 					}
-					
+
 					program.JumpAndMarkPatch(data->pcData[1]);
 				}
 			}
 			break;
-				
+
 		case InstructionType::Call:
 			//	const ByteCodeCallData* callData = patternData.GetData<ByteCodeCallData>(instruction.data);
 			//	bool result = Process(callData->callIndex, p, processData);
@@ -2414,7 +2414,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					program.JumpIfAndMarkPatch(Program::Zero, callData->falseIndex);
 				}
-				
+
 				if(callData->trueIndex == TypeData<uint32_t>::Maximum())
 				{
 					program.Fail();
@@ -2425,7 +2425,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				}
 			}
 			break;
-				
+
 		case InstructionType::DispatchTable:
 			//	{
 			//		const ByteCodeJumpTableData* data = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
@@ -2437,7 +2437,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				JASSERT(jumpTableData != nullptr);
 				const ByteCodeJumpTableData* data = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
 				bool useJumpDispatch = data->numberOfTargets <= 3;
-				
+
 				if(useJumpDispatch)
 				{
 					program.LoadConstantPointer(data->jumpTable);
@@ -2455,12 +2455,12 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.ComparePToPStop();
 					program.JumpIfAndMarkPatch(Program::Equal, data->pcData[0]);
 				}
-				
+
 				program.ReadByte();
 				if(useJumpDispatch)
 				{
 					program.Append(0x41, 0x80, 0x3c, 0x02, 0x01);	// cmpb   $0x1, (%r10,%rax)
-					
+
 					if(data->pcData[0] == TypeData<uint32_t>::Maximum())
 					{
 						if(data->HasJumpTableTarget(0))
@@ -2472,7 +2472,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					{
 						program.JumpIfAndMarkPatch(Program::Below, data->pcData[0]);
 					}
-					
+
 					if(data->numberOfTargets <= 2)
 					{
 						if(data->pcData[1] != pc+1)
@@ -2526,7 +2526,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				}
 				program.ReadByte();								// %rax now contains *p
 				program.Append(0x41, 0x80, 0x3c, 0x02, 0x00);	// cmpb   $0x0, (%r10,%rax)
-				
+
 				if(data->pcData[0] == pc+1)
 				{
 					program.JumpIfAndMarkPatch(Program::NotZero, data->pcData[1]);
@@ -2552,16 +2552,16 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					{
 						program.JumpIfAndMarkPatch(Program::Zero, data->pcData[0]);
 					}
-					
+
 					program.JumpAndMarkPatch(data->pcData[1]);
 				}
 			}
 			break;
-				
+
 		case InstructionType::DispatchRange:
 			{
 				const ByteCodeJumpRangeData* data = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
-				
+
 				if(data->pcData[0] == TypeData<uint32_t>::Maximum())
 				{
 					program.CheckPToPStop(pc);
@@ -2573,13 +2573,13 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				}
 
 				program.ReadByte();
-				
+
 				program.SubtractValue(data->range.min);
 				program.CompareValue(data->range.GetSize());
 				// Flags are:
 				// Above if outside the range (index 0)
 				// BelowOrEqual if inside the range (index 1)
-				
+
 				if(data->pcData[0] == pc+1)
 				{
 					program.JumpIfAndMarkPatch(Program::BelowOrEqual, data->pcData[1]);
@@ -2605,12 +2605,12 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					{
 						program.JumpIfAndMarkPatch(Program::Above, data->pcData[0]);
 					}
-					
+
 					program.JumpAndMarkPatch(data->pcData[1]);
 				}
 			}
 			break;
-				
+
 		case InstructionType::Fail:
 			//	return nullptr;
 			program.Fail();
@@ -2620,7 +2620,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			program.Append(0x48, 0x89, 0xf0);				// movq   %rsi, %rax
 			program.Return();
 			break;
-				
+
 		case InstructionType::FindByte:
 			{
 				//	unsigned char c = instruction.data & 0xff;
@@ -2637,14 +2637,14 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.Append(0x48, 0x89, 0xf3);							// movq   %rsi, %rbx
 					program.Append(0x48, 0x89, 0xd6);							// movq   %rdx, %rsi
 					program.AdjustP(-1);
-					
+
 					uint32_t loopPoint = program.GetCount();
 					program.Append(0x48, 0x39, 0xf3);							// cmpq   %rsi, %rbx
 					uint32_t fail1 = program.JumpIfShort(Program::Above);
 
 					program.Append(0x52);										// pushq %rdx
 					program.Append(0x48, 0x89, 0xda);							// movq   %rbx, %rdx
-					
+
 					uint32_t c = instruction.data & 0xff;
 					program.LoadConstantPointer((void*) InternalFindByteReverse);
 					program.LoadValueIntoXmm(c*0x1010101, 0, false);
@@ -2665,7 +2665,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 
 					program.Append(0x5b);              							// popq   %rbx
 					program.Return();
-					
+
 					program.PatchShort(fail1);
 					program.PatchShort(fail2);
 					program.Append(0x5b);              							// popq   %rbx
@@ -2678,7 +2678,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
                     program.LoadValueIntoXmm(c*0x1010101, 0, Machine::SupportsAvx2());
 					if(type == PatternProcessorType::BitState) program.PushP();
 					program.CallPointer();
-					
+
 					if(type == PatternProcessorType::BitState)
 					{
 						program.PopP();
@@ -2687,11 +2687,11 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						program.Append(0x4d, 0x0f, 0xaf, 0xd1);			// imulq  %r9, %r10
 						program.Append(0x4d, 0x01, 0xd0);				// addq   %r10, %r8
 					}
-					
+
 					program.Append(0x48, 0x8d, 0x70, 0x01);						// leaq   0x1(%rax), %rsi
 					program.TestValue();
 					program.FailIf(Program::Zero);
-					
+
 					uint32_t nextPc = instruction.data>>8;
 					if(nextPc != pc+1)
 					{
@@ -2700,7 +2700,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				}
 			}
 			break;
-				
+
 		case InstructionType::Possess:
 			//	const ByteCodeCallData* callData = patternData.GetData<ByteCodeCallData>(instruction.data);
 			//	const void* result = Process(callData->callIndex, p, processData);
@@ -2720,7 +2720,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.CallAndMarkPatch(callData->callIndex);
 				program.PopP();
 				program.TestValue();
-				
+
 				if(callData->falseIndex == TypeData<uint32_t>::Maximum())
 				{
 					program.FailIf(Program::Zero);
@@ -2729,7 +2729,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					program.JumpIfAndMarkPatch(Program::Zero, callData->falseIndex);
 				}
-				
+
 				if(callData->trueIndex == TypeData<uint32_t>::Maximum())
 				{
 					program.Fail();
@@ -2741,7 +2741,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				}
 			}
 			break;
-				
+
 		case InstructionType::PropagateBackwards:
 			//	if(processData.captures != nullptr)
 			//	{
@@ -2755,9 +2755,9 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.TestCaptures();
 					nextPatch = program.JumpIfShort(Program::Zero);
 				}
-				
+
 				program.LoadConstantPointer(patternData.GetData<StaticBitTable<256>>(instruction.data));
-				
+
 				uint32_t loopPoint = program.GetCount();
 				program.ReadPreviousByte();
 				program.AdjustP(-1);
@@ -2765,11 +2765,11 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					program.Append(0x4d, 0x29, 0xc8);	// subq %r9, %r8
 				}
-				
+
 				program.BitTest();
 				program.JumpIf(Program::BitSet, loopPoint);
 				program.IncrementP();
-				
+
 				if(!header->flags.alwaysRequiresCaptures)
 				{
 					program.PatchShort(nextPatch);
@@ -2799,11 +2799,11 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 
 				uint32_t recurseValue = instruction.data & 0xff;
 				int recursePc = instruction.data >> 8;
-				
+
 				program.Append(0xff, 0x37);				// pushq (%rdi) -- push processData.recurseValue
 				program.Append(0x48, 0xc7, 0x47, 0x04); program.AppendData(&recurseValue, 4);	//  movq   {value}, 0x04(%rdi)
 
-				
+
 				uint32_t noCapturesPatch;
 				if(!header->flags.alwaysRequiresCaptures)
 				{
@@ -2815,10 +2815,10 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					program.PushCapture(i*8);
 				}
-				
+
 				program.CallAndMarkPatch(recursePc);
 				program.TestValue();
-				
+
 				program.Append(0x48, 0x89, 0xc6);					//     movq   %rax, %rsi
 
 				for(int i = 2*header->numberOfCaptures; i > 0;)
@@ -2841,13 +2841,13 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.Append(0x48, 0x89, 0xc6);				//     movq   %rax, %rsi
 					program.Append(0x8f, 0x07);						// popq   (%rdi)
 					program.FailIf(Program::Zero);
-					
+
 					program.PatchLong(nextPatch);
 				}
 			}
 
 			break;
-				
+
 		case InstructionType::ReturnIfRecurseValue:
 			// if(processData.recurseValue == instruction.data) return true;
 			{
@@ -2857,7 +2857,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.JumpIf(Program::Equal, 3);
 			}
 			break;
-				
+
 		case InstructionType::SearchByte:
 			{
 				uint32_t c 		= instruction.data & 0xff;
@@ -2874,7 +2874,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				//	if(!pSearch) return nullptr;
 				//	p = pSearch-offset;
 				//	++pc;
-				
+
                 program.LoadConstantPointer(Machine::SupportsAvx2() ? (void*) InternalAvx2FindByte : (void*) InternalFindByte);
 				program.AdjustP(offset);
 				program.ComparePToPStop();
@@ -2883,7 +2883,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.LoadValueIntoXmm(c*0x1010101, 0, Machine::SupportsAvx2());
 				if(type == PatternProcessorType::BitState) program.PushP();
 				program.CallPointer();
-				
+
 				uint32_t stepBack = -offset;
 				if(type == PatternProcessorType::BitState)
 				{
@@ -2893,13 +2893,13 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.Append(0x4d, 0x0f, 0xaf, 0xd1);								// imulq  %r9, %r10
 					program.Append(0x4d, 0x01, 0xd0);									// addq   %r10, %r8
 				}
-				
+
 				program.Append(0x48, 0x8d, 0xb0); program.AppendData(&stepBack, 4);	// leaq   {value}(%rax), %rsi
 				program.TestValue();
 				program.FailIf(Program::Zero);
 			}
 			break;
-				
+
 		case InstructionType::SearchByteEitherOf2:
 		case InstructionType::SearchByteEitherOf3:
 		case InstructionType::SearchByteEitherOf4:
@@ -2931,7 +2931,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						(void*) InternalFindEitherOf7,
 						(void*) InternalFindEitherOf8,
 					};
-					
+
 					static constexpr void* AVX_FUNCTION_TABLE[8] = {
 						nullptr,
 						(void*) InternalAvxFindEitherOf2,
@@ -2967,7 +2967,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					{
 						program.LoadValueIntoXmm(data->bytes[i]*0x1010101, i, FUNCTION_TABLE[numberOfBytes-1] != SSE_FUNCTION_TABLE[numberOfBytes-1]);
 					}
-					
+
 				}
 				program.ComparePToPStop();
 				program.FailIf(Program::AboveOrEqual);
@@ -2988,7 +2988,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.Append(0x4d, 0x0f, 0xaf, 0xd1);								// imulq  %r9, %r10
 					program.Append(0x4d, 0x01, 0xd0);									// addq   %r10, %r8
 				}
-				
+
 				program.Append(0x48, 0x8d, 0xb0); program.AppendData(&stepBack, 4);	// leaq   {value}(%rax), %rsi
 				program.TestValue();
 				program.FailIf(Program::Zero);
@@ -3002,7 +3002,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			{
 				int numberOfBytePairs = int(instruction.type) - int(InstructionType::SearchBytePair) + 1;
 				const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-				
+
 				const void* nibbleMask = expandedJumpTables.GetData(pc);
 				if(nibbleMask)
 				{
@@ -3015,7 +3015,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 											Machine::SupportsAvx2() ?
 												(void*) InternalAvx2FindPairNibbleMask :
 												(void*) InternalAvxFindPairNibbleMask;
-					
+
 					program.LoadConstantPointer(nibbleMask);
 					program.LoadXmmValueFromPointer(0);
 					program.LoadXmmValueFromPointer(1);
@@ -3031,9 +3031,9 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						program.PushP();
 						program.Append(0x41, 0x51);		// pushq  %r9
 					}
-					
+
 					program.CallPointer();
-					
+
 					uint32_t stepBack = -data->offset-1;
 					if(patternData[pc+1].type == InstructionType::AdvanceByte
 					   && patternData[pc+1].isSingleReference)
@@ -3041,7 +3041,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						++stepBack;
 						++pc;
 					}
-					
+
 					if(type == PatternProcessorType::BitState)
 					{
 						program.Append(0x41, 0x59);											// popq  %r9
@@ -3051,7 +3051,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						program.Append(0x4d, 0x0f, 0xaf, 0xd1);								// imulq  %r9, %r10
 						program.Append(0x4d, 0x01, 0xd0);									// addq   %r10, %r8
 					}
-					
+
 					program.Append(0x48, 0x8d, 0xb0); program.AppendData(&stepBack, 4);		// leaq   {value}(%rax), %rsi
 					program.TestValue();
 					program.FailIf(Program::Zero);
@@ -3076,13 +3076,13 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						{ (void*) InternalFindPair3, (void*) InternalFindPair3 },
 						{ (void*) InternalFindPair4, (void*) InternalFindPair4 },
 					};
-					
+
 					const void* const (*const FUNCTION_TABLE)[2] = Machine::SupportsAvx2() ?
 																	AVX2_FUNCTION_TABLE :
 																	Machine::SupportsAvx() ?
 																		AVX_FUNCTION_TABLE :
 																		SSE_FUNCTION_TABLE;
-					
+
 					const ByteCodeSearchMultiByteData* multiByteData = (ByteCodeSearchMultiByteData*) &data->bytes[instruction.type >= InstructionType::SearchBytePair3 ? 8 : 4];
 
 					JASSERT(FUNCTION_TABLE[numberOfBytePairs-1] != nullptr);
@@ -3100,7 +3100,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						program.Append(0x41, 0x51);		// pushq  %r9
 					}
 					program.CallPointer();
-					
+
 					uint32_t stepBack = -data->offset-1;
 					if(patternData[pc+1].type == InstructionType::AdvanceByte
 					   && patternData[pc+1].isSingleReference)
@@ -3108,7 +3108,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						++stepBack;
 						++pc;
 					}
-					
+
 					if(type == PatternProcessorType::BitState)
 					{
 						program.Append(0x41, 0x59);											// popq  %r9
@@ -3118,14 +3118,14 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						program.Append(0x4d, 0x0f, 0xaf, 0xd1);								// imulq  %r9, %r10
 						program.Append(0x4d, 0x01, 0xd0);									// addq   %r10, %r8
 					}
-					
+
 					program.Append(0x48, 0x8d, 0xb0); program.AppendData(&stepBack, 4);		// leaq   {value}(%rax), %rsi
 					program.TestValue();
 					program.FailIf(Program::Zero);
 				}
 			}
 			break;
-				
+
 		case InstructionType::SearchByteTriplet:
 		case InstructionType::SearchByteTriplet2:
 			{
@@ -3136,7 +3136,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					(void*) InternalFindTriplet,
 					(void*) InternalFindTriplet2,
 				};
-				
+
 				static constexpr void *const AVX_FUNCTION_TABLE[4] = {
 					(void*) InternalAvxFindTriplet,
 					(void*) InternalFindTriplet2,
@@ -3168,7 +3168,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.Append(0x41, 0x51);		// pushq  %r9
 				}
 				program.CallPointer();
-				
+
 				uint32_t stepBack = -data->offset-2;
 				if(patternData[pc+1].type == InstructionType::AdvanceByte
 				   && patternData[pc+1].isSingleReference)
@@ -3186,40 +3186,40 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.Append(0x4d, 0x0f, 0xaf, 0xd1);								// imulq  %r9, %r10
 					program.Append(0x4d, 0x01, 0xd0);									// addq   %r10, %r8
 				}
-				
+
 				program.Append(0x48, 0x8d, 0xb0); program.AppendData(&stepBack, 4);	// leaq   {value}(%rax), %rsi
 				program.TestValue();
 				program.FailIf(Program::Zero);
 			}
 			break;
-				
+
 		case InstructionType::SearchByteRange:
 		case InstructionType::SearchByteRangePair:
 			{
 				int numberOfBytePairs = int(instruction.type) - int(InstructionType::SearchByteRange) + 1;
 				const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-				
+
 				static constexpr void* SSE_FUNCTION_TABLE[2] = {
 					(void*) InternalFindByteRange,
 					(void*) InternalFindByteRangePair,
 				};
-				
+
 				static constexpr void *const AVX_FUNCTION_TABLE[2] = {
 					(void*) InternalAvxFindByteRange,
 					(void*) InternalAvxFindByteRangePair,
 				};
-				
+
 				static constexpr void *const AVX2_FUNCTION_TABLE[2] = {
 					(void*) InternalAvx2FindByteRange,
 					(void*) InternalAvxFindByteRangePair,
 				};
-				
+
 				const void* const *const FUNCTION_TABLE = Machine::SupportsAvx2() ?
 															AVX2_FUNCTION_TABLE :
 															Machine::SupportsAvx() ?
 																AVX_FUNCTION_TABLE :
 																SSE_FUNCTION_TABLE;
-															
+
 				JASSERT(FUNCTION_TABLE[numberOfBytePairs-1] != nullptr);
 				program.LoadConstantPointer((void*) FUNCTION_TABLE[numberOfBytePairs-1]);
 				program.AdjustP(data->offset);
@@ -3229,7 +3229,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					unsigned char low = data->bytes[i*2];
 					unsigned char high = data->bytes[i*2+1];
-					
+
 					// Example: low = '0', high = '9'.
 					// SSE only has greater-than signed compare
 					// Need to pass values (127-high)
@@ -3244,7 +3244,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					if(numberOfBytePairs > 1) program.Append(0x41, 0x51);		// pushq  %r9
 				}
 				program.CallPointer();
-				
+
 				uint32_t stepBack = -data->offset-numberOfBytePairs+1;
 				if(patternData[pc+1].type == InstructionType::AdvanceByte
 				   && patternData[pc+1].isSingleReference)
@@ -3262,18 +3262,18 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.Append(0x4d, 0x0f, 0xaf, 0xd1);								// imulq  %r9, %r10
 					program.Append(0x4d, 0x01, 0xd0);									// addq   %r10, %r8
 				}
-				
+
 				program.Append(0x48, 0x8d, 0xb0); program.AppendData(&stepBack, 4);	// leaq   {value}(%rax), %rsi
 				program.TestValue();
 				program.FailIf(Program::Zero);
 			}
 			break;
-				
+
 		case InstructionType::SearchBoyerMoore:
 			{
 				const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(instruction.data);
 				//	const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(instruction.data);
-				//	
+				//
 				//	const unsigned char* pSearch = p+searchData->offset;
 				//	for(;;)
 				//	{
@@ -3282,18 +3282,18 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				//		if(adjust == 0) break;
 				//		pSearch += adjust;
 				//	}
-				//	
+				//
 				//	p = pSearch-searchData->offset;
 				//	++pc;
 				const void* p = nullptr; // expandedJumpTables.GetData(pc);
-				
+
 				program.LoadConstantPointer(p ? p : searchData->data);
 				program.AdjustP(searchData->length);
 				if(type == PatternProcessorType::BitState)
 				{
 					program.Append(0x49, 0x89, 0xf3);				// movq   %rsi, %r11
 				}
-				
+
 				uint32_t loopPoint = program.GetCount();
 				program.ComparePToPStop();
 				program.FailIf(Program::AboveOrEqual);
@@ -3319,7 +3319,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				}
 			}
 			break;
-			
+
 		case InstructionType::SearchShiftOr:
 			{
 				const ByteCodeSearchShiftOrData* searchData = patternData.GetData<ByteCodeSearchShiftOrData>(instruction.data);
@@ -3328,7 +3328,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					// maskData is only created for shift or if AVX is supported.
 					JASSERT(Machine::SupportsAvx());
-					
+
 					static constexpr const void *const AVX_FUNCTION_TABLE[3][2] = {
 						{ (void*) InternalAvxFindNibbleMask, (void*) InternalAvxFindNibbleMask },
 						{ (void*) InternalAvxFindPairNibbleMask, (void*) InternalAvxFindPairNibbleMaskPath },
@@ -3340,7 +3340,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						{ (void*) InternalAvx2FindPairNibbleMask, (void*) InternalAvx2FindPairNibbleMaskPath },
 						{ (void*) InternalAvxFindTripletNibbleMask, (void*) InternalAvx2FindTripletNibbleMaskPath },
 					};
-					
+
 					const void* const (*const FUNCTION_TABLE)[2] = Machine::SupportsAvx2() ?
 																	AVX2_FUNCTION_TABLE :
 																	AVX_FUNCTION_TABLE;
@@ -3351,7 +3351,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						program.LoadXmmValueFromPointer(x*2);
 						program.LoadXmmValueFromPointer(x*2+1);
 					}
-					
+
 					program.LoadConstantPointer(FUNCTION_TABLE[searchData->numberOfNibbleMasks-1][searchData->isPath]);
 					program.ComparePToPStop();
 					program.FailIf(Program::AboveOrEqual);
@@ -3361,7 +3361,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						program.PushP();
 					}
 					program.CallPointer();
-					
+
 					uint32_t stepBack = -searchData->numberOfNibbleMasks+1;
 					if(patternData[pc+1].type == InstructionType::AdvanceByte
 					   && patternData[pc+1].isSingleReference)
@@ -3369,7 +3369,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						++stepBack;
 						++pc;
 					}
-					
+
 					if(type == PatternProcessorType::BitState)
 					{
 						program.PopP();
@@ -3378,7 +3378,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 						program.Append(0x4d, 0x0f, 0xaf, 0xd1);								// imulq  %r9, %r10
 						program.Append(0x4d, 0x01, 0xd0);									// addq   %r10, %r8
 					}
-					
+
 					program.Append(0x48, 0x8d, 0xb0); program.AppendData(&stepBack, 4);		// leaq   {value}(%rax), %rsi
 					program.TestValue();
 					program.FailIf(Program::Zero);
@@ -3387,9 +3387,9 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					const void* searchDataPointer = &searchData->data;
 					program.LoadConstantPointer((void*) &InternalFindShiftOr);
-					
+
 					program.Append(0x51, 0x57);										// pushq %rcx, %rdi
-					
+
 					program.Append(0x48, 0xbf); program.AppendData(&searchDataPointer, 8);	// movabsq $searchData, %rdi
 					if(type == PatternProcessorType::BitState)
 					{
@@ -3397,7 +3397,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					}
 					program.Append(0xb9); program.AppendData(&searchData->length, 4);	// movl $offset, %ecx
 					program.CallPointer();
-					
+
 					if(type == PatternProcessorType::BitState)
 					{
 						program.Append(0x41, 0x59, 0x41, 0x58, 0x41, 0x5a);			// popq %r9, %r8, %r10
@@ -3413,7 +3413,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				}
 			}
 			break;
-				
+
 		case InstructionType::Jump:
 			// pc = instruction.data;
 			program.JumpAndMarkPatch(instruction.data);
@@ -3432,7 +3432,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
             }
 			program.Return();
 			break;
-				
+
 		case InstructionType::ProgressCheck:
 			if(type == PatternProcessorType::BackTracking)
 			{
@@ -3454,7 +3454,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					program.Append(0x48, 0x8b, 0x87); program.AppendData(&offset, 4); 	// movq 0x1234(%rdi), %rax
 				}
-				
+
 				program.Append(0x48, 0x39, 0xc6);										// cmpq   %rax, %rsi
 				program.FailIf(Program::BelowOrEqual);
 				program.Append(0x50);													// push %rax
@@ -3473,7 +3473,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				uint32_t callLocation = uint32_t(program.GetCount());
 				program.PopP();
 				program.Append(0x41, 0x5a);												// popq   %r10
-				
+
 				if(offset < 0x80)
 				{
 					program.Append(0x4c, 0x89, 0x57, offset);							// movq   %r10, 0x10(%rdi)
@@ -3486,7 +3486,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.PatchLong(callLocation);
 			}
 			break;
-				
+
 		case InstructionType::Save:
 		case InstructionType::SaveNoRecurse:
 			//	if(captures != nullptr)
@@ -3500,7 +3500,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			//		return nullptr;
 			//	}
 			//
-				
+
 			// Special case code for one-pass
 			if(type == PatternProcessorType::OnePass
 			   || instruction.type == InstructionType::SaveNoRecurse)
@@ -3521,7 +3521,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					program.TestCaptures();
 					nextPatch = program.JumpIfLong(Program::Zero);
 				}
-				
+
 				if(rewind)
 				{
 					program.WriteCapture(saveIndex);
@@ -3552,7 +3552,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 					if(saveOffset == 0) program.WriteZeroOffsetCapture(saveIndex);
 					else program.WriteCapture(saveIndex);
 				}
-				
+
 				if(!header->flags.alwaysRequiresCaptures)
 				{
 					program.PatchLong(nextPatch);
@@ -3600,7 +3600,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.ExitIfNot0();
 				program.WriteCapture(saveIndex);
 				program.Jump(0);
-				
+
 				program.WriteCapture(saveIndex);
 
 				if(!header->flags.alwaysRequiresCaptures)
@@ -3624,7 +3624,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			if(type != PatternProcessorType::OnePass)
 			{
 				if(useStackGuard) program.DoStackGuardCheck();
-				
+
 				const ByteCodeSplitData* split = patternData.GetData<ByteCodeSplitData>(instruction.data);
 				uint32_t numberOfTargets = split->numberOfTargets;
 				for(size_t i = 0; i < numberOfTargets-1; ++i)
@@ -3670,7 +3670,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.JumpAndMarkPatch(instruction.data);
 			}
 			break;
-				
+
 		case InstructionType::SplitNNext:
 			//	if(Process(instruction.data, p)) return true;
 			//	++pc;
@@ -3684,7 +3684,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				program.ExitIfNot0();
 			}
 			break;
-				
+
 		case InstructionType::SplitNextMatchN:
 		//	pc = (isPartialMatch || p == pEnd) ? pc+1 : instruction.data;
 			{
@@ -3695,9 +3695,9 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				else program.JumpIfAndMarkPatch(Program::Zero, instruction.data);
 				program.PatchShort(nextOffset);
 			}
-				
+
 			break;
-				
+
 		case InstructionType::SplitNMatchNext:
 		//	pc = (isPartialMatch || p == pEnd) ? instruction.data : pc+1;
 			program.ComparePToPStop();
@@ -3719,11 +3719,11 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			break;
 		}
 	}
-	
-	
+
+
 	uint32_t fullMatchProgramOffset = instructionOffsets[header->fullMatchStartingInstruction];
 	uint32_t partialMatchProgramOffset = instructionOffsets[header->partialMatchStartingInstruction];
-	
+
 	if(type == PatternProcessorType::BackTracking && (header->numberOfProgressChecks > 0 || header->flags.useStackGuard))
 	{
 		uint32_t newFullMatchProgramOffset = program.GetCount();
@@ -3739,7 +3739,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			program.Jump(fullMatchProgramOffset);
 		}
 		fullMatchProgramOffset = newFullMatchProgramOffset;
-		
+
 		uint32_t newPartialMatchProgramOffset = program.GetCount();
 		if(header->numberOfProgressChecks > 0) program.ClearProgressCheckTable(header->numberOfProgressChecks);
 		if(header->flags.useStackGuard)
@@ -3753,18 +3753,18 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 			program.Jump(partialMatchProgramOffset);
 		}
 		partialMatchProgramOffset = newPartialMatchProgramOffset;
-		
+
 		program.WriteStackGuardList();
 	}
-	
+
 	for(const Program::PatchEntry& entry : program.patchList)
 	{
 		program.PatchOffset(entry.location, uint32_t(instructionOffsets[entry.pc]));
 	}
-	
-	
+
+
 	MakeProgramExecutable(program);
-	
+
 	fullMatchProgram = ((char*) mapRegion + fullMatchProgramOffset);
 	partialMatchProgram = ((char*) mapRegion + partialMatchProgramOffset);
 	expandedJumpTables.Populate(patternData, numberOfInstructions, mapRegion, instructionOffsets, type);
@@ -3776,7 +3776,7 @@ void Amd64ProcessorBase::MakeProgramExecutable(const Program& program)
 	mapRegionLength = (program.GetCount() + pageSize-1) & -pageSize;
 	mapRegion = mmap(0, mapRegionLength, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 	JVERIFY(mapRegion != MAP_FAILED);
-	
+
 	memcpy(mapRegion, program.GetData(), program.GetCount());
 }
 
@@ -3847,13 +3847,13 @@ int BitStateAmd64PatternProcessor::GetBytesForBitState(const void* data)
 {
 	uint32_t numberOfBitStateInstructions = 0;
 	const ByteCodeHeader* header = (const ByteCodeHeader*) data;
-	
+
 	const PatternData patternData(header->GetForwardProgram());
 	for(uint32_t i = 0; i < header->numberOfInstructions; ++i)
 	{
 		if(!patternData[i].isSingleReference) numberOfBitStateInstructions++;
 	}
-	
+
 	return (numberOfBitStateInstructions+7) >> 3;
 }
 

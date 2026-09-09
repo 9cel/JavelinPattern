@@ -11,7 +11,7 @@
 namespace Javelin::Assembler
 {
 //============================================================================
-	
+
 	/// Simple FILE* wrapper
 	class Character
 	{
@@ -21,7 +21,7 @@ namespace Javelin::Assembler
 		static bool IsWordCharacter(int c);
 		static bool IsWhitespace(uint32_t c);
 	};
-	
+
 //============================================================================
 }
 //============================================================================

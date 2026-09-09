@@ -19,8 +19,8 @@ namespace Javelin
 		template<typename T> T Square(T a) 			{ return a*a;	}
 		template<typename T> T Negate(T a) 			{ return -a; 	}
 		template<typename T, T k> T Scale(T a) 		{ return k*a;	}
-		
-		
+
+
 		// Templated math functions
 		template<typename T> T Abs(T x);
 		template<typename T> T ACos(T x);
@@ -43,7 +43,7 @@ namespace Javelin
 		template<typename T> T Tan(T x);
 		template<typename T> bool ApproximateEquals(T x, T y, T ACCEPTABLE_ERROR = 0.001f);
 
-		
+
 		// Int specializations
 		template<> JINLINE int Abs(int x)						{ return abs(x);			}
 		template<> JEXPORT int Pow(int x, int y);
@@ -52,7 +52,7 @@ namespace Javelin
 
 		// Unsigned specialization
 		template<> JEXPORT unsigned int Log10(unsigned int x);
-		
+
 		// Float specializations
 		template<> JINLINE float Abs(float x)					{ return fabsf(x);			}
 		template<> JINLINE float ACos(float x)					{ return acosf(x);			}
@@ -79,7 +79,7 @@ namespace Javelin
 		template<> JINLINE float Tan(float x)					{ return tanf(x);			}
 		template<> JINLINE bool ApproximateEquals(float a, float b, float ACCEPTABLE_ERROR) { return Abs(a-b) < ACCEPTABLE_ERROR; }
 
-		
+
 		// Double specializations
 		template<> JINLINE double Abs(double x)					{ return fabs(x);			}
 		template<> JINLINE double ACos(double x)				{ return acos(x);			}
@@ -106,7 +106,7 @@ namespace Javelin
 		template<> JINLINE double Tan(double x)					{ return tan(x);			}
 		template<> JINLINE bool ApproximateEquals(double a, double b, double ACCEPTABLE_ERROR) { return Abs(a-b) < ACCEPTABLE_ERROR; }
 
-		
+
 		// Long double specializations
 		template<> JINLINE long double Abs(long double x)						{ return fabsl(x);			}
 		template<> JINLINE long double ACos(long double x)						{ return acosl(x);			}

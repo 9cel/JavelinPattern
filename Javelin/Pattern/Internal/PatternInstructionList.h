@@ -17,9 +17,9 @@
 namespace Javelin
 {
 //==========================================================================
-	
+
 	class ICharacterWriter;
-	
+
 	namespace PatternInternal
 	{
 //==========================================================================
@@ -29,14 +29,14 @@ namespace Javelin
 		struct IComponent;
 
 //==========================================================================
-		
+
 		enum class AnyByteResult
 		{
 			False,
 			Minimal,
 			Maximal
 		};
-		
+
 		class InstructionList
 		{
 		public:
@@ -45,11 +45,11 @@ namespace Javelin
 				Forwards,
 				Reverse,
 			};
-			
+
 			~InstructionList();
-			
+
 			void Build(uint32_t options, ScanDirection scanDirection, IComponent* headComponent, Compiler& compiler, bool needsProgressChecks, PatternProcessorType processorType);
-			
+
 			void AddInstruction(Instruction* instruction);
 			void Patch(Instruction* instruction);
 			Instruction* Back() 								{ return &instructionList.Back(); }
@@ -59,11 +59,11 @@ namespace Javelin
 			static void ReplaceInstruction(Instruction* old, Instruction* newInstruction);
 			static void InsertAfterInstruction(Instruction* instruction, Instruction* newInstruction);
 			static void InsertBeforeInstruction(Instruction* instruction, Instruction* newInstruction);
-			
+
 			void Dump(ICharacterWriter& output);
-			
+
 			void Optimize();
-			
+
 			bool ShouldEmitSaveInstructions() const;
 			void StopSaveInstructions()							{ ++saveCounter;				}
 			void AllowSaveInstructions()						{ --saveCounter; 				}
@@ -72,7 +72,7 @@ namespace Javelin
 			void DecrementSaveRecurse()							{ --recurseCounter;				}
 
 			uint32_t GetNextProgessCheckSlot() 					{ return progressCheckCounter++;	}
-			
+
 			bool ShouldEmitAssertInstructions() const			{ return allowAssertCounter == 0;	}
 			void IncrementAssertCounter()						{ ++allowAssertCounter;				}
 			void DecrementAssertCounter()						{ --allowAssertCounter; 			}
@@ -82,16 +82,16 @@ namespace Javelin
 			bool IsForwards() const								{ return scanDirection == Forwards; }
 			bool IsReverse() const								{ return scanDirection == Reverse; 	}
 			bool RequiresAnyByteMinimalForPartialMatch(IComponent* headComponent) const;
-			
+
 			bool NeedsProgressChecks() const;
 
 			void WriteByteCode(DataBlockWriter& writer, const String& pattern, uint32_t numberOfCaptures);
 			void AppendByteCode(DataBlockWriter& writer);
-			
+
 			void SetHasResetCapture() 							{ hasResetCapture = true; }
-			
+
 			struct StateMap;
-			
+
 		private:
 			typedef IntrusiveList<Instruction, &Instruction::listNode> LinkedInstructionList;
 			LinkedInstructionList	instructionList;
@@ -120,26 +120,26 @@ namespace Javelin
 #endif
 			Instruction* fullMatchInstruction;
 			Instruction* partialMatchInstruction;
-			
+
 			struct SearchOptimizer
 			{
 				bool						isMaximal;
 				Instruction*				original;
 				InstructionWalker			instructionWalker;
 				IntrusiveListNode			listNode;
-				
+
 				bool						canSkipBackwardsPropagate;
 				StaticBitTable<256>			backwardsPropagate;
-				
+
 				void ReplaceOriginal(Instruction* searcher, bool replaceByteJumpTableWithAdvanceByte, bool hasZeroOffsetCheck, Instruction*& partialMatchInstruction);
 			};
-			
+
 			typedef IntrusiveList<SearchOptimizer, &SearchOptimizer::listNode> SearchOptimizerList;
 			SearchOptimizerList	searchOptimizerList;
-			
+
 			static const int AVOID_STATES_REQUIRE_CONSECUTIVE_GROWTH_COUNT = 3;
 			typedef OpenHashSet<InstructionTable> StateSet;
-			
+
 			void Optimize_RemoveAssertEndOfInput();
 			void Optimize_CaptureSearch();
 			void Optimize_AccelerateSearch();
@@ -163,34 +163,34 @@ namespace Javelin
 			void Optimize_ForwardJumpTargets();
 			void Optimize_SimpleByteConsumersToAdvanceByte();
 			void Optimize_RemoveLeadingAsserts();
-			
+
 			void RunOptimizeStep(void (InstructionList::*)(), const char* name);
-			
+
 			void CleanReverseProgram();
-			
+
 			void IndexInstructions();
 			void UpdateReferencesForInstructions();
 			bool VerifyReferencesForInstructions(const char* optimizationPass);
 			void DumpReferenceMismatch(const ReferenceTable& before, size_t instructionIndex, const char* optimizationPass);
-			
+
 			void InsertPartialMatchAnyByteMinimal();
-			
+
 			void Optimize_SplitToSplit(SplitInstruction* split);
 			void Optimize_SplitToByteConsumers(LinkedInstructionList::Iterator& insertAfter, SplitInstruction* split, StateMap& stateMap);
 			void Optimize_SplitToByteFilters(LinkedInstructionList::Iterator& insertAfter, SplitInstruction* split);
-			
+
 			void AddToSearchOptimizer(Instruction* split, Instruction* afterAnyByte, AnyByteResult mode, bool canSkipBackwardsPropagate, const StaticBitTable<256>& backwardsPropagate);
-			
+
 			Instruction* GetByteFilterStartingFrom(Instruction* instruction) const;
 			Instruction* GetAfterByteFilterStartingFrom(Instruction* instruction) const;
 			Instruction* GetMatchStartingFrom(Instruction* instruction) const;
 			Instruction* ReplaceWithFail(Instruction* old);
 			void PropagateFail(Instruction* instruction, Instruction* fail);
-			
+
 			void RemoveAllInstructionsOfType(const EnumSet<InstructionType, uint64_t>& typeSet);
-		
+
 			void ConvertToFail(Instruction* &startingInstruction);
-			
+
 			static uint32_t CalculateSearchEffectivenessValue(const uint32_t* data, size_t offset);
 		};
 

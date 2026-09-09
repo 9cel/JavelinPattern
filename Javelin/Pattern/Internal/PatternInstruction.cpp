@@ -58,7 +58,7 @@ Tuple<Instruction*, bool> InstructionTable::GetRepeatedByteInstruction() const
 {
 	if(GetCount() != 1) return { nullptr, false };
 	Instruction* instruction = Front();
-	
+
 	// Need to detect:
 	// x:   jump x+2
 	// x+1: simple-byte-consumer
@@ -70,33 +70,33 @@ Tuple<Instruction*, bool> InstructionTable::GetRepeatedByteInstruction() const
 	// x+1: split x x+2   or x+2 x
 
 	bool hasAtLeastOne = true;
-	
+
 	while(instruction->type == InstructionType::Save
 		  || instruction->type == InstructionType::ProgressCheck)
 	{
 		instruction = instruction->GetNext();
 	}
-	
+
 	if(instruction->type == InstructionType::Jump)
 	{
 		JumpInstruction* jump = (JumpInstruction*) instruction;
 		if(jump->target != instruction->GetNext()->GetNext()) return { nullptr, false };
-		
+
 		instruction = instruction->GetNext();
 		hasAtLeastOne = false;
 	}
-	
+
 	if(!instruction->IsSimpleByteConsumer()) return { nullptr, false };
-	
+
 	Instruction* afterByteConsumer = instruction->GetNext();
 	if(afterByteConsumer->type != InstructionType::Split) return { nullptr, false };
 
 	SplitInstruction* split = (SplitInstruction*) afterByteConsumer;
 	if(split->targetList.GetCount() != 2) return { nullptr, false };
-	
+
 	if(split->targetList[0] == instruction && split->targetList[1] == split->GetNext()) return { instruction, hasAtLeastOne };
 	if(split->targetList[1] == instruction && split->targetList[0] == split->GetNext()) return { instruction, hasAtLeastOne };
-	
+
 	return { nullptr, false };
 }
 
@@ -115,7 +115,7 @@ Instruction::Instruction(const Instruction& a)
 : type(a.type)
 {
 	index = TypeData<uint32_t>::Maximum();
-	
+
 	// Do NOT copy reference list!
 }
 
@@ -157,7 +157,7 @@ bool Instruction::LeadsToMatch(bool direct) const
 				}
 				else return false;
 			}
-				
+
 		case InstructionType::ProgressCheck:
 		case InstructionType::Save:
 			p = p->GetNext();
@@ -166,10 +166,10 @@ bool Instruction::LeadsToMatch(bool direct) const
 		case InstructionType::Jump:
 			p = ((JumpInstruction*) p)->target;
 			continue;
-				
+
 		case InstructionType::Match:
 			return true;
-				
+
 		default:
 			return false;
 		}
@@ -180,7 +180,7 @@ bool Instruction::CanLeadToMatch() const
 {
 	InstructionTable stack;
 	OpenHashSet<const Instruction*> progressCheckSet;
-	
+
 	const Instruction* p = this;
 	for(;;)
 	{
@@ -197,21 +197,21 @@ bool Instruction::CanLeadToMatch() const
 		case InstructionType::Save:
 			p = p->GetNext();
 			continue;
-				
+
 		case InstructionType::ProgressCheck:
 			if(progressCheckSet.Contains(p)) goto Default;
 			progressCheckSet.Put(p);
 			p = p->GetNext();
 			continue;
-				
+
 		case InstructionType::BackReference:
 			// TODO: This stops processing when a back reference is encountered.
 			return true;
-				
+
 		case InstructionType::Recurse:
 			// TODO: This stops processing when a recurse is encountered.
 			return true;
-				
+
 		case InstructionType::Success:
 			return true;
 
@@ -253,7 +253,7 @@ bool Instruction::CanLeadToMatch() const
 				stack.Pop();
 			}
 			continue;
-				
+
 		case InstructionType::DispatchTable:
 			{
 				DispatchTableInstruction* dispatch = (DispatchTableInstruction*) p;
@@ -266,10 +266,10 @@ bool Instruction::CanLeadToMatch() const
 				stack.Pop();
 			}
 			continue;
-				
+
 		case InstructionType::Match:
 			return true;
-			
+
 		Default:
 		default:
 			if(stack.IsEmpty()) return false;
@@ -307,7 +307,7 @@ void Instruction::TagReachable(int flags)
 	{
 		if((p->startReachable & flags) == flags) return;
 		p->startReachable |= flags;
-		
+
 		p = p->ProcessReachable(flags);
 	}
 }
@@ -362,12 +362,12 @@ void AssertEndOfLineInstruction::Dump(ICharacterWriter& output) const
 uint32_t AssertWordBoundaryBaseInstruction::GetByteCodeData() const
 {
 	uint32_t result = 0;
-	
+
 	if(isPreviousWordOnly) result += ByteCodeWordBoundaryHint::PreviousIsWordOnly;
 	if(isPreviousNotWordOnly) result += ByteCodeWordBoundaryHint::PreviousIsNotWordOnly;
 	if(isNextWordOnly) result += ByteCodeWordBoundaryHint::NextIsWordOnly;
 	if(isNextNotWordOnly) result += ByteCodeWordBoundaryHint::NextIsNotWordOnly;
-	
+
 	return result;
 }
 
@@ -378,15 +378,15 @@ void AssertWordBoundaryBaseInstruction::Dump(ICharacterWriter& output) const
 	case InstructionType::AssertWordBoundary:
 		output.PrintF("assert-word-boundary");
 		break;
-			
+
 	case InstructionType::AssertNotWordBoundary:
 		output.PrintF("assert-not-word-boundary");
 		break;
-			
+
 	default:
 		JERROR("Internal error!");
 	}
-	
+
 	if(isPreviousWordOnly) output.PrintF(" previous-is-word-only");
 	if(isPreviousNotWordOnly) output.PrintF(" previous-is-not-word-only");
 	if(isNextWordOnly) output.PrintF(" next-is-word-only");
@@ -489,67 +489,67 @@ void SearchByteInstruction::Dump(ICharacterWriter& output) const
 	case InstructionType::SearchByte:
 		output.PrintF("search-byte '%C' @ %u", bytes[0], offset);
 		break;
-			
+
 	case InstructionType::SearchByteEitherOf2:
 		output.PrintF("search-byte-either-of-2 '%C' '%C' @ %u", bytes[0], bytes[1], offset);
 		break;
-			
+
 	case InstructionType::SearchByteEitherOf3:
 		output.PrintF("search-byte-either-of-3 '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], offset);
 		break;
-			
+
 	case InstructionType::SearchByteEitherOf4:
 		output.PrintF("search-byte-either-of-4 '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], offset);
 		break;
-			
+
 	case InstructionType::SearchByteEitherOf5:
 		output.PrintF("search-byte-either-of-5 '%C' '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], offset);
 		break;
-		
+
 	case InstructionType::SearchByteEitherOf6:
 		output.PrintF("search-byte-either-of-6 '%C' '%C' '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], offset);
 		break;
-		
+
 	case InstructionType::SearchByteEitherOf7:
 		output.PrintF("search-byte-either-of-7 '%C' '%C' '%C' '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], offset);
 		break;
-		
+
 	case InstructionType::SearchByteEitherOf8:
 		output.PrintF("search-byte-either-of-8 '%C' '%C' '%C' '%C' '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], offset);
 		break;
-		
+
 	case InstructionType::SearchBytePair:
 		output.PrintF("search-byte-pair '%C' '%C' @ %u", bytes[0], bytes[1], offset);
 		break;
-			
+
 	case InstructionType::SearchBytePair2:
 		output.PrintF("search-byte-pair-2 '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], offset);
 		break;
-			
+
 	case InstructionType::SearchBytePair3:
 		output.PrintF("search-byte-pair-3 '%C' '%C' '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], offset);
 		break;
-			
+
 	case InstructionType::SearchBytePair4:
 		output.PrintF("search-byte-pair-4 '%C' '%C' '%C' '%C' '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], offset);
 		break;
-		
+
 	case InstructionType::SearchByteRange:
 		output.PrintF("search-byte-range '%C' '%C' @ %u", bytes[0], bytes[1], offset);
 		break;
-		
+
 	case InstructionType::SearchByteRangePair:
 		output.PrintF("search-byte-range-pair '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], offset);
 		break;
-		
+
 	case InstructionType::SearchByteTriplet:
 		output.PrintF("search-byte-triplet '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], offset);
 		break;
-		
+
 	case InstructionType::SearchByteTriplet2:
 		output.PrintF("search-byte-triplet-2 '%C' '%C' '%C' '%C' '%C' '%C' @ %u", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], offset);
 		break;
-		
+
 	default:
 		JERROR("Internal error!");
 	}
@@ -562,7 +562,7 @@ void SearchDataInstruction::Dump(ICharacterWriter& output) const
 	case InstructionType::SearchBoyerMoore:
 		output.PrintF("search-boyer-moore %u", length);
 		break;
-		
+
 	case InstructionType::SearchShiftOr:
 		output.PrintF("search-shift-or %u", length);
 		break;
@@ -639,40 +639,40 @@ void StepBackInstruction::Dump(ICharacterWriter& output) const
 bool Javelin::PatternInternal::operator==(const Instruction &a, const Instruction& b)
 {
 	if(a.type != b.type) return false;
-	
+
 	switch(a.type)
 	{
 	case InstructionType::AdvanceByte:
 		return true;
-			
+
 	case InstructionType::AnyByte:
 		return true;
 
 	case InstructionType::AssertStartOfInput:
 		return true;
-			
+
 	case InstructionType::AssertEndOfInput:
 		return true;
-		
+
 	case InstructionType::AssertStartOfLine:
 		return true;
-		
+
 	case InstructionType::AssertEndOfLine:
 		return true;
-		
+
 	case InstructionType::AssertWordBoundary:
 	case InstructionType::AssertNotWordBoundary:
 		return ((AssertWordBoundaryBaseInstruction&) a).isPreviousWordOnly == ((AssertWordBoundaryBaseInstruction&) b).isPreviousWordOnly
 			&& ((AssertWordBoundaryBaseInstruction&) a).isPreviousNotWordOnly == ((AssertWordBoundaryBaseInstruction&) b).isPreviousNotWordOnly
 			&& ((AssertWordBoundaryBaseInstruction&) a).isNextWordOnly == ((AssertWordBoundaryBaseInstruction&) b).isNextWordOnly
 			&& ((AssertWordBoundaryBaseInstruction&) a).isNextNotWordOnly == ((AssertWordBoundaryBaseInstruction&) b).isNextNotWordOnly;
-		
+
 	case InstructionType::AssertRecurseValue:
 		return ((AssertRecurseValueInstruction&) a).recurseValue == ((AssertRecurseValueInstruction&) b).recurseValue;
-			
+
 	case InstructionType::BackReference:
 		return ((BackReferenceInstruction&) a).index == ((BackReferenceInstruction&) b).index;
-			
+
 	case InstructionType::Byte:
 		return ((ByteInstruction&) a).c == ((ByteInstruction&) b).c;
 
@@ -689,30 +689,30 @@ bool Javelin::PatternInternal::operator==(const Instruction &a, const Instructio
 			const ByteEitherOf3Instruction& rhs = (ByteEitherOf3Instruction&) b;
 			return lhs.c[0] == rhs.c[0] && lhs.c[1] == rhs.c[1] && lhs.c[2] == rhs.c[2];
 		}
-			
+
 	case InstructionType::ByteRange:
 		return ((ByteRangeInstruction&) a).byteRange == ((ByteRangeInstruction&) b).byteRange;
-		
+
 	case InstructionType::ByteBitMask:
 		return ((ByteBitMaskInstruction&) a).bitMask == ((ByteBitMaskInstruction&) b).bitMask;
-		
+
 	case InstructionType::ByteNot:
 			return ((ByteNotInstruction&) a).c == ((ByteNotInstruction&) b).c;
-			
+
 	case InstructionType::ByteNotEitherOf2:
 		{
 			const ByteNotEitherOf2Instruction& lhs = (ByteNotEitherOf2Instruction&) a;
 			const ByteNotEitherOf2Instruction& rhs = (ByteNotEitherOf2Instruction&) b;
 			return lhs.c[0] == rhs.c[0] && lhs.c[1] == rhs.c[1];
 		}
-			
+
 	case InstructionType::ByteNotEitherOf3:
 		{
 			const ByteNotEitherOf3Instruction& lhs = (ByteNotEitherOf3Instruction&) a;
 			const ByteNotEitherOf3Instruction& rhs = (ByteNotEitherOf3Instruction&) b;
 			return lhs.c[0] == rhs.c[0] && lhs.c[1] == rhs.c[1] && lhs.c[2] == rhs.c[2];
 		}
-			
+
 	case InstructionType::ByteNotRange:
 		return ((ByteNotRangeInstruction&) a).byteRange == ((ByteNotRangeInstruction&) b).byteRange;
 
@@ -723,55 +723,55 @@ bool Javelin::PatternInternal::operator==(const Instruction &a, const Instructio
 			const JumpTableInstruction& rhs = (JumpTableInstruction&) b;
 			return memcmp(lhs.targetTable, rhs.targetTable, 256) == 0 && lhs.targetList == rhs.targetList;
 		}
-			
+
 	case InstructionType::Call:
 		return ((CallInstruction&) a).callTarget == ((CallInstruction&) b).callTarget
 		   && ((CallInstruction&) a).falseTarget == ((CallInstruction&) b).falseTarget
 		   && ((CallInstruction&) a).trueTarget  == ((CallInstruction&) b).trueTarget;
-		
+
 	case InstructionType::Fail:
 		return true;
 
 	case InstructionType::Jump:
 		return ((JumpInstruction&) a).target == ((JumpInstruction&) b).target;
-		
+
 	case InstructionType::Match:
 		return true;
-		
+
 	case InstructionType::Possess:
 		return ((PossessInstruction&) a).callTarget == ((PossessInstruction&) b).callTarget
 		   && ((PossessInstruction&) a).trueTarget  == ((PossessInstruction&) b).trueTarget;
-		
+
 	case InstructionType::ProgressCheck:
 		return true;
 
 	case InstructionType::Recurse:
 		return ((RecurseInstruction&) a).recurseValue == ((RecurseInstruction&) b).recurseValue
 			&& ((RecurseInstruction&) a).callTarget == ((RecurseInstruction&) b).callTarget;
-		
+
 	case InstructionType::ReturnIfRecurseValue:
 		return ((ReturnIfRecurseValueInstruction&) a).recurseValue == ((ReturnIfRecurseValueInstruction&) b).recurseValue;
-			
+
 	case InstructionType::Save:
 		return ((SaveInstruction&) a).saveIndex == ((SaveInstruction&) b).saveIndex
 			&& ((SaveInstruction&) a).saveOffset == ((SaveInstruction&) b).saveOffset;
-		
+
 	case InstructionType::Split:
 		{
 			const SplitInstruction& splitA = (SplitInstruction&) a;
 			const SplitInstruction& splitB = (SplitInstruction&) b;
 			if(splitA.targetList == splitB.targetList) return true;
-			
+
 
 		}
 		return false;
-			
+
 	case InstructionType::StepBack:
 		return ((StepBackInstruction&) a).step == ((StepBackInstruction&) b).step;
-		
+
 	case InstructionType::Success:
 		return true;
-		
+
 	default:
 		JERROR("Unhandled case");
 		return false;
@@ -876,7 +876,7 @@ void JumpInstruction::Link()
 {
 	target->referenceList.Append(InstructionReference{&target, this});
 }
-						   
+
 void JumpInstruction::Unlink()
 {
 	target->referenceList.Remove(&target);
@@ -967,7 +967,7 @@ void JumpTableInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 	{
 		JASSERT(targetList[i] != nullptr);
 	}
-	
+
 	if(targetList.GetCount() == 2)
 	{
 		// Use a mask instruction instead!
@@ -980,12 +980,12 @@ void JumpTableInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 		{
 			data.pcData[i] = (targetList[i] == nullptr) ? TypeData<uint32_t>::Maximum() : targetList[i]->index;
 		}
-		
+
 		// Is it possible to use a range?
 		if(data.bitMask.IsContiguous())
 		{
 			Interval<size_t> range = data.bitMask.GetContiguousRange();
-			
+
 			ByteCodeJumpRangeData rangeData;
 			rangeData.range.min = range.min;
 			rangeData.range.max = range.max-1;
@@ -1169,7 +1169,7 @@ Instruction* ByteBitMaskInstruction::Clone() const
 void ByteBitMaskInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 {
 	static_assert(sizeof(bitMask) == 32, "Ensure bitMask has expected size");
-	
+
 	size_t populationCount = bitMask.GetPopulationCount();
 
 	if(populationCount == 0)
@@ -1213,7 +1213,7 @@ void ByteBitMaskInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 		{
 			if(!bitMask[i]) c[cIndex++] = i;
 		}
-		
+
 		if(cIndex >= 2 && c[0]+cIndex-1 == c[cIndex-1])
 		{
 			unsigned char low = c[0];
@@ -1407,7 +1407,7 @@ void SearchByteInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 	{
 		char buffer[sizeof(ByteCodeSearchByteData) + sizeof(ByteCodeSearchMultiByteData)];
 		ByteCodeSearchByteData* data = (ByteCodeSearchByteData*) buffer;
-		
+
 		memcpy(data->bytes, bytes, 8);
 		data->offset = offset;
 
@@ -1424,7 +1424,7 @@ void SearchByteInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 			InstructionType::SearchByteTriplet,
 		};
 		if(SMALLER_DATA.Contains(type)) sizeOfData -= 4;
-		
+
 		static constexpr EnumSet<InstructionType, uint64_t> MULTI_BYTE_SEARCH
 		{
 			InstructionType::SearchBytePair,
@@ -1435,7 +1435,7 @@ void SearchByteInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 			InstructionType::SearchByteTriplet,
 			InstructionType::SearchByteTriplet2,
 		};
-		
+
 		if(MULTI_BYTE_SEARCH.Contains(type))
 		{
 			ByteCodeSearchMultiByteData* multiByteData = (ByteCodeSearchMultiByteData*) &buffer[sizeOfData];
@@ -1461,13 +1461,13 @@ void SearchByteInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 					}
 				}
 			}
-			
+
 			if(multiByteData->numberOfNibbleMasks == 0
 			   && (type == InstructionType::SearchBytePair3 || type == InstructionType::SearchBytePair4))
 			{
 				int bytes = int(type) - int(InstructionType::SearchBytePair) + 1;
 				NibbleMask nibbleMaskList[2];
-				
+
 				for(int i = 0; i < bytes; ++i)
 				{
 					nibbleMaskList[0].AddByte(data->bytes[i]);
@@ -1514,14 +1514,14 @@ void SearchDataInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 		ByteCodeSearchData 			searchData;
 		ByteCodeSearchMultiByteData	multiByteData;
 	};
-	
+
 	Data byteCodeData;
-	
+
 	byteCodeData.searchData.length = length;
 	CopyMemory(byteCodeData.searchData.data, data, 256);
 
 	size_t dataSize = sizeof(ByteCodeSearchData);
-	
+
 	if(type == InstructionType::SearchShiftOr)
 	{
 		if(nibbleMaskList.GetCount())
@@ -1538,7 +1538,7 @@ void SearchDataInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 		}
 		dataSize += sizeof(uint32_t) + 32*byteCodeData.multiByteData.numberOfNibbleMasks;
 	}
-	
+
 	uint32_t dataOffset = builder.GetOffsetForData(&byteCodeData, dataSize);
 	builder.AddInstruction(this, type, dataOffset);
 }
@@ -1645,7 +1645,7 @@ Instruction* SuccessInstruction::Clone() const
 void SplitInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 {
 	uint32_t numberOfTargets = (uint32_t) targetList.GetCount();
-	
+
 	if(numberOfTargets == 0)
 	{
 		builder.AddInstruction(this, InstructionType::Fail);
@@ -1656,9 +1656,9 @@ void SplitInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 		builder.AddInstruction(this, InstructionType::Jump, targetList[0]->index);
 		return;
 	}
-	
+
 	uint32_t byteCodeData[numberOfTargets+1];
-	
+
 	if(numberOfTargets == 2)
 	{
 		Instruction* nextInstruction = GetNext();
@@ -1687,9 +1687,9 @@ void SplitInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 	{
 		byteCodeData[i+1] = targetList[i]->index;
 	}
-	
+
 	uint32_t offset = builder.GetOffsetForData(byteCodeData, sizeof(uint32_t) * (numberOfTargets+1));
-	
+
 	builder.AddInstruction(this, InstructionType::Split, offset);
 }
 

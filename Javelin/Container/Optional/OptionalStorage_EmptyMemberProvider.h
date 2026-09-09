@@ -28,40 +28,40 @@ namespace Javelin
 		public:
 			struct Type
 			{
-				Type() { SetEmpty(); }																									
+				Type() { SetEmpty(); }
 				template<typename... A>	JINLINE Type(A&&... a) : value((A&&) a...) { }
 				~Type()	{ }
-				
+
 				// Union will prevent the constructor of T being called.
 				union
 				{
 					T	value;
 				};
-				
+
 				JINLINE bool HasValue() const	{ return value.*M != EMPTY_VALUE_CLASS::GetEmptyValue();	}
 				JINLINE void SetEmpty()			{ value.*M = EMPTY_VALUE_CLASS::GetEmptyValue();			}
 			};
-			
+
 			JINLINE static void DestroyValue(Type& a)				{ a.value.~T(); }
-			
+
 			template<typename... A>
 			JINLINE static void Replace(Type &a, A&&... b)			{ a.value.~T(); new(Placement(&a.value)) Type((A&&) b...); }
-			
+
 			JINLINE static void CopyFrom(Type& a, Type& b)			{ a.value = b.value; }
 			JINLINE static void CopyFrom(Type& a, const Type& b)	{ a.value = b.value; }
 			JINLINE static void MoveFrom(Type& a, Type&& b)			{ a.value = (T&&) b.value; }
-			
+
 			template<typename... A>
 			JINLINE static T& CopyFrom(Type& a, A&&... b)			{ return *new(Placement(&a.value)) T((A&&) b...); }
-			
+
 			JINLINE static bool HasValue(const Type& a)				{ return a.HasValue(); 	}
 			JINLINE static void SetEmpty(Type& a) 					{ a.SetEmpty(); 		}
-			
+
 			JINLINE static T& GetValue(Type& a) 					{ JASSERT(HasValue(a)); return a.value; }
 			JINLINE static const T& GetValue(const Type& a)			{ JASSERT(HasValue(a)); return a.value; }
 		};
 	};
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

@@ -21,7 +21,7 @@ class DefaultStackGrowthHandler : public Pattern::StackGrowthHandler
 {
 public:
 	constexpr DefaultStackGrowthHandler() { }
-	
+
 	virtual void* Allocate(size_t size) const	{ return malloc(size); 	}
 	virtual void Free(void* p) const			{ free(p);				}
 
@@ -33,7 +33,7 @@ constexpr DefaultStackGrowthHandler	DefaultStackGrowthHandler::instance;
 const Pattern::StackGrowthHandler*	Pattern::stackGrowthHandler = &DefaultStackGrowthHandler::instance;
 
 //============================================================================
-	
+
 MatchResult::MatchResult(const char** captures, uint32_t numberOfCaptures)
 {
 	captureList.SetCount(numberOfCaptures);
@@ -75,22 +75,22 @@ PatternInternal::PatternProcessor* Pattern::CreateProcessor(DataBlock&& dataBloc
 	{
 	case PatternProcessorType::BackTracking:
 		return PatternProcessor::CreateBackTrackingProcessor((DataBlock&&) dataBlock);
-		
+
 	case PatternProcessorType::ConsistencyCheck:
 		return PatternProcessor::CreateConsistencyCheckProcessor((DataBlock&&) dataBlock);
-		
+
 	case PatternProcessorType::Nfa:
 		return PatternProcessor::CreateNfaProcessor((DataBlock&&) dataBlock);
 
 	case PatternProcessorType::NfaOrBitStateBackTracking:
 		return PatternProcessor::CreateNfaOrBitStateProcessor((DataBlock&&) dataBlock);
-			
+
 	case PatternProcessorType::ScanAndCapture:
 		return PatternProcessor::CreateScanAndCaptureProcessor((DataBlock&&) dataBlock);
-			
+
 	case PatternProcessorType::OnePass:
 		return PatternProcessor::CreateOnePassProcessor((DataBlock&&) dataBlock);
-		
+
 	default:
 		JERROR("Invalid processor type!");
 		return nullptr;
@@ -104,7 +104,7 @@ Pattern::Pattern(const String& pattern, int options) // Can throw PatternExcepti
 
 	numberOfCaptures = compiler.GetNumberOfCaptures();
 	const DataBlock& dataBlock = compiler.GetByteCode();
-	
+
 	const ByteCodeHeader* header = (ByteCodeHeader*) dataBlock.GetData();
 	SetAnchoredByteFilter(header);
 	flags = header->flags.value;
@@ -113,10 +113,10 @@ Pattern::Pattern(const String& pattern, int options) // Can throw PatternExcepti
 	maximumMatchLength = header->maximumMatchLength == TypeData<uint16_t>::Maximum() ? TypeData<uint32_t>::Maximum() : size_t(header->maximumMatchLength);
 	matchLengthCheck = GetMaximumLength() - GetMinimumLength();
 	JASSERT(GetMatchLengthCheck() == GetMaximumLength() - GetMinimumLength());
-	
+
 	const void* data = dataBlock.GetData();
 	size_t length = dataBlock.GetNumberOfBytes();
-	
+
 	partialMatchProcessor = CreateProcessor((DataBlock&&) dataBlock, header->flags.partialMatchProcessorType);
 	if(header->flags.partialMatchProcessorType == header->flags.fullMatchProcessorType)
 	{
@@ -147,22 +147,22 @@ PatternProcessor* Pattern::CreateProcessor(const void* data, size_t length, bool
 	{
 	case PatternProcessorType::BackTracking:
 		return PatternProcessor::CreateBackTrackingProcessor(data, length, makeCopy);
-		
+
 	case PatternProcessorType::ConsistencyCheck:
 		return PatternProcessor::CreateConsistencyCheckProcessor(data, length, makeCopy);
-		
+
 	case PatternProcessorType::Nfa:
 		return PatternProcessor::CreateNfaProcessor(data, length, makeCopy);
-		
+
 	case PatternProcessorType::NfaOrBitStateBackTracking:
 		return PatternProcessor::CreateNfaOrBitStateProcessor(data, length, makeCopy);
-			
+
 	case PatternProcessorType::ScanAndCapture:
 		return PatternProcessor::CreateScanAndCaptureProcessor(data, length, makeCopy);
-			
+
 	case PatternProcessorType::OnePass:
 		return PatternProcessor::CreateOnePassProcessor(data, length, makeCopy);
-		
+
 	default:
 		JERROR("Invalid processor type!");
 		return nullptr;
@@ -174,7 +174,7 @@ void Pattern::Set(const void* data, size_t length, bool makeCopy)
 	const ByteCodeHeader* header = (ByteCodeHeader*) data;
 	JVERIFY(header->IsValid());
 	SetAnchoredByteFilter(header);
-	
+
 	numberOfCaptures = header->numberOfCaptures;
 	flags = header->flags.value;
 	isUtf8 = (header->patternStringOptions & UTF8) != 0;
@@ -184,7 +184,7 @@ void Pattern::Set(const void* data, size_t length, bool makeCopy)
 	JASSERT(GetMatchLengthCheck() == GetMaximumLength() - GetMinimumLength());
 
 	partialMatchProcessor = CreateProcessor(data, length, makeCopy, header->flags.partialMatchProcessorType);
-	
+
 	if(header->flags.partialMatchProcessorType == header->flags.fullMatchProcessorType)
 	{
 		fullMatchProcessor = partialMatchProcessor;
@@ -288,7 +288,7 @@ void Pattern::DumpInstructions(IWriter& output, const DataBlock& data)
 		output.PrintF("Header not valid\n");
 		return;
 	}
-	
+
 	static const char *const PROCESSOR_TYPES[] = { "none", "nfa", "bit-state", "one-pass", "back-tracking", "scan-and-capture", "consistency-check", "nfa-or-bitstate-back-tracking", "fixed-length", "anchored" };
 
 	output.PrintF("Pattern: \"%A\"\n", &header->GetPatternString());
@@ -316,7 +316,7 @@ void Pattern::DumpInstructions(IWriter& output, const DataBlock& data)
 		if(header->patternStringOptions == 0) output.PrintF("NONE");
 		output.PrintF("\n");
 	}
-	
+
 	static constexpr const char* ANCHOR_TEXT[] =
 	{
 		"none",
@@ -324,11 +324,11 @@ void Pattern::DumpInstructions(IWriter& output, const DataBlock& data)
 		"end",
 		"both"
 	};
-	
+
 	bool hasReverseProgram = header->flags.reverseProcessorType != PatternProcessorType::None
 								&& header->flags.reverseProcessorType != PatternProcessorType::FixedLength
 								&& header->flags.reverseProcessorType != PatternProcessorType::Anchored;
-	
+
 	output.PrintF("PartialMatch: %s -> %u\n", PROCESSOR_TYPES[(int) header->flags.partialMatchProcessorType], header->partialMatchStartingInstruction);
 	output.PrintF("FullMatch: %s -> %u\n", PROCESSOR_TYPES[(int) header->flags.fullMatchProcessorType], header->fullMatchStartingInstruction);
 	output.PrintF(hasReverseProgram ? "ReverseMatch: %s -> %u\n" : "ReverseMatch: %s\n", PROCESSOR_TYPES[(int) header->flags.reverseProcessorType], header->reverseMatchStartingInstruction);
@@ -350,12 +350,12 @@ void Pattern::DumpInstructions(IWriter& output, const DataBlock& data)
 
 	const ByteCodeInstruction* instructions = (const ByteCodeInstruction*) (header+1);
 	DumpInstructionList(output, instructions, header->numberOfInstructions, sizeof(ByteCodeHeader));
-	
+
 	if(hasReverseProgram)
 	{
 		output.PrintF("\nReverse program:\n");
 		const ByteCodeInstruction* instructions = header->GetReverseProgram();
-		DumpInstructionList(output, instructions, header->numberOfReverseInstructions, header->reverseProgramOffset);		
+		DumpInstructionList(output, instructions, header->numberOfReverseInstructions, header->reverseProgramOffset);
 	}
 }
 
@@ -390,13 +390,13 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 		ValueAndInstruction,
 		WordBoundaryHint,
 	};
-	
+
 	struct InstructionData
 	{
 		String						name;
 		InstructionParameterType	parameterType;
 	};
-	
+
 	static const InstructionData INSTRUCTION_DATA[] =
 	{
 		#define TAG(x, y, c) { VariableName{JS(#x), VariableName::CAMEL_CASE}.AsLowerWithSeparator('-'), InstructionParameterType::y },
@@ -426,7 +426,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				else output.PrintF("fail\n");
 			}
 			break;
-				
+
 		case InstructionParameterType::Save:
 			{
 				uint32_t saveIndex = instruction.data & 0xff;
@@ -438,7 +438,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 		case InstructionParameterType::Value:
 			output.PrintF(" %d\n", instruction.data);
 			break;
-				
+
 		case InstructionParameterType::SingleByte:
 		case InstructionParameterType::DoubleByte:
 		case InstructionParameterType::TripleByte:
@@ -452,7 +452,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				output.PrintF("\n");
 			}
 			break;
-				
+
 		case InstructionParameterType::ByteRange:
 			output.PrintF(" {'%C','%C'}\n", instruction.data & 0xff, instruction.data>>8 & 0xff);
 			break;
@@ -477,7 +477,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 			}
 			output.PrintF(" [0x%x]\n", instruction.data+ byteCodeDataOffset);
 			break;
-				
+
 		case InstructionParameterType::JumpMask:
 			{
 				const unsigned char* data = (const unsigned char*) instructions;
@@ -498,7 +498,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 			}
 			output.PrintF(" [0x%x]\n", instruction.data+ byteCodeDataOffset);
 			break;
-				
+
 		case InstructionParameterType::JumpRange:
 			{
 				const unsigned char* data = (const unsigned char*) instructions;
@@ -518,7 +518,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				output.PrintF(" {'%C','%C'} [0x%x]\n", jumpRangeData->range.min, jumpRangeData->range.max, instruction.data+ byteCodeDataOffset);
 			}
 			break;
-				
+
 		case InstructionParameterType::BitMask:
 			{
 				const unsigned char* data = (const unsigned char*) instructions;
@@ -526,7 +526,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 			}
 			output.PrintF(" [0x%x]\n", instruction.data+ byteCodeDataOffset);
 			break;
-				
+
 		case InstructionParameterType::Split:
 			{
 				const unsigned char* data = (const unsigned char*) instructions;
@@ -545,7 +545,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				output.PrintF(" %u %u [0x%x]\n", data[0], data[1], instruction.data+ byteCodeDataOffset);
 			}
 			break;
-				
+
 		case InstructionParameterType::ByteValueAndInstruction:
 			output.PrintF(" '%C' -> %u\n", instruction.data & 0xff, instruction.data >> 8);
 			break;
@@ -553,7 +553,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 		case InstructionParameterType::ValueAndInstruction:
 			output.PrintF(" %u -> %u\n", instruction.data & 0xff, instruction.data >> 8);
 			break;
-				
+
 		case InstructionParameterType::SearchByte:
 			output.PrintF((instruction.data >> 8) != 0 ? " '%C' @ %u\n" : " '%C'\n", instruction.data & 0xff, instruction.data >> 8);
 			break;
@@ -584,7 +584,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				output.PrintF(" [0x%x]\n", instruction.data + byteCodeDataOffset);
 			}
 			break;
-				
+
 		case InstructionParameterType::SearchByte5:
 			{
 				const unsigned char* data = (const unsigned char*) instructions;
@@ -593,7 +593,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				output.PrintF(" [0x%x]\n", instruction.data + byteCodeDataOffset);
 			}
 			break;
-				
+
 		case InstructionParameterType::SearchByte6:
 			{
 				const unsigned char* data = (const unsigned char*) instructions;
@@ -602,7 +602,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				output.PrintF(" [0x%x]\n", instruction.data + byteCodeDataOffset);
 			}
 			break;
-				
+
 		case InstructionParameterType::SearchByte7:
 			{
 				const unsigned char* data = (const unsigned char*) instructions;
@@ -611,7 +611,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				output.PrintF(" [0x%x]\n", instruction.data + byteCodeDataOffset);
 			}
 			break;
-				
+
 		case InstructionParameterType::SearchByte8:
 			{
 				const unsigned char* data = (const unsigned char*) instructions;
@@ -620,7 +620,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				output.PrintF(" [0x%x]\n", instruction.data + byteCodeDataOffset);
 			}
 			break;
-				
+
 		case InstructionParameterType::SearchData:
 			{
 				const unsigned char* data = (const unsigned char*) instructions;
@@ -628,7 +628,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 				output.PrintF(" %u [0x%x]\n", searchData->length, instruction.data+ byteCodeDataOffset);
 			}
 			break;
-				
+
 		case InstructionParameterType::WordBoundaryHint:
 			if(instruction.data & ByteCodeWordBoundaryHint::PreviousIsWordOnly) output.PrintF(" previous-is-word-only");
 			if(instruction.data & ByteCodeWordBoundaryHint::PreviousIsNotWordOnly) output.PrintF(" previous-is-not-word-only");
@@ -648,7 +648,7 @@ const void* Pattern::InternalHasFullMatch(const void* data, size_t length) const
 	size_t testLength = length - GetMinimumLength();
 	if(JUNLIKELY(testLength > GetMatchLengthCheck())) return nullptr;
 //	if(JUNLIKELY(length < GetMinimumLength() || length > GetMaximumMatchLength())) return false;
-	
+
 	if(JUNLIKELY(AlwaysRequiresCaptures()))
 	{
 		return HasFullMatchWithCaptures(data, length);
@@ -670,7 +670,7 @@ const void* Pattern::InternalHasPartialMatch(const void* data, size_t length, si
 {
 	JASSERT(offset <= length);
 	if(RejectsAnchoredByte(data, length)) return nullptr;
-	
+
 	size_t remainingLength = length - offset;
 	if(HasEndAnchor() && remainingLength > GetMaximumLength())
 	{
@@ -718,9 +718,9 @@ bool Pattern::PartialMatch(const void* data, size_t length, const void** capture
 		offset = length - GetMaximumLength();
 	}
 	else if(remainingLength < GetMinimumLength()) return false;
-	
+
 	if(offset > 0 && HasStartAnchor()) return false;
-	
+
 	return partialMatchProcessor->PartialMatch(data, length, offset, (const char**) captures) != nullptr;
 }
 
@@ -770,7 +770,7 @@ MatchResult Pattern::PartialMatch(const String& s, size_t offset) const
 {
 	const char* captures[2*numberOfCaptures];
 	memset(captures, 0, sizeof(const char*)*2*numberOfCaptures);
-	
+
 	if(PartialMatch(s.GetData(), s.GetNumberOfBytes(), (const void**) captures, offset))
 	{
 		return MatchResult(captures, numberOfCaptures);
@@ -825,7 +825,7 @@ size_t Pattern::CountPartialMatches(const void* data, size_t length, size_t offs
 {
 	JASSERT(offset <= length);
 	if(RejectsAnchoredByte(data, length)) return 0;
-	
+
 	size_t remainingLength = length - offset;
 	if(HasEndAnchor() && remainingLength > GetMaximumLength())
 	{
@@ -837,15 +837,15 @@ size_t Pattern::CountPartialMatches(const void* data, size_t length, size_t offs
 	{
 		return CountPartialMatchesWithCaptures(data, length, offset);
 	}
-	
+
 	if(HasStartAnchor())
 	{
 		if(offset != 0) return 0;
-		
+
 		const void* result = partialMatchProcessor->PartialMatch(data, length, offset);
 		return (result != nullptr) ? 1 : 0;
 	}
-	
+
 	size_t count = 0;
 	if(GetMinimumLength() == 0)
 	{
@@ -883,7 +883,7 @@ size_t Pattern::CountPartialMatchesWithCaptures(const void* data, size_t length,
 		const void* result = partialMatchProcessor->PartialMatch(data, length, offset, captures);
 		return (result != nullptr) ? 1 : 0;
 	}
-		
+
 
 	size_t count = 0;
 	do
@@ -891,7 +891,7 @@ size_t Pattern::CountPartialMatchesWithCaptures(const void* data, size_t length,
 		memset(captures, 0, sizeof(const char*)*2*numberOfCaptures);
 		const void* result = partialMatchProcessor->PartialMatch(data, length, offset, captures);
 		if(result == nullptr) return count;
-		
+
 		++count;
 		offset = uintptr_t(result) - uintptr_t(data);
 		if(captures[0] == captures[1]) offset = AdvanceAfterEmptyMatch(data, length, offset);

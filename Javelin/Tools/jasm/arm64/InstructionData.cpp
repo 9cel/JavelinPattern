@@ -122,13 +122,13 @@ constexpr EncodingVariant ADD_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64SP|MatchOp0, MatchComma, MatchReg64|MatchReg64SP|MatchOp1, MatchComma, MatchReg64|MatchReg64Z|MatchOp2, MatchComma, MatchExtendReg64|MatchOp3), ArithmeticExtendedRegister, 0, 0x8b200000),
 	// ADD <Xd|SP>, <Xn|WSP>, <Xm>, <extend> #<amount>}
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64SP|MatchOp0, MatchComma, MatchReg64|MatchReg64SP|MatchOp1, MatchComma, MatchReg64|MatchReg64Z|MatchOp2, MatchComma, MatchLSL|MatchExtendReg64|MatchOp3, MatchImm|MatchOp4), ArithmeticExtendedRegister, 0, 0x8b200000),
-	
+
 	// ADD Dd, Dn, Dm
 	DECLARE_CANDIDATE((MatchD|MatchOp0|MatchOp7, MatchComma, MatchD|MatchOp1, MatchComma, MatchD|MatchOp2), FpRdRnRmRa, 0, 0x5ee08400),
 
 	// ADD <Vd>.T, <Vn>.T, <Vm>.T
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x0e208400),
-	
+
 	// ADD Rd, Rn, {target}[highbit:lowbit]
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchReg32|MatchOp1, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket), RdRnImmSubfield, 0x0c0a, 0x11000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchReg64|MatchOp1, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket), RdRnImmSubfield, 0x0c0a, 0x91000000),
@@ -172,7 +172,7 @@ constexpr EncodingVariant ADDS_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchExtendReg32|MatchOp3), ArithmeticExtendedRegister, 0, 0x2b200000),
 	// ADDS Wd, <Wn|WSP>, <Wm>, <extend> #<amount>}
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchLSL|MatchExtendReg32|MatchOp3, MatchImm|MatchOp4), ArithmeticExtendedRegister, 0, 0x2b200000),
-	
+
 	// ADDS Xd, <Xn|SP>, #<imm>, <shift>
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64SP|MatchOp1, MatchComma, MatchImm|MatchOp2), ArithmeticImmediate, 0, 0xb1000000),
 	// ADDS Xd, <Xn|SP>, #<imm>, <shift> #<amount>
@@ -216,7 +216,7 @@ constexpr EncodingVariant AND_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchReg64|MatchReg64Z|MatchOp2), ArithmeticShiftedRegister, 0, 0x8a000000),
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchShift|MatchROR|MatchOp3, MatchImm|MatchOp4), ArithmeticShiftedRegister, 0, 0x0a000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchReg64|MatchReg64Z|MatchOp2, MatchComma, MatchShift|MatchROR|MatchOp3, MatchImm|MatchOp4), ArithmeticShiftedRegister, 0, 0x8a000000),
-	
+
 	// AND <Vd>.T, <Vn>.T, <Vm>.T
 	DECLARE_CANDIDATE((MatchV8B16B|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0e201c00),
 };
@@ -226,7 +226,7 @@ constexpr EncodingVariant ANDS_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchImm|MatchOp2), LogicalImmediate, 32, 0x72000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64SP|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchImm|MatchOp2), LogicalImmediate, 64, 0xf2000000),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2), ArithmeticShiftedRegister, 0, 0x6a000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchReg64|MatchReg64Z|MatchOp2), ArithmeticShiftedRegister, 0, 0xea000000),
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchShift|MatchROR|MatchOp3, MatchImm|MatchOp4), ArithmeticShiftedRegister, 0, 0x6a000000),
@@ -472,7 +472,7 @@ constexpr EncodingVariant CLS_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1), RdRnRmRa, 0, 0x5ac01400),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1), RdRnRmRa, 0, 0xdac01400),
-	
+
 	// CLS <Vd>.T, <Vn>.T
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 3, 0x0e204800),
 
@@ -509,13 +509,13 @@ constexpr EncodingVariant CMGE_ENCODING_VARIANTS[] =
 {
 	// Scalar: CMGE <V><d>, <V><n>, <V><m>
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 0, 0x5ee03c00),
-	
+
 	// Vector: CMGE <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x0e203c00),
-	
+
 	// Scalar Zero: CMGE <V><d>, <V><n>, #0
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 0, 0x7ee08800),
-	
+
 	// Vector Zero: CMGE <Vd>.<T>, <Vn>.<T>, #0
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 3, 0x2e208800),
 };
@@ -525,13 +525,13 @@ constexpr EncodingVariant CMGT_ENCODING_VARIANTS[] =
 {
 	// Scalar: CMGT <V><d>, <V><n>, <V><m>
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 0, 0x5ee03400),
-	
+
 	// Vector: CMGT <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x0e203400),
-	
+
 	// Scalar Zero: CMGT <V><d>, <V><n>, #0
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 0, 0x5ee08800),
-	
+
 	// Vector Zero: CMGT <Vd>.<T>, <Vn>.<T>, #0
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 3, 0x0e208800),
 };
@@ -541,7 +541,7 @@ constexpr EncodingVariant CMHI_ENCODING_VARIANTS[] =
 {
 	// Scalar: CMHI <V><d>, <V><n>, <V><m>
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 0, 0x7ee03400),
-	
+
 	// Vector: CMHI <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x2e203400),
 };
@@ -551,7 +551,7 @@ constexpr EncodingVariant CMHS_ENCODING_VARIANTS[] =
 {
 	// Scalar: CMHS <V><d>, <V><n>, <V><m>
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 0, 0x7ee03c00),
-	
+
 	// Vector: CMHS <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x2e203c00),
 };
@@ -561,13 +561,13 @@ constexpr EncodingVariant CMLE_ENCODING_VARIANTS[] =
 {
 	// Scalar: CMGE <V><d>, <V><m>, <V><n>
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 0, 0x5ee03c00),
-	
+
 	// Vector: CMGE <Vd>.<T>, <Vm>.<T>, <Vn>.<T>
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 3, 0x0e203c00),
-	
+
 	// Scalar Zero: CMLE <V><d>, <V><n>, #0
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 0, 0x7ee09800),
-	
+
 	// Vector Zero: CMLE <Vd>.<T>, <Vn>.<T>, #0
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 3, 0x2e209800),
 };
@@ -577,13 +577,13 @@ constexpr EncodingVariant CMLT_ENCODING_VARIANTS[] =
 {
 	// Scalar: CMGT <V><d>, <V><m>, <V><n>
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 0, 0x5ee03400),
-	
+
 	// Vector: CMGT <Vd>.<T>, <Vm>.<T>, <Vn>.<T>
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 3, 0x0e203400),
-	
+
 	// Scalar Zero: CMLE <V><d>, <V><n>, #0
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 0, 0x5ee0a800),
-	
+
 	// Vector Zero: CMLE <Vd>.<T>, <Vn>.<T>, #0
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 3, 0x0e20a800),
 };
@@ -603,7 +603,7 @@ constexpr EncodingVariant CMN_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchExtendReg32|MatchOp3), ArithmeticExtendedRegister, 0, 0x2b20001f),
 	// CMN <Wn|WSP>, <Wm>, <extend> #<amount>}
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchLSL|MatchExtendReg32|MatchOp3, MatchImm|MatchOp4), ArithmeticExtendedRegister, 0, 0x2b20001f),
-	
+
 	// CMN <Xn|SP>, #<imm>, <shift>
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64SP|MatchOp1, MatchComma, MatchImm|MatchOp2), ArithmeticImmediate, 0, 0xb100001f),
 	// CMN <Xn|SP>, #<imm>, <shift> #<amount>
@@ -637,7 +637,7 @@ constexpr EncodingVariant CMP_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchExtendReg32|MatchOp3), ArithmeticExtendedRegister, 0, 0x6b20001f),
 	// CMN <Wn|WSP>, <Wm>, <extend> #<amount>}
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchLSL|MatchExtendReg32|MatchOp3, MatchImm|MatchOp4), ArithmeticExtendedRegister, 0, 0x6b20001f),
-	
+
 	// CMN <Xn|SP>, #<imm>, <shift>
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64SP|MatchOp1, MatchComma, MatchImm|MatchOp2), ArithmeticImmediate, 0, 0xf100001f),
 	// CMN <Xn|SP>, #<imm>, <shift> #<amount>
@@ -661,7 +661,7 @@ constexpr EncodingVariant CMTST_ENCODING_VARIANTS[] =
 {
 	// Scalar: CMTST <V><d>, <V><n>, <V><m>
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 0, 0x5ee08c00),
-	
+
 	// Vector: CMTST <Vd>.<T>, <Vm>.<T>, <Vn>.<T>
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x0e208c00),
 };
@@ -759,7 +759,7 @@ constexpr EncodingVariant EOR_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchImm|MatchOp2), LogicalImmediate, 32, 0x52000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64SP|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchImm|MatchOp2), LogicalImmediate, 64, 0xd2000000),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2), ArithmeticShiftedRegister, 0, 0x4a000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchReg64|MatchReg64Z|MatchOp2), ArithmeticShiftedRegister, 0, 0xca000000),
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchShift|MatchROR|MatchOp3, MatchImm|MatchOp4), ArithmeticShiftedRegister, 0, 0x4a000000),
@@ -789,7 +789,7 @@ constexpr EncodingVariant FABD_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 0, 0x7ec01400),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 4, 0x7ea0d400),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x2ec01400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x2ea0d400),
@@ -800,7 +800,7 @@ constexpr EncodingVariant FABS_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e20c000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0ef8f800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0ea0f800),
@@ -824,7 +824,7 @@ constexpr EncodingVariant FACGT_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 0, 0x7ec02c00),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 4, 0x7ea0ec00),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x2ec02c00),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x2ea0ec00),
@@ -835,7 +835,7 @@ constexpr EncodingVariant FADD_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 8, 0x1e202800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0e401400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0e20d400),
@@ -863,15 +863,15 @@ constexpr EncodingVariant FCMEQ_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchH|MatchOp2), FpRdRnRmRa, 0, 0x5e402400),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 4, 0x5e20e400),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0e402400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0e20e400),
-	
+
 	// Scalar Zero
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 0, 0x5ef8d800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 4, 0x5ea0d800),
-	
+
 	// Vector Zero
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 2, 0x0ef8d800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 6, 0x0ea0d800),
@@ -883,15 +883,15 @@ constexpr EncodingVariant FCMGE_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchH|MatchOp2), FpRdRnRmRa, 0, 0x7e402400),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 4, 0x7e20e400),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x2e402400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x2e20e400),
-	
+
 	// Scalar Zero
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 0, 0x7ef8c800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 4, 0x7ea0c800),
-	
+
 	// Vector Zero
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 2, 0x2ef8c800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 6, 0x2ea0c800),
@@ -903,15 +903,15 @@ constexpr EncodingVariant FCMGT_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchH|MatchOp2), FpRdRnRmRa, 0, 0x7ec02400),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 4, 0x7ea0e400),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x2ec02400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x2ea0e400),
-	
+
 	// Scalar Zero
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 0, 0x5ef8c800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 4, 0x5ea0c800),
-	
+
 	// Vector Zero
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 2, 0x0ef8c800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 6, 0x0ea0c800),
@@ -923,15 +923,15 @@ constexpr EncodingVariant FCMLE_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp2, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x7e402400),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x7e20e400),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2e402400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2e20e400),
-	
+
 	// Scalar Zero
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 0, 0x7ef8d800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 4, 0x7ea0d800),
-	
+
 	// Vector Zero
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 2, 0x2ef8d800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 6, 0x2ea0d800),
@@ -943,15 +943,15 @@ constexpr EncodingVariant FCMLT_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp2, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x7ec02400),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x7ea0e400),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2ec02400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp2, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2ea0e400),
-	
+
 	// Scalar Zero
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 0, 0x5ef8e800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 4, 0x5ea0e800),
-	
+
 	// Vector Zero
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 2, 0x0ef8e800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm0), FpRdRnRmRa, 6, 0x0ea0e800),
@@ -995,10 +995,10 @@ constexpr EncodingVariant FCVTAS_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x5e79c800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x5e21c800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0e79c800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0e21c800),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x1e240000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x9e240000),
 };
@@ -1008,10 +1008,10 @@ constexpr EncodingVariant FCVTAU_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x7e79c800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x7e21c800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2e79c800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2e21c800),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x1e250000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x9e250000),
 };
@@ -1035,10 +1035,10 @@ constexpr EncodingVariant FCVTMS_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x5e79b800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x5e21b800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0e79b800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0e21b800),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x1e300000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x9e300000),
 };
@@ -1048,10 +1048,10 @@ constexpr EncodingVariant FCVTMU_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x7e79b800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x7e21b800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2e79b800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2e21b800),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x1e310000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x9e310000),
 };
@@ -1075,10 +1075,10 @@ constexpr EncodingVariant FCVTNS_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x5e79a800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x5e21a800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0e79a800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0e21a800),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x1e200000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x9e200000),
 };
@@ -1088,10 +1088,10 @@ constexpr EncodingVariant FCVTNU_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x7e79a800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x7e21a800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2e79a800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2e21a800),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x1e210000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x9e210000),
 };
@@ -1101,10 +1101,10 @@ constexpr EncodingVariant FCVTPS_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x5ef9a800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x5ea1a800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0ef9a800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0ea1a800),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x1e280000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x9e280000),
 };
@@ -1114,10 +1114,10 @@ constexpr EncodingVariant FCVTPU_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x7ef9a800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x7ea1a800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2ef9a800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2ea1a800),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x1e290000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchFpAll|MatchOp1|MatchOp7), FpRdRnRmRa, 8, 0x9e290000),
 };
@@ -1162,16 +1162,16 @@ constexpr EncodingVariant FCVTZU_ENCODING_VARIANTS[] =
 	// Vector, Fixed-point
 	DECLARE_CANDIDATE((MatchH|MatchS|MatchD|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm|MatchOp2), FpRdRnFixedPointShift, 1, 0x7f00fc00),
 	DECLARE_CANDIDATE((MatchV4H8H|MatchV2S4S2D|MatchOp0, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm|MatchOp2), FpRdRnFixedPointShift, 5, 0x2f00fc00),
-	
+
 	// Vector, Integer
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x7ef9b800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x7ea1b800),
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2ef9b800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2ea1b800),
-	
+
 	// Scalar, Fixed-Point
 	DECLARE_CANDIDATE((MatchReg32|MatchReg64|MatchOp0, MatchComma, MatchH|MatchS|MatchD|MatchOp1, MatchComma, MatchImm|MatchOp2), FpRdRnFixedPointShift, 0x1a, 0x1e190000),
-	
+
 	// Scalar, Integer
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x1ef90000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x9ef90000),
@@ -1186,7 +1186,7 @@ constexpr EncodingVariant FDIV_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 8, 0x1e201800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x2e403c00),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x2e20fc00),
@@ -1201,7 +1201,7 @@ constexpr EncodingVariant FMAX_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 8, 0x1e204800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0e403400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0e20f400),
@@ -1212,7 +1212,7 @@ constexpr EncodingVariant FMAXNM_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 8, 0x1e206800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0e400400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0e20c400),
@@ -1224,7 +1224,7 @@ constexpr EncodingVariant FMAXNMP_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1), FpRdRnRmRa, 0, 0x5e30c800),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchV2S|MatchOp1), FpRdRnRmRa, 4, 0x7e30c800),
 	DECLARE_CANDIDATE((MatchD|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1), FpRdRnRmRa, 4, 0x7e30c800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x2e400400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x2e20c400),
 };
@@ -1259,7 +1259,7 @@ constexpr EncodingVariant FMIN_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 8, 0x1e205800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0ec03400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0ea0f400),
@@ -1270,7 +1270,7 @@ constexpr EncodingVariant FMINNM_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 8, 0x1e207800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0ec00400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0ea0c400),
@@ -1282,7 +1282,7 @@ constexpr EncodingVariant FMINNMP_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1), FpRdRnRmRa, 0, 0x5eb0c800),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchV2S|MatchOp1), FpRdRnRmRa, 4, 0x7eb0c800),
 	DECLARE_CANDIDATE((MatchD|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1), FpRdRnRmRa, 4, 0x7eb0c800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x2ec00400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x2ea0c400),
 };
@@ -1300,7 +1300,7 @@ constexpr EncodingVariant FMINP_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1), FpRdRnRmRa, 0, 0x5eb0f800),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchV2S|MatchOp1), FpRdRnRmRa, 4, 0x7eb0f800),
 	DECLARE_CANDIDATE((MatchD|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1), FpRdRnRmRa, 4, 0x7eb0f800),
-	
+
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x2ec03400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x2ea0f400),
 };
@@ -1335,7 +1335,7 @@ constexpr EncodingVariant FMLAL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x0f800000),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0|MatchOp7, MatchComma, MatchV4H|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x0f800000),
-	
+
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1, MatchComma, MatchV2H|MatchOp2), FpRdRnRmRa, 2, 0x0e20ec00),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0|MatchOp7, MatchComma, MatchV4H|MatchOp1, MatchComma, MatchV4H|MatchOp2), FpRdRnRmRa, 2, 0x0e20ec00),
 };
@@ -1345,7 +1345,7 @@ constexpr EncodingVariant FMLAL2_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x2f808000),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0|MatchOp7, MatchComma, MatchV4H|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x2f808000),
-	
+
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1, MatchComma, MatchV2H|MatchOp2), FpRdRnRmRa, 2, 0x0e20cc00),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0|MatchOp7, MatchComma, MatchV4H|MatchOp1, MatchComma, MatchV4H|MatchOp2), FpRdRnRmRa, 2, 0x0e20cc00),
 };
@@ -1357,12 +1357,12 @@ constexpr EncodingVariant FMLS_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x5f005000),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x5f805000),
 	DECLARE_CANDIDATE((MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVD|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x5f805000),
-	
+
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x0f005000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x0f805000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVD|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x0f805000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0ec00c00),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0ea0cc00),
@@ -1373,7 +1373,7 @@ constexpr EncodingVariant FMLSL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x0f804000),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0|MatchOp7, MatchComma, MatchV4H|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x0f800000),
-	
+
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1, MatchComma, MatchV2H|MatchOp2), FpRdRnRmRa, 2, 0x0ea0ec00),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0|MatchOp7, MatchComma, MatchV4H|MatchOp1, MatchComma, MatchV4H|MatchOp2), FpRdRnRmRa, 2, 0x0ea0ec00),
 };
@@ -1383,7 +1383,7 @@ constexpr EncodingVariant FMLSL2_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x2f80c000),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0|MatchOp7, MatchComma, MatchV4H|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x2f80c000),
-	
+
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2H|MatchOp1, MatchComma, MatchV2H|MatchOp2), FpRdRnRmRa, 2, 0x0ea0cc00),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0|MatchOp7, MatchComma, MatchV4H|MatchOp1, MatchComma, MatchV4H|MatchOp2), FpRdRnRmRa, 2, 0x0ea0cc00),
 };
@@ -1421,15 +1421,15 @@ constexpr EncodingVariant FMUL_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x5f009000),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x5f809000),
 	DECLARE_CANDIDATE((MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVD|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x5f809000),
-	
+
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x0f009000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x0f809000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVD|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x0f809000),
-	
+
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 8, 0x1e200800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x2e401c00),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x2e20dc00),
@@ -1442,7 +1442,7 @@ constexpr EncodingVariant FMULX_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x7f009000),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x7f809000),
 	DECLARE_CANDIDATE((MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVD|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x7f809000),
-	
+
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x802, 0x2f009000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x806, 0x2f809000),
@@ -1462,7 +1462,7 @@ constexpr EncodingVariant FNEG_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e214000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2ef8f800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2ea0f800),
@@ -1478,7 +1478,7 @@ constexpr EncodingVariant FRECPE_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x5ef9d800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x5ea1d800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0ef9d800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0ea1d800),
@@ -1490,7 +1490,7 @@ constexpr EncodingVariant FRECPS_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchH|MatchOp2), FpRdRnRmRa, 0, 0x5e403c00),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 4, 0x5e20fc00),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0e403c00),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0e20fc00),
@@ -1509,7 +1509,7 @@ constexpr EncodingVariant FRINTA_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e264000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2e798800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2e218800),
@@ -1520,7 +1520,7 @@ constexpr EncodingVariant FRINTI_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e27c000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2ef99800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2ea19800),
@@ -1531,7 +1531,7 @@ constexpr EncodingVariant FRINTM_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e254000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0e799800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0e219800),
@@ -1542,7 +1542,7 @@ constexpr EncodingVariant FRINTN_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e244000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0e798800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0e218800),
@@ -1553,7 +1553,7 @@ constexpr EncodingVariant FRINTP_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e24c000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0ef98800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0ea18800),
@@ -1564,7 +1564,7 @@ constexpr EncodingVariant FRINTX_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e274000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2e799800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2e219800),
@@ -1575,7 +1575,7 @@ constexpr EncodingVariant FRINTZ_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e25c000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0ef99800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0ea19800),
@@ -1587,7 +1587,7 @@ constexpr EncodingVariant FRSQRTE_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x7ef9d800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x7ea1d800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2ef9d800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2ea1d800),
@@ -1599,7 +1599,7 @@ constexpr EncodingVariant FRSQRTS_ENCODING_VARIANTS[] =
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchOp0, MatchComma, MatchH|MatchOp1, MatchComma, MatchH|MatchOp2), FpRdRnRmRa, 0, 0x5ec03c00),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 4, 0x5ea0fc00),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0ec03c00),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0ea0fc00),
@@ -1610,7 +1610,7 @@ constexpr EncodingVariant FSQRT_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 8, 0x1e21c000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x2ef9f800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x2ea1f800),
@@ -1621,7 +1621,7 @@ constexpr EncodingVariant FSUB_ENCODING_VARIANTS[] =
 {
 	// Scalar
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 8, 0x1e203800),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0ec01400),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 6, 0x0ea0d400),
@@ -1637,7 +1637,7 @@ constexpr EncodingVariant INS_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchVH|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchVH|MatchOp1, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchRightSquareBracket), FpRdRnIndex1Index2, 0, 0x6e000400),
 	DECLARE_CANDIDATE((MatchVS|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchVS|MatchOp1, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchRightSquareBracket), FpRdRnIndex1Index2, 0, 0x6e000400),
 	DECLARE_CANDIDATE((MatchVD|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchVD|MatchOp1, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchRightSquareBracket), FpRdRnIndex1Index2, 0, 0x6e000400),
-	
+
 	DECLARE_CANDIDATE((MatchVB|MatchVH|MatchVS|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchReg32|MatchOp1), FpRdRnIndex1Index2, 0, 0x4e001c00),
 	DECLARE_CANDIDATE((MatchVD|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp1), FpRdRnIndex1Index2, 0, 0x4e001c00),
 };
@@ -1677,7 +1677,7 @@ constexpr EncodingVariant LD2_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x12, 0x0c408000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x92, 0x0cc08000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x12, 0x0cc08000),
-	
+
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x40, 0x0d600000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x60, 0x0de00000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x40, 0x0de00000),
@@ -1697,7 +1697,7 @@ constexpr EncodingVariant LD3_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x12, 0x0c404000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x92, 0x0cc04000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x12, 0x0cc04000),
-	
+
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x40, 0x0d402000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x60, 0x0dc02000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x40, 0x0dc02000),
@@ -1717,7 +1717,7 @@ constexpr EncodingVariant LD4_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x12, 0x0c400000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x92, 0x0cc00000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x12, 0x0cc00000),
-	
+
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x40, 0x0d602000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x60, 0x0de02000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x40, 0x0de02000),
@@ -2237,10 +2237,10 @@ constexpr EncodingVariant LDPSW_ENCODING_VARIANTS[] =
 {
 	// Post index
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp3), LoadStorePair, 8, 0x68c00000),
-	
+
 	// Pre index
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket, MatchExclamationMark), LoadStorePair, 8, 0x69c00000),
-	
+
 	// Signed offset
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchRightSquareBracket), LoadStorePair, 8, 0x69400000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket), LoadStorePair, 8, 0x69400000),
@@ -2455,7 +2455,7 @@ constexpr EncodingVariant LSL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchReg32|MatchOp1, MatchComma, MatchImm|MatchOp2|MatchOp3), RdRnImmrImms, 0x25, 0x53000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchReg64|MatchOp1, MatchComma, MatchImm|MatchOp2|MatchOp3), RdRnImmrImms, 0x36, 0xd3400000),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchReg32|MatchOp1, MatchComma, MatchReg32|MatchOp2), RdRnRmImm6, 0, 0x1ac02000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchReg64|MatchOp1, MatchComma, MatchReg64|MatchOp2), RdRnRmImm6, 0, 0x9ac02000),
 };
@@ -2472,7 +2472,7 @@ constexpr EncodingVariant LSR_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchReg32|MatchOp1, MatchComma, MatchImm|MatchOp2), RdRnImmrImms, 0, 0x53007c00),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchReg64|MatchOp1, MatchComma, MatchImm|MatchOp2), RdRnImmrImms, 0, 0xd340fc00),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchReg32|MatchOp1, MatchComma, MatchReg32|MatchOp2), RdRnRmImm6, 0, 0x1ac02400),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchReg64|MatchOp1, MatchComma, MatchReg64|MatchOp2), RdRnRmImm6, 0, 0x9ac02400),
 };
@@ -2498,7 +2498,7 @@ constexpr EncodingVariant MLA_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f000000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f000000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVD|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f000000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x0e209400),
 };
@@ -2510,7 +2510,7 @@ constexpr EncodingVariant MLS_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f004000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f004000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVD|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f004000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x2e209400),
 };
@@ -2537,7 +2537,7 @@ constexpr EncodingVariant MOV_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchNot64HwImm16|MatchOp1), RdNot64HwImm16, 0, 0x92800000),
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp0, MatchComma, MatchLogical32Imm|MatchOp2), LogicalImmediate, 32, 0x320003e0),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64SP|MatchOp0, MatchComma, MatchLogical64Imm|MatchOp2), LogicalImmediate, 64, 0xb20003e0),
-	
+
 	// SIMD Scalar
 	DECLARE_CANDIDATE((MatchB|MatchOp0|MatchOp7, MatchComma, MatchVB|MatchOp1, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket), FpRdRnIndex1Index2, 0, 0x5e000400),
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchVH|MatchOp1, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket), FpRdRnIndex1Index2, 0, 0x5e000400),
@@ -2549,7 +2549,7 @@ constexpr EncodingVariant MOV_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchVH|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchVH|MatchOp1, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchRightSquareBracket), FpRdRnIndex1Index2, 0, 0x6e000400),
 	DECLARE_CANDIDATE((MatchVS|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchVS|MatchOp1, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchRightSquareBracket), FpRdRnIndex1Index2, 0, 0x6e000400),
 	DECLARE_CANDIDATE((MatchVD|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchVD|MatchOp1, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchRightSquareBracket), FpRdRnIndex1Index2, 0, 0x6e000400),
-	
+
 	// SIMD from general
 	DECLARE_CANDIDATE((MatchVB|MatchVH|MatchVS|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchReg32|MatchOp1), FpRdRnIndex1Index2, 0, 0x4e001c00),
 	DECLARE_CANDIDATE((MatchVD|MatchOp0|MatchOp7, MatchLeftSquareBracket, MatchNumber|MatchOp2, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp1), FpRdRnIndex1Index2, 0, 0x4e001c00),
@@ -2592,7 +2592,7 @@ constexpr EncodingVariant MOVK_ENCODING_VARIANTS[] =
 	// MOVK Rd, {target}[highbit:lowbit]
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket), RdRnImmSubfield, 0x1005, 0x72800000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket), RdRnImmSubfield, 0x1005, 0xf2800000),
-	
+
 	// MOVK Rd, {target}[highbit:lowbit], LSL #n
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket, MatchComma, MatchLSL, MatchImm|MatchOp5), RdRnImmSubfield, 0x1005, 0x72800000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket, MatchComma, MatchLSL, MatchImm|MatchOp5), RdRnImmSubfield, 0x1005, 0xf2800000),
@@ -2618,7 +2618,7 @@ constexpr EncodingVariant MOVZ_ENCODING_VARIANTS[] =
 	// MOVZ Rd, {target}[highbit:lowbit]
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket), RdRnImmSubfield, 0x1005, 0x52800000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket), RdRnImmSubfield, 0x1005, 0xd2800000),
-	
+
 	// MOVZ Rd, {target}[highbit:lowbit], LSL #n
 	DECLARE_CANDIDATE((MatchReg32|MatchOp0, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket, MatchComma, MatchLSL, MatchImm|MatchOp5), RdRnImmSubfield, 0x1005, 0x52800000),
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchNumber|MatchImm|MatchRel|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp3, MatchColon, MatchNumber|MatchOp4, MatchRightSquareBracket, MatchComma, MatchLSL, MatchImm|MatchOp5), RdRnImmSubfield, 0x1005, 0xd2800000),
@@ -2641,7 +2641,7 @@ constexpr EncodingVariant MUL_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f008000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f008000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVD|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f008000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x0e209c00),
 };
@@ -2673,7 +2673,7 @@ constexpr EncodingVariant NEG_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp2), ArithmeticShiftedRegister, 0, 0x4b0003e0),
 	// SUB <Wd|WSP>, WZR, <Wm>, <shift> #<amount>
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchShift|MatchOp3, MatchImm|MatchOp4), ArithmeticShiftedRegister, 0, 0x4b0003e0),
-	
+
 	// SUB <Xd|SP>, XZR, <Xm>
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp2), ArithmeticShiftedRegister, 0, 0xcb0003e0),
 	// SUB <Xd|SP>, XZR, <Xm>, <shift> #<amount>
@@ -2693,7 +2693,7 @@ constexpr EncodingVariant NEGS_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp2), ArithmeticShiftedRegister, 0, 0x6b0003e0),
 	// SUBS Wd, WZR, <Wm>, <shift> #<amount>
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchShift|MatchOp3, MatchImm|MatchOp4), ArithmeticShiftedRegister, 0, 0x6b0003e0),
-	
+
 	// SUBS Xd, XZR, <Xm>
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp2), ArithmeticShiftedRegister, 0, 0xeb0003e0),
 	// SUBS Xd, XZR, <Xm>, <shift> #<amount>
@@ -2732,7 +2732,7 @@ constexpr EncodingVariant ORR_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchImm|MatchOp2), LogicalImmediate, 32, 0x32000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64SP|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchImm|MatchOp2), LogicalImmediate, 64, 0xb2000000),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2), ArithmeticShiftedRegister, 0, 0x2a000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchReg64|MatchReg64Z|MatchOp2), ArithmeticShiftedRegister, 0, 0xaa000000),
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchShift|MatchROR|MatchOp3, MatchImm|MatchOp4), ArithmeticShiftedRegister, 0, 0x2a000000),
@@ -2741,7 +2741,7 @@ constexpr EncodingVariant ORR_ENCODING_VARIANTS[] =
 	// ORR <Vd>.T, #imm
 	DECLARE_CANDIDATE((MatchV4H8H|MatchV2S4S|MatchOp0, MatchComma, MatchImm|MatchOp1), VectorImmediate, 0, 0x0f001400),
 	DECLARE_CANDIDATE((MatchV4H8H|MatchV2S4S|MatchOp0, MatchComma, MatchImm|MatchOp1, MatchComma, MatchLSL, MatchImm|MatchOp3), VectorImmediate, 0, 0x0f001400),
-	
+
 	// ORR <Vd>.T, <Vn>.T, <Vm>.T
 	DECLARE_CANDIDATE((MatchV8B16B|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 2, 0x0ea01c00),
 };
@@ -3035,17 +3035,17 @@ constexpr EncodingVariant SCVTF_ENCODING_VARIANTS[] =
 	// Vector, Fixed Point
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x5f00e400),
 	DECLARE_CANDIDATE((MatchV4H8H|MatchV2S4S|MatchV2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x202, 0x0f00e400),
-	
+
 	// Vector, Integer
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 0, 0x5e79d800),
 	DECLARE_CANDIDATE((MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 4, 0x5e21d800),
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 2, 0x0e79d800),
 	DECLARE_CANDIDATE((MatchV2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 6, 0x0e21d800),
-	
+
 	// Scalar, Fixed Point
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchReg32|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x1008, 0x1e020000),
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchReg64|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x1008, 0x9e020000),
-	
+
 	// Scalar, Integer
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchReg32|MatchOp1), FpRdRnRmRa, 8, 0x1e220000),
 	DECLARE_CANDIDATE((MatchFpAll|MatchOp0|MatchOp7, MatchComma, MatchReg64|MatchOp1), FpRdRnRmRa, 8, 0x9e220000),
@@ -3181,7 +3181,7 @@ constexpr EncodingVariant SMLAL2_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f002000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f002000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchV8H|MatchOp2), FpRdRnRmRa, 3, 0x0e208000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchV4S|MatchOp2), FpRdRnRmRa, 3, 0x0e208000),
 };
@@ -3191,7 +3191,7 @@ constexpr EncodingVariant SMLSL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f006000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f006000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchV4H|MatchOp2), FpRdRnRmRa, 3, 0x0e20a000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchV2S|MatchOp2), FpRdRnRmRa, 3, 0x0e20a000),
 };
@@ -3201,7 +3201,7 @@ constexpr EncodingVariant SMLSL2_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f006000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f006000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchV8H|MatchOp2), FpRdRnRmRa, 3, 0x0e20a000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchV4S|MatchOp2), FpRdRnRmRa, 3, 0x0e20a000),
 };
@@ -3226,7 +3226,7 @@ constexpr EncodingVariant SMULL_ENCODING_VARIANTS[] =
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00a000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00a000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV8H|MatchOp0, MatchComma, MatchV8B|MatchOp1|MatchOp7, MatchComma, MatchV8B|MatchOp2), FpRdRnRmRa, 3, 0x0e20c000),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchV4H|MatchOp2), FpRdRnRmRa, 3, 0x0e20c000),
@@ -3239,7 +3239,7 @@ constexpr EncodingVariant SMULL2_ENCODING_VARIANTS[] =
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00a000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00a000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV8H|MatchOp0, MatchComma, MatchV16B|MatchOp1|MatchOp7, MatchComma, MatchV16B|MatchOp2), FpRdRnRmRa, 3, 0x0e20c000),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchV8H|MatchOp2), FpRdRnRmRa, 3, 0x0e20c000),
@@ -3251,7 +3251,7 @@ constexpr EncodingVariant SQABS_ENCODING_VARIANTS[] =
 {
 	// SQABS <V><d>, <V><n>
 	DECLARE_CANDIDATE((MatchB|MatchH|MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 1, 0x5e207800),
-	
+
 	// SQABS <Vd>.<T>, <Vn>.<T>
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 3, 0x0e207800),
 };
@@ -3284,7 +3284,7 @@ constexpr EncodingVariant SQDMLAL2_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f003000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f003000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchV8H|MatchOp2), FpRdRnRmRa, 3, 0x0e209000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchV4S|MatchOp2), FpRdRnRmRa, 3, 0x0e209000),
 };
@@ -3294,7 +3294,7 @@ constexpr EncodingVariant SQDMLSL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchS|MatchOp0, MatchComma, MatchH|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x5f007000),
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchS|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x5f007000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f007000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f007000),
 
@@ -3310,7 +3310,7 @@ constexpr EncodingVariant SQDMLSL2_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f007000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f007000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchV8H|MatchOp2), FpRdRnRmRa, 3, 0x0e20b000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchV4S|MatchOp2), FpRdRnRmRa, 3, 0x0e20b000),
 };
@@ -3321,14 +3321,14 @@ constexpr EncodingVariant SQDMULH_ENCODING_VARIANTS[] =
 	// Scalar Element
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x801, 0x5f00c000),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x801, 0x5f00c000),
-	
+
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00c000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00c000),
-	
+
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 1, 0x5e20b400),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x0e20b400),
 };
@@ -3338,13 +3338,13 @@ constexpr EncodingVariant SQDMULL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchS|MatchOp0, MatchComma, MatchH|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x5f00b000),
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchS|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x5f00b000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00b000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00b000),
-	
+
 	DECLARE_CANDIDATE((MatchS|MatchOp0, MatchComma, MatchH|MatchOp1|MatchOp7, MatchComma, MatchH|MatchOp2), FpRdRnRmRa, 3, 0x5e20d000),
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchS|MatchOp1|MatchOp7, MatchComma, MatchS|MatchOp2), FpRdRnRmRa, 3, 0x5e20d000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchV4H|MatchOp2), FpRdRnRmRa, 3, 0x0e20d000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchV2S|MatchOp2), FpRdRnRmRa, 3, 0x0e20d000),
 };
@@ -3354,7 +3354,7 @@ constexpr EncodingVariant SQDMULL2_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00b000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00b000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchV8H|MatchOp2), FpRdRnRmRa, 3, 0x0e20d000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchV4S|MatchOp2), FpRdRnRmRa, 3, 0x0e20d000),
 };
@@ -3364,7 +3364,7 @@ constexpr EncodingVariant SQNEG_ENCODING_VARIANTS[] =
 {
 	// SQNEG <V><d>, <V><n>
 	DECLARE_CANDIDATE((MatchB|MatchH|MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 1, 0x7e207800),
-	
+
 	// SQNEG <Vd>.<T>, <Vn>.<T>
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1), FpRdRnRmRa, 3, 0x2e207800),
 };
@@ -3375,14 +3375,14 @@ constexpr EncodingVariant SQRDMLAH_ENCODING_VARIANTS[] =
 	// Scalar Element
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x801, 0x7f00d000),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x801, 0x7f00d000),
-	
+
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f00d000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f00d000),
-	
+
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 1, 0x7e008400),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x2e008400),
 };
@@ -3393,14 +3393,14 @@ constexpr EncodingVariant SQRDMLSH_ENCODING_VARIANTS[] =
 	// Scalar Element
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x801, 0x7f00f000),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x801, 0x7f00f000),
-	
+
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f00f000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f00f000),
-	
+
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 1, 0x7e008c00),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x2e008c00),
 };
@@ -3411,14 +3411,14 @@ constexpr EncodingVariant SQRDMULH_ENCODING_VARIANTS[] =
 	// Scalar Element
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x801, 0x5f00d000),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x801, 0x5f00d000),
-	
+
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4H8H|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00d000),
 	DECLARE_CANDIDATE((MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x0f00d000),
-	
+
 	// Scalar
 	DECLARE_CANDIDATE((MatchH|MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 1, 0x7e20b400),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV4H8H|MatchV2S4S|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x2e20b400),
 };
@@ -3473,7 +3473,7 @@ constexpr EncodingVariant SQRSHRUN_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchB|MatchOp0|MatchOp7, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f008c00),
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchS|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f008c00),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchD|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f008c00),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchV8H|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f008c00),
 	DECLARE_CANDIDATE((MatchV4H|MatchOp0|MatchOp7, MatchComma, MatchV4S|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f008c00),
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f008c00),
@@ -3493,7 +3493,7 @@ constexpr EncodingVariant SQSHRN_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchB|MatchOp0|MatchOp7, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x5f009400),
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchS|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x5f009400),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchD|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x5f009400),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchV8H|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x0f009400),
 	DECLARE_CANDIDATE((MatchV4H|MatchOp0|MatchOp7, MatchComma, MatchV4S|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x0f009400),
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x0f009400),
@@ -3513,7 +3513,7 @@ constexpr EncodingVariant SQSHRUN_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchB|MatchOp0|MatchOp7, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f008400),
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchS|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f008400),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchD|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f008400),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchV8H|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f008400),
 	DECLARE_CANDIDATE((MatchV4H|MatchOp0|MatchOp7, MatchComma, MatchV4S|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f008400),
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f008400),
@@ -3540,7 +3540,7 @@ constexpr EncodingVariant SQXTN_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchB|MatchOp0|MatchOp7, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 1, 0x5e214800),
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchS|MatchOp1), FpRdRnRmRa, 1, 0x5e214800),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchD|MatchOp1), FpRdRnRmRa, 1, 0x5e214800),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchV8H|MatchOp1), FpRdRnRmRa, 3, 0x0e214800),
 	DECLARE_CANDIDATE((MatchV4H|MatchOp0|MatchOp7, MatchComma, MatchV4S|MatchOp1), FpRdRnRmRa, 3, 0x0e214800),
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1), FpRdRnRmRa, 3, 0x0e214800),
@@ -3560,7 +3560,7 @@ constexpr EncodingVariant SQXTUN_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchB|MatchOp0|MatchOp7, MatchComma, MatchH|MatchOp1), FpRdRnRmRa, 1, 0x7e212800),
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchS|MatchOp1), FpRdRnRmRa, 1, 0x7e212800),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchD|MatchOp1), FpRdRnRmRa, 1, 0x7e212800),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchV8H|MatchOp1), FpRdRnRmRa, 3, 0x2e212800),
 	DECLARE_CANDIDATE((MatchV4H|MatchOp0|MatchOp7, MatchComma, MatchV4S|MatchOp1), FpRdRnRmRa, 3, 0x2e212800),
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1), FpRdRnRmRa, 3, 0x2e212800),
@@ -3690,7 +3690,7 @@ constexpr EncodingVariant ST1_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVAll|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x12, 0x0c002000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVAll|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x92, 0x0c802000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVAll|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x12, 0x0c802000),
-	
+
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x40, 0x0d000000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x60, 0x0d800000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x40, 0x0d800000),
@@ -3702,7 +3702,7 @@ constexpr EncodingVariant ST2_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x12, 0x0c008000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x92, 0x0c808000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x12, 0x0c808000),
-	
+
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x40, 0x0d200000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x60, 0x0da00000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x40, 0x0da00000),
@@ -3714,7 +3714,7 @@ constexpr EncodingVariant ST3_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x12, 0x0c004000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x92, 0x0c804000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x12, 0x0c804000),
-	
+
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x40, 0x0d002000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x60, 0x0d802000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x40, 0x0d802000),
@@ -3726,7 +3726,7 @@ constexpr EncodingVariant ST4_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x12, 0x0c000000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x92, 0x0c800000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x12, 0x0c800000),
-	
+
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket), FpRdRnRmRa, 0x40, 0x0d202000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x60, 0x0da02000),
 	DECLARE_CANDIDATE((MatchLeftBrace, MatchVB|MatchVH|MatchVS|MatchVD|MatchOp0|MatchOp7, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp1, MatchRightSquareBracket, MatchComma, MatchReg64|MatchOp2), FpRdRnRmRa, 0x40, 0x0da02000),
@@ -3900,7 +3900,7 @@ constexpr EncodingVariant STNP_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchRightSquareBracket), LoadStorePair, 8, 0xa8000000),
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket), LoadStorePair, 4, 0x28000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket), LoadStorePair, 8, 0xa8000000),
-	
+
 	DECLARE_CANDIDATE((MatchS|MatchOp0, MatchComma, MatchS|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket), LoadStorePair, 4, 0x2c000000),
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchD|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket), LoadStorePair, 8, 0x6c000000),
 	DECLARE_CANDIDATE((MatchQ|MatchOp0, MatchComma, MatchQ|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket), LoadStorePair, 16, 0xac000000),
@@ -3915,14 +3915,14 @@ constexpr EncodingVariant STP_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchS|MatchOp0, MatchComma, MatchS|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp3), LoadStorePair, 4, 0x2c800000),
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchD|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp3), LoadStorePair, 8, 0x6c800000),
 	DECLARE_CANDIDATE((MatchQ|MatchOp0, MatchComma, MatchQ|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchRightSquareBracket, MatchComma, MatchImm|MatchOp3), LoadStorePair, 16, 0xac800000),
-	
+
 	// Pre index
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket, MatchExclamationMark), LoadStorePair, 4, 0x29800000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket, MatchExclamationMark), LoadStorePair, 8, 0xa9800000),
 	DECLARE_CANDIDATE((MatchS|MatchOp0, MatchComma, MatchS|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket, MatchExclamationMark), LoadStorePair, 4, 0x2d800000),
 	DECLARE_CANDIDATE((MatchD|MatchOp0, MatchComma, MatchD|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket, MatchExclamationMark), LoadStorePair, 8, 0x6d800000),
 	DECLARE_CANDIDATE((MatchQ|MatchOp0, MatchComma, MatchQ|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchComma, MatchImm|MatchOp3, MatchRightSquareBracket, MatchExclamationMark), LoadStorePair, 16, 0xad800000),
-	
+
 	// Signed offset
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchRightSquareBracket), LoadStorePair, 4, 0x29000000),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchLeftSquareBracket, MatchReg64|MatchReg64SP|MatchOp2, MatchRightSquareBracket), LoadStorePair, 8, 0xa9000000),
@@ -3943,7 +3943,7 @@ constexpr EncodingVariant STR_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATES_LOAD_STORE_IMMEDIATE_OFFSET(MatchS, 4, 0xbc000000),
 	DECLARE_CANDIDATES_LOAD_STORE_IMMEDIATE_OFFSET(MatchD, 8, 0xfc000000),
 	DECLARE_CANDIDATES_LOAD_STORE_IMMEDIATE_OFFSET(MatchQ, 16, 0x3c800000),
-	
+
 	DECLARE_CANDIDATES_LOAD_STORE_REGISTER_OFFSET(MatchReg32|MatchReg32Z, 2, 0xb8200800),
 	DECLARE_CANDIDATES_LOAD_STORE_REGISTER_OFFSET(MatchReg64|MatchReg64Z, 3, 0xf8200800),
 	DECLARE_CANDIDATES_LOAD_STORE_REGISTER_OFFSET(MatchB, 0, 0x3c200800),
@@ -4170,7 +4170,7 @@ constexpr EncodingVariant SUB_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp0, MatchComma, MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchExtendReg32|MatchOp3), ArithmeticExtendedRegister, 0, 0x4b200000),
 	// SUB <Wd|WSP>, <Wn|WSP>, <Wm>, <extend> #<amount>}
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32SP|MatchOp0, MatchComma, MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchLSL|MatchExtendReg32|MatchOp3, MatchImm|MatchOp4), ArithmeticExtendedRegister, 0, 0x4b200000),
-	
+
 	// SUB <Xd|SP>, <Xn|SP>, #<imm>, <shift>
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64SP|MatchOp0, MatchComma, MatchReg64|MatchReg64SP|MatchOp1, MatchComma, MatchImm|MatchOp2), ArithmeticImmediate, 0, 0xd1000000),
 	// SUB <Xd|SP>, <Xn|SP>, #<imm>, <shift> #<amount>
@@ -4190,7 +4190,7 @@ constexpr EncodingVariant SUB_ENCODING_VARIANTS[] =
 
 	// SUB Dd, Dn, Dm
 	DECLARE_CANDIDATE((MatchD|MatchOp0|MatchOp7, MatchComma, MatchD|MatchOp1, MatchComma, MatchD|MatchOp2), FpRdRnRmRa, 0, 0x7ee08400),
-	
+
 	// SUB <Vd>.T, <Vn>.T, <Vm>.T
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x2e208400),
 };
@@ -4226,7 +4226,7 @@ constexpr EncodingVariant SUBS_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchExtendReg32|MatchOp3), ArithmeticExtendedRegister, 0, 0x6b200000),
 	// SUBS Wd, <Wn|WSP>, <Wm>, <extend> #<amount>}
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp0, MatchComma, MatchReg32|MatchReg32SP|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchLSL|MatchExtendReg32|MatchOp3, MatchImm|MatchOp4), ArithmeticExtendedRegister, 0, 0x6b200000),
-	
+
 	// SUBS Xd, <Xn|SP>, #<imm>, <shift>
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp0, MatchComma, MatchReg64|MatchReg64SP|MatchOp1, MatchComma, MatchImm|MatchOp2), ArithmeticImmediate, 0, 0xf1000000),
 	// SUBS Xd, <Xn|SP>, #<imm>, <shift> #<amount>
@@ -4348,13 +4348,13 @@ constexpr EncodingVariant TBX_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchLeftBrace, MatchV16B|MatchOp1, MatchRightBrace, MatchComma, MatchV8B|MatchOp2), FpRdRnRmRa, 2, 0x0e001000),
 	DECLARE_CANDIDATE((MatchV16B|MatchOp0|MatchOp7, MatchComma, MatchLeftBrace, MatchV16B|MatchOp1, MatchRightBrace, MatchComma, MatchV16B|MatchOp2), FpRdRnRmRa, 2, 0x0e001000),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchLeftBrace, MatchV16B|MatchOp1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchV8B|MatchOp2), FpRdRnRmRa, 2, 0x0e003000),
 	DECLARE_CANDIDATE((MatchV16B|MatchOp0|MatchOp7, MatchComma, MatchLeftBrace, MatchV16B|MatchOp1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchV16B|MatchOp2), FpRdRnRmRa, 2, 0x0e003000),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchLeftBrace, MatchV16B|MatchOp1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchV8B|MatchOp2), FpRdRnRmRa, 2, 0x0e005000),
 	DECLARE_CANDIDATE((MatchV16B|MatchOp0|MatchOp7, MatchComma, MatchLeftBrace, MatchV16B|MatchOp1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchV16B|MatchOp2), FpRdRnRmRa, 2, 0x0e005000),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchLeftBrace, MatchV16B|MatchOp1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchV8B|MatchOp2), FpRdRnRmRa, 2, 0x0e007000),
 	DECLARE_CANDIDATE((MatchV16B|MatchOp0|MatchOp7, MatchComma, MatchLeftBrace, MatchV16B|MatchOp1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchComma, MatchRegNP1, MatchRightBrace, MatchComma, MatchV16B|MatchOp2), FpRdRnRmRa, 2, 0x0e007000),
 };
@@ -4369,7 +4369,7 @@ constexpr EncodingVariant TST_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchImm|MatchOp2), LogicalImmediate, 32, 0x7200001f),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchImm|MatchOp2), LogicalImmediate, 64, 0xf200001f),
-	
+
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2), ArithmeticShiftedRegister, 0, 0x6a00001f),
 	DECLARE_CANDIDATE((MatchReg64|MatchReg64Z|MatchOp1, MatchComma, MatchReg64|MatchReg64Z|MatchOp2), ArithmeticShiftedRegister, 0, 0xea00001f),
 	DECLARE_CANDIDATE((MatchReg32|MatchReg32Z|MatchOp1, MatchComma, MatchReg32|MatchReg32Z|MatchOp2, MatchComma, MatchShift|MatchROR|MatchOp3, MatchImm|MatchOp4), ArithmeticShiftedRegister, 0, 0x6a00001f),
@@ -4563,7 +4563,7 @@ constexpr EncodingVariant UMLAL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f002000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f002000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchV4H|MatchOp2), FpRdRnRmRa, 3, 0x2e208000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchV2S|MatchOp2), FpRdRnRmRa, 3, 0x2e208000),
 };
@@ -4573,7 +4573,7 @@ constexpr EncodingVariant UMLAL2_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f002000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f002000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchV8H|MatchOp2), FpRdRnRmRa, 3, 0x2e208000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchV4S|MatchOp2), FpRdRnRmRa, 3, 0x2e208000),
 };
@@ -4583,7 +4583,7 @@ constexpr EncodingVariant UMLSL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f006000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f006000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchV4H|MatchOp2), FpRdRnRmRa, 3, 0x2e20a000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchV2S|MatchOp2), FpRdRnRmRa, 3, 0x2e20a000),
 };
@@ -4593,7 +4593,7 @@ constexpr EncodingVariant UMLSL2_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f006000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f006000),
-	
+
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchV8H|MatchOp2), FpRdRnRmRa, 3, 0x2e20a000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchV4S|MatchOp2), FpRdRnRmRa, 3, 0x2e20a000),
 };
@@ -4614,7 +4614,7 @@ DECLARE_SINGLE_CANDIDATE_INSTRUCTION(UMULH, (MatchReg64|MatchOp0, MatchComma, Ma
 constexpr EncodingVariant UMULL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchReg64|MatchOp0, MatchComma, MatchReg32|MatchOp1, MatchComma, MatchReg32|MatchOp2), RdRnRmRa, 0, 0x9ba07c00),
-	
+
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV4H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f00a000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV2S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f00a000),
@@ -4631,7 +4631,7 @@ constexpr EncodingVariant UMULL2_ENCODING_VARIANTS[] =
 	// Vector Element
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchVH|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f00a000),
 	DECLARE_CANDIDATE((MatchV2D|MatchOp0, MatchComma, MatchV4S|MatchOp1|MatchOp7, MatchComma, MatchVS|MatchOp2, MatchLeftSquareBracket, MatchNumber|MatchOp5, MatchRightSquareBracket), FpRdRnRmRa, 0x803, 0x2f00a000),
-	
+
 	// Vector
 	DECLARE_CANDIDATE((MatchV8H|MatchOp0, MatchComma, MatchV16B|MatchOp1|MatchOp7, MatchComma, MatchV16B|MatchOp2), FpRdRnRmRa, 3, 0x2e20c000),
 	DECLARE_CANDIDATE((MatchV4S|MatchOp0, MatchComma, MatchV8H|MatchOp1|MatchOp7, MatchComma, MatchV8H|MatchOp2), FpRdRnRmRa, 3, 0x2e20c000),
@@ -4658,7 +4658,7 @@ constexpr EncodingVariant UQRSHRN_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchB|MatchOp0|MatchOp7, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f009c00),
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchS|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f009c00),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchD|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f009c00),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchV8H|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f009c00),
 	DECLARE_CANDIDATE((MatchV4H|MatchOp0|MatchOp7, MatchComma, MatchV4S|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f009c00),
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f009c00),
@@ -4677,7 +4677,7 @@ constexpr EncodingVariant UQSHL_ENCODING_VARIANTS[] =
 {
 	DECLARE_CANDIDATE((MatchB|MatchH|MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 1, 0x7e204c00),
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchRep|MatchOp2), FpRdRnRmRa, 3, 0x2e204c00),
-	
+
 	DECLARE_CANDIDATE((MatchB|MatchH|MatchS|MatchD|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x400, 0x7f007400),
 	DECLARE_CANDIDATE((MatchV8B16B4H8H2S4S2D|MatchOp0|MatchOp7, MatchComma, MatchRep|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x402, 0x2f007400),
 };
@@ -4688,7 +4688,7 @@ constexpr EncodingVariant UQSHRN_ENCODING_VARIANTS[] =
 	DECLARE_CANDIDATE((MatchB|MatchOp0|MatchOp7, MatchComma, MatchH|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f009400),
 	DECLARE_CANDIDATE((MatchH|MatchOp0|MatchOp7, MatchComma, MatchS|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f009400),
 	DECLARE_CANDIDATE((MatchS|MatchOp0|MatchOp7, MatchComma, MatchD|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x7f009400),
-	
+
 	DECLARE_CANDIDATE((MatchV8B|MatchOp0|MatchOp7, MatchComma, MatchV8H|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f009400),
 	DECLARE_CANDIDATE((MatchV4H|MatchOp0|MatchOp7, MatchComma, MatchV4S|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f009400),
 	DECLARE_CANDIDATE((MatchV2S|MatchOp0|MatchOp7, MatchComma, MatchV2D|MatchOp1, MatchComma, MatchImm|MatchOp4), FpRdRnRmRa, 0x200, 0x2f009400),

@@ -15,7 +15,7 @@ class NfaOrDfaReverseProcessor final : public ReverseProcessor
 public:
 	NfaOrDfaReverseProcessor(const void* data, size_t length);
 	~NfaOrDfaReverseProcessor();
-	
+
 	virtual const void* Match(const void* data, size_t length, size_t startOffset, const void* matchEnd, const char **captures, bool matchIsAnchored) const;
 
 private:
@@ -25,7 +25,7 @@ private:
 	const void*					data;
 	size_t						length;
 	Mutex 						nfaCreationLock;
-	
+
 	void CreateNfaProcessor() const;
 };
 

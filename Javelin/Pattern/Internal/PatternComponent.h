@@ -13,7 +13,7 @@ namespace Javelin
 //============================================================================
 
 	class ICharacterWriter;
-	
+
 	namespace PatternInternal
 	{
 //============================================================================
@@ -36,7 +36,7 @@ namespace Javelin
 			NotWordBoundary,
 			StartOfSearch,
 		};
-		
+
 //============================================================================
 
 		struct IComponent
@@ -63,7 +63,7 @@ namespace Javelin
 			virtual bool IsFixedLength() const				{ return true; }
 			virtual bool IsEqual(const IComponent* other) const = 0;
 			virtual bool RequiresAnyByteMinimalForPartialMatch() const { return true; }
-			
+
 		protected:
 			bool HasSameClass(const IComponent* other) const;
 		};
@@ -77,7 +77,7 @@ namespace Javelin
 			virtual bool IsEqual(const IComponent* other) const;
 			virtual bool IsEmpty() const					{ return true; }
 		};
-		
+
 //============================================================================
 
 		struct BackReferenceComponent : public IComponent
@@ -108,7 +108,7 @@ namespace Javelin
 		};
 
 //============================================================================
-		
+
 		struct AssertComponent : public IComponent
 		{
 			AssertComponent(AssertType aAssertType) : assertType(aAssertType) { }
@@ -122,7 +122,7 @@ namespace Javelin
 
 			AssertType	assertType;
 		};
-		
+
 //============================================================================
 
 		struct TerminalComponent : public IComponent
@@ -149,7 +149,7 @@ namespace Javelin
 			virtual uint32_t GetMaximumLength() const override;
 			virtual bool IsFixedLength() const override;
 			virtual bool RequiresAnyByteMinimalForPartialMatch() const override;
-			
+
 			IComponent* content;
 		};
 
@@ -163,7 +163,7 @@ namespace Javelin
 			virtual void BuildInstructions(InstructionList &instructionList) const override;
 			virtual bool IsEqual(const IComponent* other) const final;
 			virtual bool RequiresAnyByteMinimalForPartialMatch() const final { return true; }
-		
+
 			bool expectedResult;
 		};
 
@@ -177,14 +177,14 @@ namespace Javelin
 		{
 			ConditionalComponent(TokenType aConditionType, IComponent* aCondition, IComponent* aFalseComponent, IComponent* aTrueComponent) : conditionType(aConditionType), condition(aCondition), falseComponent(aFalseComponent), trueComponent(aTrueComponent) { }
 			~ConditionalComponent();
-																																	 
+
 			virtual void Dump(ICharacterWriter& output, int depth) final;
 			virtual uint32_t GetMinimumLength() const override;
 			virtual uint32_t GetMaximumLength() const override;
 			virtual bool IsFixedLength() const override;
 			virtual void BuildInstructions(InstructionList &instructionList) const override;
 			virtual bool IsEqual(const IComponent* other) const final;
-			
+
 			TokenType 	conditionType;
 			IComponent* condition;
 			IComponent* falseComponent;
@@ -199,7 +199,7 @@ namespace Javelin
 				Minimal,
 				Possessive,
 			};
-			
+
 			CounterComponent(uint32_t aMinimum, uint32_t aMaximum, Mode aMode, IComponent* content);
 
 			virtual void Dump(ICharacterWriter& output, int depth) final;
@@ -209,7 +209,7 @@ namespace Javelin
 			virtual bool IsCounter() const					{ return true; }
 			virtual bool IsEqual(const IComponent* other) const final;
 			virtual bool RequiresAnyByteMinimalForPartialMatch() const final;
-			
+
 			virtual void BuildInstructions(InstructionList &instructionList) const final;
 			Instruction* BuildMinimumInstructions(InstructionList &instructionList) const;
 			void BuildMinimalInstructions(InstructionList &instructionList) const;
@@ -229,7 +229,7 @@ namespace Javelin
 			virtual bool HasStartAnchor() const final;
 			virtual bool HasEndAnchor() const final;
 			virtual bool IsEqual(const IComponent* other) const final;
-			
+
 			uint32_t 				captureIndex;
 			bool					emitSaveInstructions = true;
 			bool					emitCaptureStart = true;
@@ -244,11 +244,11 @@ namespace Javelin
 		struct GroupComponent : public IComponent
 		{
 			virtual ~GroupComponent();
-			
+
 			virtual void Dump(ICharacterWriter& output, int depth) override;
 			virtual bool CanCoalesce() const override;
 			virtual bool IsEqual(const IComponent* other) const override;
-			
+
 			Table<IComponent*> componentList;
 		};
 
@@ -287,7 +287,7 @@ namespace Javelin
 			CharacterRangeListComponent(bool aUseUtf8, const CharacterRangeList& aCharacterRangeList);
 			CharacterRangeListComponent(bool aUseUtf8, const CharacterRange& range);
 			CharacterRangeListComponent(bool aUseUtf8) : useUtf8(aUseUtf8) { }
-			
+
 			virtual bool IsByte() const;
 			virtual void AddToCharacterRangeList(CharacterRangeList&) const;
 			virtual void Dump(ICharacterWriter& output, int depth);
@@ -301,12 +301,12 @@ namespace Javelin
 			virtual bool IsEqual(const IComponent* other) const final;
 			virtual bool HasSpecificRepeatInstruction() const final;
 			virtual void BuildRepeatInstructions(InstructionList &instructionList) const;
-			
+
 			virtual void BuildInstructions(InstructionList &instructionList) const final;
-			
+
 			bool				useUtf8;
 			CharacterRangeList 	characterRangeList;
-			
+
 			void BuildUtf8Components(InstructionList &instructionList) const;
 			void BuildUtf8Components(AlternationComponent* alternation, CharacterRange interval, int bitShift, int offset) const;
 			void BuildUtf8Components(AlternationComponent* alternation,IComponent* firstConcatenateInstruction, CharacterRange interval, int bitShift) const;
@@ -323,7 +323,7 @@ namespace Javelin
 		virtual uint32_t GetMinimumLength() const final;
 		virtual uint32_t GetMaximumLength() const final;
 		virtual bool IsFixedLength() const final;
-		
+
 		mutable bool				isRecursing = false;
 		int32_t 					captureIndex;
 		CaptureComponent* 			target = nullptr;
@@ -340,7 +340,7 @@ namespace Javelin
 		virtual void BuildInstructions(InstructionList &instructionList) const final;
 		virtual bool IsEqual(const IComponent* other) const final;
 		virtual uint32_t GetMinimumLength() const final;
-		
+
 		CaptureComponent* captureComponent;
 	};
 

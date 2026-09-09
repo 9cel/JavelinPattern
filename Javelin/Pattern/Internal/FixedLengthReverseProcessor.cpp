@@ -13,9 +13,9 @@ class FixedLengthReverseProcessor final : public ReverseProcessor
 {
 public:
 	FixedLengthReverseProcessor(const void* data, size_t length);
-	
+
 	virtual const void* Match(const void* data, size_t length, size_t startOffset, const void* matchEnd, const char** captures, bool matchIsAnchored) const final;
-	
+
 private:
 	size_t patternMatchLength;
 };

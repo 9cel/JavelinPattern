@@ -90,7 +90,7 @@ namespace Javelin::Assembler::riscv
 	RegisterMap::RegisterMap()
 	{
 		using namespace Register;
-		
+
 		(*this)["x0"] = &X0;
 		(*this)["x1"] = &X1;
 		(*this)["x2"] = &X2;
@@ -123,7 +123,7 @@ namespace Javelin::Assembler::riscv
 		(*this)["x29"] = &X29;
         (*this)["x30"] = &X30;
 		(*this)["x31"] = &X31;
-        
+
         (*this)["zero"] = &X0;
         (*this)["ra"] = &X1;
         (*this)["sp"] = &X2;
@@ -232,7 +232,7 @@ namespace Javelin::Assembler::riscv
         (*this)["regx"] = { 0, MatchRegX };
 		(*this)["regf"] = { 0, MatchRegF };
 	}
-	
+
 //============================================================================
 } // Javelin::Assembler::riscv
 //============================================================================

@@ -7,19 +7,19 @@
 using namespace Javelin::Assembler;
 
 //============================================================================
-	
+
 std::string File::ReadLine()
 {
 	std::string result;
-	
+
 	for(;;)
 	{
 		int c = getc();
 		if(c == EOF || c == '\n') break;
-		
+
 		result.push_back(c);
 	}
-	
+
 	return result;
 }
 

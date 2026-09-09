@@ -10,7 +10,7 @@ namespace Javelin
 //===========================================================================
 
 using Data::UTF8_DECODE_TABLE;
-	
+
 //===========================================================================
 
 bool Utf8Pointer::IsValid() const
@@ -87,7 +87,7 @@ size_t operator-(const Utf8Pointer& a, const Utf8Pointer& b)
 Utf8Pointer& Utf8Pointer::operator--()
 {
 	const unsigned char *process = reinterpret_cast<const unsigned char*>(p);
-	
+
 	if((*--process & 0x80) != 0)
 	{
 		while((*--process & 0xC0) == 0x80);

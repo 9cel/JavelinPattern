@@ -17,12 +17,12 @@ namespace Javelin
 				#include "PatternInstructionTypeTags.h"
 			#undef TAG
 		};
-		
+
 //==========================================================================
 	} // namespace Javelin
-	
+
 	String ToString(PatternInternal::InstructionType type);
-	
+
 //==========================================================================
 } // namespace Javelin::PatternInternal
 //==========================================================================

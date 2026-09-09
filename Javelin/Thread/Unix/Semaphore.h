@@ -23,7 +23,7 @@ namespace Javelin
 
 		void JCALL Wait()		const	{ JVERIFY(sem_wait(&data) != -1);		}
 		void JCALL Signal()		const	{ JVERIFY(sem_post(&data) != -1);		}
-		
+
 		JEXPORT void JCALL Wait(size_t n) const;
 		JEXPORT void JCALL Signal(size_t n) const;
 

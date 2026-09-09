@@ -42,9 +42,9 @@ namespace Javelin
 		public:
 			BitProxy(unsigned *aData, size_t aBitIndex) : data(aData), bitIndex(aBitIndex) { }
 			JINLINE void operator=(bool b) 	{ if(b) SetBit(data, bitIndex); else ClearBit(data, bitIndex); }
-			
+
 			JINLINE operator bool() const 	{ return IsBitSet(data, bitIndex); }
-			
+
 		private:
 			unsigned*		data;
 			size_t			bitIndex;
@@ -52,7 +52,7 @@ namespace Javelin
 	};
 
 //============================================================================
-	
+
 #if defined(JCOMPILER_MSVC)
 	#define FUNCTION_BITUTILITY_DETERMINEHIGHESTNONZEROBIT32_DEFINED
 	JINLINE int BitUtility::DetermineHighestNonZeroBit32(unsigned value)
@@ -61,7 +61,7 @@ namespace Javelin
 		if(!_BitScanReverse(&result, value)) return -1;
 		return result;
 	}
-	
+
 #elif defined(JASM_GNUC_X86) || defined(JASM_GNUC_X86_64)
 	// This is platform specific, as x86 has undefined return values for value == 0
 	#define FUNCTION_BITUTILITY_DETERMINEHIGHESTNONZEROBIT32_DEFINED
@@ -75,7 +75,7 @@ namespace Javelin
 			);
 		return result;
 	}
-	
+
 	#if defined(JASM_GNUC_X86_64)
 		#define FUNCTION_BITUTILITY_DETERMINEHIGHESTNONZEROBIT64_DEFINED
 		JINLINE int BitUtility::DetermineHighestNonZeroBit64(unsigned long long value)
@@ -97,7 +97,7 @@ namespace Javelin
 		return 31-__builtin_clz(value);
 	}
 #endif
-	
+
 #if !defined(FUNCTION_BITUTILITY_DETERMINEHIGHESTNONZEROBIT32_DEFINED)
 	#warning "No assembler specific DetermineHighestNonZeroBit32 defined"
 	JINLINE int BitUtility::DetermineHighestNonZeroBit32(unsigned value)
@@ -109,7 +109,7 @@ namespace Javelin
 		return -1;
 	}
 #endif
-	
+
 #if !defined(FUNCTION_BITUTILITY_DETERMINEHIGHESTNONZEROBIT64_DEFINED)
 	JINLINE int BitUtility::DetermineHighestNonZeroBit64(unsigned long long value)
 	{
@@ -117,7 +117,7 @@ namespace Javelin
 		else return 32 + DetermineHighestNonZeroBit32((unsigned) (value >> 32));
 	}
 #endif
-	
+
 //============================================================================
 
 #if defined(JCOMPILER_MSVC)
@@ -126,7 +126,7 @@ namespace Javelin
 	JINLINE uint32_t BitUtility::RotateRight(uint32_t a, int s)	{ return _rotr(a, s);	}
 	JINLINE uint64_t BitUtility::RotateLeft(uint64_t a, int s)	{ return _rotl64(a, s);	}
 	JINLINE uint64_t BitUtility::RotateRight(uint64_t a, int s)	{ return _rotr64(a, s);	}
-	
+
 	// GCC is now good enough to detect rotations and automatically encodes it for us!
 //#elif defined(JASM_GNUC_X86)
 //	#define FUNCTION_BITWISE_ROTATIONS_DEFINED
@@ -135,19 +135,19 @@ namespace Javelin
 //		 asm("rol %1, %0" : "+r" (value) : "rI" (s) );
 //		 return value;
 //	 }
-// 
+//
 //	 JINLINE uint32_t BitUtility::RotateRight(uint32_t value, int s)
 //	 {
 //		 asm("ror %1, %0" : "+r" (value) : "rI" (s));
 //		 return value;
 //	 }
-//	
+//
 //	JINLINE uint64_t BitUtility::RotateLeft(uint64_t value, int s)
 //	{
 //		asm("roll %1, %0" : "+r" (value) : "rI" (s) );
 //		return value;
 //	}
-// 
+//
 //	JINLINE uint64_t BitUtility::RotateRight(uint64_t value, int s)
 //	{
 //		asm("rorl %1, %0" : "+r" (value) : "rI" (s));
@@ -176,7 +176,7 @@ namespace Javelin
 	JINLINE uint64_t BitUtility::RotateLeft(uint64_t a, int s)	{ return a << (s&63) | a >> (64-(s&63));	}
 	JINLINE uint64_t BitUtility::RotateRight(uint64_t a, int s)	{ return a >> (s&63) | a << (64-(s&63));	}
 #endif
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

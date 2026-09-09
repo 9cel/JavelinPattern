@@ -51,7 +51,7 @@ TreeType_Binary::NodeBase* TreeType_Binary::NodeBase::GetIteratorPrevious(const 
 	else
 	{
 		const NodeBase* last;
-		
+
 		do
 		{
 			last = p;

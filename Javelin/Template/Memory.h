@@ -31,7 +31,7 @@ namespace Javelin
 		{
 			memset(data, c, count);
 		}
-		
+
 #if defined(JASM_GNUC_X86) || defined(JASM_GNUC_X86_64)
 		template<> JINLINE void InlineCopyMemory<4>(void* destination, const void* source, size_t count)
 		{
@@ -94,7 +94,7 @@ namespace Javelin
 				: "memory");
 		}
 #endif
-		
+
 #if !defined(FUNCTION_INLINE_SET_MEMORY_2_DEFINED)
 		JINLINE void InlineSetMemory(uint16_t* d, uint16_t v, size_t count)
 		{
@@ -104,7 +104,7 @@ namespace Javelin
 			}
 		}
 #endif
-		
+
 #if !defined(FUNCTION_INLINE_SET_MEMORY_4_DEFINED)
 		JINLINE void InlineSetMemory(uint32_t* d, uint32_t v, size_t count)
 		{
@@ -114,7 +114,7 @@ namespace Javelin
 			}
 		}
 #endif
-		
+
 #if !defined(FUNCTION_INLINE_SET_MEMORY_8_DEFINED)
 		JINLINE void InlineSetMemory(uint64_t* d, uint64_t v, size_t count)
 		{
@@ -125,7 +125,7 @@ namespace Javelin
 		}
 #endif
 	}
-	
+
 	template<typename T> JINLINE void CopyMemory(T *destination, const T *source, int count)
 	{
 		Private::InlineCopyMemory<sizeof(T)>(destination, source, count);
@@ -135,7 +135,7 @@ namespace Javelin
 	{
 		Private::InlineCopyMemory<sizeof(T)>(destination, source, count);
 	}
-	
+
 	template<typename T> JINLINE void MoveMemory(T *destination, const T *source, int count)
 	{
 		memmove((void*) destination, (void*) source, count*sizeof(T));
@@ -150,14 +150,14 @@ namespace Javelin
 	{
 		memset(&a, 0, sizeof(T));
 	}
-	
+
 	template<typename T> JINLINE void ClearMemory(T *a, int count)
 	{
 		Private::InlineClearMemory<sizeof(T)>(a, count);
 	}
 
 	template<typename T> JINLINE void ClearMemory(T *a, size_t count)
-	{ 
+	{
 		Private::InlineClearMemory<sizeof(T)>(a, count);
 	}
 

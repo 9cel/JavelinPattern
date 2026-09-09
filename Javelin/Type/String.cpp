@@ -45,7 +45,7 @@ using namespace Javelin;
 //	{
 //		strings.Append(it->Begin());
 //	}
-//	
+//
 //	strings.QuickSort<StringComparator>();
 //	for(const auto& it : strings)
 //	{
@@ -59,12 +59,12 @@ class StringDataTextFormatter : public ICharacterWriter
 {
 public:
 	StringDataTextFormatter(char* aP) : p(aP) { }
-	
+
 	virtual void JCALL WriteByte(unsigned char c) final                   	{ *p++ = c; }
 	virtual void JCALL WriteString(const char* data, size_t count) final	{ CopyMemory(p, data, count); p += count; }
-	
+
 	char* GetDestination() const { return p; }
-	
+
 private:
 	char* p;
 };
@@ -82,7 +82,7 @@ StringData::StringData()
 	data = nullptr;
 	length = 0;
 	capacity = 0;
-	
+
 //	GetStringTree().Insert(this);
 }
 
@@ -153,19 +153,19 @@ StringData* StringData::CreateHexStringFromBytes(const void* data, size_t number
 	size_t stringLength = numberOfBytes*2;
 	StringData* p = CreateWithSize(stringLength);
 	char* charDataLocation = p->GetInlineDataPointer();
-	
+
 	p->length = stringLength;
 	p->data = charDataLocation;
-	
+
 	for(size_t i = 0; i < numberOfBytes; ++i)
 	{
 		unsigned char c = reinterpret_cast<const unsigned char*>(data)[i];
-		
+
 		*charDataLocation++ = String::LOWER_HEX_CHARACTERS[c>>4];
 		*charDataLocation++ = String::LOWER_HEX_CHARACTERS[c&15];
 	}
 	*charDataLocation = '\0';
-	
+
 	return p;
 }
 
@@ -173,15 +173,15 @@ StringData* StringData::CreateFromFormatString(const char* format, va_list argum
 {
 	StringData* p = CreateWithSize(numberOfBytes);
 	char* charDataLocation = p->GetInlineDataPointer();
-	
+
 	p->length = numberOfBytes;
 	p->data = charDataLocation;
 	charDataLocation[numberOfBytes] = '\0';
-	
+
     StringDataTextFormatter stringData(p->data);
     stringData.VPrintF(format, arguments);
 	JASSERT(p->data + p->length == stringData.GetDestination());
-	
+
 	return p;
 }
 
@@ -200,7 +200,7 @@ StringData::StringData(StringData&& a)
 	length = a.length;
 	capacity = a.capacity;
 	data = a.data;
-	
+
 	a.length = 0;
 	a.capacity = 0;
 	a.data = nullptr;
@@ -218,7 +218,7 @@ StringData* StringData::CreateFromUcs2(const unsigned short* string, size_t numb
 			*p = string[i];
 			++p;
 		}
-		
+
 		size_t numberOfEncodedBytes = p.GetCharPointer() - buffer;
 		return CreateFromUtf8(buffer, numberOfEncodedBytes);
 	});
@@ -235,7 +235,7 @@ StringData* StringData::CreateFromUcs2(const AlternateEndian<unsigned short>* st
 			*p = (unsigned short) string[i];
 			++p;
 		}
-		
+
 		size_t numberOfEncodedBytes = p.GetCharPointer() - buffer;
 		return CreateFromUtf8(buffer, numberOfEncodedBytes);
 	});
@@ -253,7 +253,7 @@ StringData* StringData::CreateFromUtf16(const unsigned short* string, size_t num
 		Utf8Pointer p{buffer};
 		const unsigned short* pSource = string;
 		const unsigned short* pEnd = string+numberOfShorts;
-		
+
 		while(pSource < pEnd)
 		{
 			unsigned short c1 = *pSource++;
@@ -268,7 +268,7 @@ StringData* StringData::CreateFromUtf16(const unsigned short* string, size_t num
 				if(pSource >= pEnd) JDATA_ERROR();
 				unsigned short c2 = *pSource++;
 				if(c2 < 0xdc00 || c2 > 0xe000) JDATA_ERROR();
-				
+
 				// Cannot be combined! UTF8 only knows how to advance after assignment
 				*p = ((c1 << 10) ^ c2 ^ (0xd800 << 10 | 0xdc00)) + 0x10000;
 				++p;
@@ -284,7 +284,7 @@ StringData* StringData::CreateFromUtf16(const unsigned short* string, size_t num
 				++p;
 			}
 		}
-		
+
 		size_t numberOfEncodedBytes = p.GetCharPointer() - buffer;
 		return CreateFromUtf8(buffer, numberOfEncodedBytes);
 	});
@@ -297,7 +297,7 @@ StringData* StringData::CreateFromUtf16(const AlternateEndian<unsigned short>* s
 		Utf8Pointer p{buffer};
 		const AlternateEndian<unsigned short>* pSource = string;
 		const AlternateEndian<unsigned short>* pEnd = string+numberOfShorts;
-		
+
 		while(pSource < pEnd)
 		{
 			unsigned short c1 = *pSource++;
@@ -312,7 +312,7 @@ StringData* StringData::CreateFromUtf16(const AlternateEndian<unsigned short>* s
 				if(pSource >= pEnd) JDATA_ERROR();
 				unsigned short c2 = *pSource++;
 				if(c2 < 0xdc00 || c2 > 0xe000) JDATA_ERROR();
-				
+
 				// Cannot be combined! UTF8 only knows how to advance after assignment
 				*p = ((c1 << 10) ^ c2 ^ (0xd800 << 10 | 0xdc00)) + 0x10000;
 				++p;
@@ -454,7 +454,7 @@ String String::CreateFromAscii(const char* string, size_t length)
 
 String String::CreateHexStringFromBytes(const void* data, size_t numberOfBytes)
 {
-	return String(StringData::CreateHexStringFromBytes(data, numberOfBytes));	
+	return String(StringData::CreateHexStringFromBytes(data, numberOfBytes));
 }
 
 String String::CreateFromUcs2(const unsigned short* string, size_t length)
@@ -498,11 +498,11 @@ String String::Create(const char* format, ...)
 {
     va_list arguments;
     va_start(arguments, format);
-	
+
     String returnValue = VCreate(format, arguments);
-	
+
     va_end(arguments);
-	
+
     return returnValue;
 }
 
@@ -540,7 +540,7 @@ String String::Concatenate(const String &a, const String &b)
 {
 	const StringData* pa = a.GetPointer();
 	const StringData* pb = b.GetPointer();
-	
+
 	size_t length = a->GetCount() + b->GetCount();
 	StringData* data = new StringData(length+1);
 	data->AppendCountNoExpand(pa->GetData(), pa->GetCount());
@@ -604,7 +604,7 @@ bool String::SplitLast(char splitChar, String* left, String* right) const
 Table<String> String::Split(char splitChar) const
 {
 	const char* pString = GetData();
-	
+
 	// Count the number of splitChars.
 	const char* pSearch = pString-1;
 	size_t count = 0;
@@ -613,7 +613,7 @@ Table<String> String::Split(char splitChar) const
 		pSearch = strchr(pSearch+1, splitChar);
 		++count;
 	} while(pSearch != nullptr);
-	
+
 	// And build the table result
 	Table<String> result(count);
 	pSearch = pString;
@@ -631,7 +631,7 @@ Table<String> String::Split(char splitChar) const
 			pSearch = pNext+1;
 		}
 	}
-	
+
 	return result;
 }
 
@@ -651,14 +651,14 @@ String Javelin::ToLower(const String& string)
 	// This assumes that upper case representation of Utf8 strings take the same number of bytes as lower case!
     size_t length = string.GetNumberOfBytes();
 	StringData* data = new StringData(length+1);
-	
+
 	for(Utf8Pointer p = string.Begin(); p != string.End(); ++p)
 	{
 		Utf8Character c((*p).ToLower());
 		data->AppendCountNoExpand(c.GetData(), c.GetNumberOfBytes());
 	}
 	data->SetTerminatingNullNoExpand();
-	
+
     return String(data);
 }
 
@@ -667,14 +667,14 @@ String Javelin::ToUpper(const String& string)
 	// This assumes that upper case representation of Utf8 strings take the same number of bytes as lower case!
     size_t length = string.GetNumberOfBytes();
 	StringData* data = new StringData(length+1);
-	
+
 	for(Utf8Pointer p = string.Begin(); p != string.End(); ++p)
 	{
 		Utf8Character c((*p).ToUpper());
 		data->AppendCountNoExpand(c.GetData(), c.GetNumberOfBytes());
 	}
 	data->SetTerminatingNullNoExpand();
-	
+
     return String(data);
 }
 
@@ -711,7 +711,7 @@ bool String::operator==(const String& a) const
 {
 	const StringData* s1 = GetPointer();
 	const StringData* s2 = a.GetPointer();
-	
+
 	return *s1 == *s2;
 }
 
@@ -741,9 +741,9 @@ bool String::IsInteger() const
 {
     const char* p = GetData();
     const char* pEnd = GetEndOfData();
-	
+
     if(p == pEnd) return false;
-	
+
     if(*p == '-' || *p == '+') p++;
 	while('0' <= *p && *p <= '9') ++p;
 	return p == pEnd;
@@ -753,9 +753,9 @@ int String::AsInteger() const
 {
     const char* p = GetData();
     JASSERT(*GetEndOfData() == '\0');
-	
+
     bool isNegative = false;
-	
+
     if(*p == '-')
     {
         isNegative = true;
@@ -765,7 +765,7 @@ int String::AsInteger() const
 	{
 		++p;
 	}
-	
+
     int value = 0;
     while('0' <= *p && *p <= '9')
     {
@@ -778,9 +778,9 @@ int String::AsIntegerFromHex() const
 {
     const char* p = GetData();
     const char* pEnd = GetEndOfData();
-	
+
     bool isNegative = false;
-	
+
     if(*p == '-')
     {
         isNegative = true;
@@ -790,7 +790,7 @@ int String::AsIntegerFromHex() const
 	{
 		++p;
 	}
-	
+
     int value = 0;
 	while(p < pEnd)
 	{
@@ -818,13 +818,13 @@ bool String::IsFloat() const
     const char* p = pStart;
     const char* pEnd = GetEndOfData();
 	JASSERT(*pEnd == '\0');
-	
+
     if(p == pEnd) return false;
-	
+
     if(*p == '-' || *p == '+') ++p;
-	
+
     while('0' <= *p && *p <= '9') ++p;
-	
+
 	if(*p == '.')
 	{
 		++p;
@@ -834,10 +834,10 @@ bool String::IsFloat() const
 	{
 		++p;
 		if(*p == '-' || *p == '+') ++p;
-		
+
 		while('0' <= *p && *p <= '9') ++p;
 	}
-	
+
 	return p == pEnd;
 }
 
@@ -845,7 +845,7 @@ float String::AsFloat() const
 {
     const char* p = GetData();
 	JASSERT(*GetEndOfData() == '\0');
-	
+
 	int sign = 1;
     if(*p == '-')
     {
@@ -874,7 +874,7 @@ float String::AsFloat() const
 			}
 		}
     }
-	
+
 	if(*p == '.')
 	{
 		p++;
@@ -892,7 +892,7 @@ float String::AsFloat() const
 			}
 		}
 	}
-	
+
 DoExponent:
 	if(*p == 'e' || *p == 'E')
 	{
@@ -907,13 +907,13 @@ DoExponent:
 		{
 			++p;
 		}
-		
+
 		int evalue = 0;
 		while('0' <= *p && *p <= '9')
 		{
 			evalue = evalue * 10 + (*p++ - '0');
 		}
-		
+
 		exponent += exponentSign * evalue;
 	}
 
@@ -940,7 +940,7 @@ String String::CreateJsonString() const
 	{
 		char* p = buffer;
 		*p++ = '"';
-		
+
 		for(const unsigned char c : RawBytes())
 		{
 			switch(c)
@@ -949,12 +949,12 @@ String String::CreateJsonString() const
 				*p++ = '\\';
 				*p++ = '"';
 				break;
-				
+
 			case '\\':
 				*p++ = '\\';
 				*p++ = '\\';
 				break;
-				
+
 				// I don't see any need to escape '/'.. so let's not -- makes the output more readable too
 				//		case '/':
 				//			*p++ = '\\';
@@ -965,27 +965,27 @@ String String::CreateJsonString() const
 				*p++ = '\\';
 				*p++ = 'b';
 				break;
-				
+
 			case '\f':
 				*p++ = '\\';
 				*p++ = 'f';
 				break;
-				
+
 			case '\n':
 				*p++ = '\\';
 				*p++ = 'n';
 				break;
-				
+
 			case '\r':
 				*p++ = '\\';
 				*p++ = 'r';
 				break;
-				
+
 			case '\t':
 				*p++ = '\\';
 				*p++ = 't';
 				break;
-				
+
 			default:
 				if(c < 32)
 				{
@@ -1003,7 +1003,7 @@ String String::CreateJsonString() const
 			}
 		}
 		*p++ = '"';
-		
+
 		return String(buffer, p-buffer);
 	});
 }
@@ -1014,7 +1014,7 @@ String String::CreateYamlString() const
 	{
 		return JS("''");
 	}
-	
+
 	// If it contains '\r', '\n' -> use double quoted representation
 	// Also put in strings that contain "'" (not required by spec.. choice made)
 	if(Contains('\r') || Contains('\n') || Contains('\''))
@@ -1054,7 +1054,7 @@ String String::CreateYamlString() const
 			//		"? "
 			//		" #"
 			// or any of: ",[]{}"
-			
+
 			const char* p = pBegin;
 			while(p < pEnd)
 			{
@@ -1067,7 +1067,7 @@ String String::CreateYamlString() const
 				case '}':
 					useSingleQuote = true;
 					goto Exit;
-					
+
 				case ' ':
 					// We can access p[-1] safely because it passed the pBegin[0] == ' ' check before.
 					if(p[-1] == '-'
@@ -1099,11 +1099,11 @@ String Javelin::UrlEncode(const String& s, String::UrlEncode encode)
 	return StackBuffer(s.GetNumberOfBytes()*3, [=](char* buffer) -> String
 	{
 		char* p = buffer;
-		
+
 		int percentEncodeThreshold = (encode == String::UrlEncode::SPACE_TO_PERCENT) ? ' '+1 : ' ';
 		const int spaceToPlusCharacter = (encode == String::UrlEncode::SPACE_TO_PLUS) ? ' ' : TypeData<int>::Maximum();
 		const int plusEncodeCharacter = (encode == String::UrlEncode::SPACE_TO_PLUS) ? '+' : TypeData<int>::Maximum();
-		
+
 		for(const unsigned char c : s.RawBytes())
 		{
 			if(c < percentEncodeThreshold || c == '%' || c == plusEncodeCharacter)
@@ -1135,7 +1135,7 @@ String Javelin::UrlDecode(const String& s, bool convertPlusses)
 
 		const unsigned char* pSource = (const unsigned char*) s.GetData();
 		const unsigned char* pEnd = (const unsigned char*) s.GetEndOfData();
-		
+
 		while(pSource < pEnd)
 		{
 			unsigned char c = *pSource++;
@@ -1145,11 +1145,11 @@ String Javelin::UrlDecode(const String& s, bool convertPlusses)
 				*p++ = (Character::GetHexValue(pSource[0]) << 4) | Character::GetHexValue(pSource[1]);
 				pSource += 2;
 				break;
-					
+
 			case '+':
 				*p++ = convertPlusCharacter;
 				break;
-					
+
 			default:
 				*p++ = c;
 			}
@@ -1175,7 +1175,7 @@ bool String::EndsWith(const String& a) const
 {
 	size_t length = GetNumberOfBytes();
 	size_t lengthA = a.GetNumberOfBytes();
-	
+
 	return length >= lengthA && memcmp(GetData() + (length-lengthA), a.GetData(), lengthA) == 0;
 }
 
@@ -1183,7 +1183,7 @@ Utf8Pointer String::GetPointerToCharacterIndex(int i) const
 {
 	Utf8Pointer p = Begin();
 	Utf8Pointer pEnd = End();
-	
+
 	if(i >= 0)
 	{
 		while(i > 0 && p < pEnd)
@@ -1217,10 +1217,10 @@ String String::SubString(int startCharacterIndex, int endCharacterIndex) const
 {
 	Utf8Pointer start = GetPointerToCharacterIndex(startCharacterIndex);
 	Utf8Pointer end = GetPointerToCharacterIndex(endCharacterIndex);
-	
+
 	if(start == Begin() && end == End()) return *this;
 	if(start >= end) return String::EMPTY_STRING;
-	
+
 	return String{start.GetCharPointer(), static_cast<size_t>(end.GetCharPointer() - start.GetCharPointer())};
 }
 
@@ -1242,16 +1242,16 @@ void String::ToCharacters(Character* result) const
 size_t Javelin::Levenshtein(const String& a, const String& b)
 {
 	if(a == b) return 0;
-	
+
 	size_t numberOfCharactersA = a.GetNumberOfCharacters();
 	size_t numberOfCharactersB = b.GetNumberOfCharacters();
 	if(numberOfCharactersA == 0) return numberOfCharactersB;
 	if(numberOfCharactersB == 0) return numberOfCharactersA;
-	
+
 	AutoArrayPointerWithInlineStore<size_t, 1000> vStore(2*(numberOfCharactersB+1));
 	size_t* v0 = vStore;
 	size_t* v1 = v0 + numberOfCharactersB+1;
-	
+
 	for(size_t i = 0; i <= numberOfCharactersB; ++i) v1[i] = i;
 
 	AutoArrayPointerWithInlineStore<Character, 1000> charactersStore(numberOfCharactersA+numberOfCharactersB);
@@ -1259,7 +1259,7 @@ size_t Javelin::Levenshtein(const String& a, const String& b)
 	Character* charactersB = charactersA + numberOfCharactersA;
 	a.ToCharacters(charactersA);
 	b.ToCharacters(charactersB);
-	
+
 	for(size_t i = 0; i < numberOfCharactersA; ++i)
 	{
 		Swap(v0, v1);
@@ -1270,32 +1270,32 @@ size_t Javelin::Levenshtein(const String& a, const String& b)
 			v1[j+1] = Minimum(v1[j] + 1, v0[j+1] + 1, v0[j] + cost);
 		}
 	}
-	
+
     return v1[numberOfCharactersB];
 }
 
 size_t Javelin::DamerauLevenshtein(const String& a, const String& b)
 {
 	if(a == b) return 0;
-	
+
 	size_t numberOfCharactersA = a.GetNumberOfCharacters();
 	size_t numberOfCharactersB = b.GetNumberOfCharacters();
 	if(numberOfCharactersA == 0) return numberOfCharactersB;
 	if(numberOfCharactersB == 0) return numberOfCharactersA;
-	
+
 	AutoArrayPointerWithInlineStore<size_t, 1000> vStore(3*(numberOfCharactersB+1));
 	size_t* v0 = vStore;
 	size_t* v1 = v0 + numberOfCharactersB+1;
 	size_t* v2 = v1 + numberOfCharactersB+1;
-	
+
 	for(size_t i = 0; i <= numberOfCharactersB; ++i) v2[i] = i;
-	
+
 	AutoArrayPointerWithInlineStore<Character, 1000> charactersStore(numberOfCharactersA+numberOfCharactersB);
 	Character* charactersA = charactersStore;
 	Character* charactersB = charactersA + numberOfCharactersA;
 	a.ToCharacters(charactersA);
 	b.ToCharacters(charactersB);
-	
+
 	for(size_t i = 0; i < numberOfCharactersA; ++i)
 	{
 		size_t* vtemp = v0;
@@ -1308,14 +1308,14 @@ size_t Javelin::DamerauLevenshtein(const String& a, const String& b)
 		{
 			size_t cost = (charactersA[i] == charactersB[j]) ? 0 : 1;
 			v2[j+1] = Minimum(v2[j] + 1, v1[j+1] + 1, v1[j] + cost);
-			
+
 			if(i >= 1 && j >= 1 && charactersA[i] == charactersB[j-1] && charactersA[i-1] == charactersB[j])
 			{
 				v2[j+1] = Minimum(v2[j+1], v0[j-1] + cost);
 			}
 		}
 	}
-	
+
     return v2[numberOfCharactersB];
 }
 

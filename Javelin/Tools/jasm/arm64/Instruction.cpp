@@ -81,7 +81,7 @@ std::string Javelin::Assembler::arm64::MatchBitfieldsDescription(const MatchBitf
 void ImmediateOperand::UpdateMatchBitfield()
 {
 	matchBitfield = immediateType == ImmediateType::Integer ? MatchImm : MatchFloatImm;
-	
+
 	if((value & 0xffffffffffff0000) == 0
 	   || (value & 0xffffffff0000ffff) == 0
 	   || (value & 0xffff0000ffffffff) == 0
@@ -89,13 +89,13 @@ void ImmediateOperand::UpdateMatchBitfield()
 	{
 		matchBitfield |= MatchHwImm16;
 	}
-	
+
 	if(int32_t(value | 0xffff) == -1
 	   || int32_t(value | 0xffff0000) == -1)
 	{
 		matchBitfield |= MatchNot32HwImm16;
 	}
-	
+
 	if((value | 0xffff) == -1
 	   || (value | 0xffff0000) == -1
 	   || (value | 0xffff00000000) == -1
@@ -198,7 +198,7 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
 			++numberOfExpressions;
 		}
 	}
-	
+
 	for(int i = 0; i < encodingVariantLength; ++i)
 	{
 		const EncodingVariant *encoding = &encodingVariants[i];
@@ -214,7 +214,7 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
 					if(opMask & (1 << opIndex)) encodingOperands[opIndex] = operands[i];
 				}
 			}
-			
+
 			InstructionEncoder *encoder = encoding->encoder.GetFunction();
 			if(numberOfExpressions == 0)
 			{
@@ -225,7 +225,7 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
 						   encodingOperands);
 				return;
 			}
-			
+
 			(*encoder)(assembler,
 					   listAction,
 					   *this,

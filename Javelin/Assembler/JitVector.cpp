@@ -13,7 +13,7 @@ using namespace Javelin;
 void* JitVectorBase::ExpandAndAppend(uint32_t appendSize)
 {
 	capacity = 2 * (offset + appendSize);
-	
+
 	// If realloc fails, this will lead to a crash.
 	// This is a conscious choice.
 	data = (uint8_t*) realloc(data, capacity);
@@ -25,7 +25,7 @@ void* JitVectorBase::ExpandAndAppend(uint32_t appendSize)
 void JitVectorBase::Reserve(uint32_t reserveSize)
 {
 	if(data) free(data);
-	
+
 	data = (uint8_t*) malloc(reserveSize);
 	capacity = reserveSize;
 }

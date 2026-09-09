@@ -47,27 +47,27 @@ struct InstructionList::StateMap
 {
 	typedef Map<InstructionTable, Instruction*> StatesToInstructionMap;
 	typedef Map<Instruction*, InstructionTable> InstructionToStatesMap;
-	
+
 	StatesToInstructionMap statesToInstructionMap;
 	InstructionToStatesMap instructionToStatesMap;
 	uint32_t& visitMark;
-	
+
 	StateMap(uint32_t& aVisitMark)
 	: statesToInstructionMap(4),
 	  instructionToStatesMap(4),
 	  visitMark(aVisitMark)
 	{
 	}
-	
+
 	~StateMap() { Reset(); }
-	
+
 	void Insert(const ObjectWithHash<InstructionTable&> &state, Instruction* instruction)
 	{
 		statesToInstructionMap.Insert(state, instruction);
 		instructionToStatesMap.Insert(instruction, state);
 		instruction->hasStates = true;
 	}
-	
+
 	void Remove(const ObjectWithHash<InstructionTable&> &state, Instruction* split)
 	{
 		JASSERT(instructionToStatesMap[split] == state);
@@ -76,18 +76,18 @@ struct InstructionList::StateMap
 		instructionToStatesMap.Remove(split);
 		split->hasStates = false;
 	}
-	
+
 	void Reset()
 	{
 		for(const auto& entry : instructionToStatesMap) entry.key->hasStates = false;
 		statesToInstructionMap.Reset();
 		instructionToStatesMap.Reset();
 	}
-	
+
 	StatesToInstructionMap::ConstIterator Find(const ObjectWithHash<InstructionTable&> &lookup) const 	{ return statesToInstructionMap.Find(lookup); }
 	StatesToInstructionMap::ConstIterator Find(const InstructionTable& lookup) const 					{ return statesToInstructionMap.Find(lookup); }
 	StatesToInstructionMap::ConstIterator End() const													{ return statesToInstructionMap.End(); }
-	
+
 	InstructionTable MakeCanonicalStateList(Instruction* original, const InstructionTable& targetList) const;
 	InstructionTable MakeCanonicalStateList(SplitInstruction* split) const	{ return MakeCanonicalStateList(split, split->targetList); }
 	void RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target, uint32_t mark) const;
@@ -107,7 +107,7 @@ void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Inst
 		}
 		return;
 	}
-	
+
 	switch(target->type)
 	{
 	case InstructionType::Split:
@@ -116,11 +116,11 @@ void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Inst
 			RecurseAddTargets(result, original, splitTarget, mark);
 		}
 		break;
-		
+
 	case InstructionType::Jump:
 		RecurseAddTargets(result, original, ((JumpInstruction*) target)->target, mark);
 		break;
-	
+
 	case InstructionType::ProgressCheck:
 		{
 			Instruction* next = target->GetNext();
@@ -129,10 +129,10 @@ void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Inst
 			result.Append(target);
 			break;
 		}
-			
+
 	case InstructionType::Fail:
 		break;
-		
+
 	default:
 		target->visitMark = mark+1;
 		result.Append(target);
@@ -163,7 +163,7 @@ void InstructionList::Dump(ICharacterWriter& output)
 {
 	IndexInstructions();
 	UpdateReferencesForInstructions();
-	
+
 	for(Instruction& instruction : instructionList)
 	{
 		output.PrintF("%p %3z: %z ref: ", &instruction, instruction.index, instruction.referenceList.GetCount());
@@ -238,18 +238,18 @@ void InstructionList::UpdateReferencesForInstructions()
 	{
 		instruction.referenceList.SetCount(0);
 	}
-	
+
 	for(SearchOptimizer& searchOptimizer : searchOptimizerList)
 	{
 		searchOptimizer.original->referenceList.Append(InstructionReference{&searchOptimizer.original, InstructionReference::SEARCH_OPTIMIZER_REFERENCE});
 	}
-	
+
 	if(scanDirection == Forwards)
 	{
-		partialMatchInstruction->referenceList.Append(InstructionReference{&partialMatchInstruction, InstructionReference::START_REFERENCE});		
+		partialMatchInstruction->referenceList.Append(InstructionReference{&partialMatchInstruction, InstructionReference::START_REFERENCE});
 	}
 	fullMatchInstruction->referenceList.Append(InstructionReference{&fullMatchInstruction, InstructionReference::START_REFERENCE});
-	
+
 	for(Instruction& instruction : instructionList)
 	{
 		instruction.Link();
@@ -277,15 +277,15 @@ bool InstructionList::VerifyReferencesForInstructions(const char* optimizationPa
 		snapShot[i] = instruction.referenceList;
 		++i;
 	}
-	
+
 	UpdateReferencesForInstructions();
-	
+
 	i = 0;
 	for(Instruction& instruction : instructionList)
 	{
 		const ReferenceTable &singleSnapShot = snapShot[i];
 		const ReferenceTable &current = instruction.referenceList;
-	
+
 		if(singleSnapShot.GetCount() != current.GetCount())
 		{
 			DumpReferenceMismatch(singleSnapShot, i, optimizationPass);
@@ -301,12 +301,12 @@ bool InstructionList::VerifyReferencesForInstructions(const char* optimizationPa
 		}
 		++i;
 	}
-	
+
 #if JDUMP_BYTECODE_OPTIMIZATION_INFORMATION
 	StandardOutput.PrintF("\nAfter optimization pass: %s\n", optimizationPass);
 	Dump(StandardOutput);
 #endif
-	
+
 	return true;
 }
 
@@ -364,7 +364,7 @@ void InstructionList::Optimize()
 		}
 		return;
 	}
-	
+
 #define STEP(x) RunOptimizeStep(&InstructionList::x, #x)
 	STEP(Optimize_RemoveAssertEndOfInput);									// This also determines matchRequiresEndOfInput flag
 	if(scanDirection == Reverse) STEP(Optimize_RemoveLeadingAsserts);
@@ -411,7 +411,7 @@ void InstructionList::Optimize()
 	if(scanDirection == Reverse) STEP(Optimize_RemoveZeroReference);
 	if(scanDirection == Reverse) STEP(Optimize_ByteJumpTableToFindByte);
 #undef STEP
-	
+
 #if DUMP_OPTIMIZATION_STATISTICS
 	StandardOutput.PrintF("OPTIMIZATION STEPS\n");
 	for(uint32_t i = 0; i < optimizationStepCounter; ++i)
@@ -461,7 +461,7 @@ void InstructionList::PropagateFail(Instruction* instruction, Instruction* fail)
 	for(size_t i = instruction->referenceList.GetCount(); i > 0;)
 	{
 		InstructionReference ref = instruction->referenceList[--i];
-		
+
 		Instruction* ancestor = ref.GetInstruction(instruction);
 		if(ancestor)
 		{
@@ -554,7 +554,7 @@ void InstructionList::Optimize_RemoveLeadingAsserts()
 	for(;;)
 	{
 		if(instruction->referenceList.GetCount() > 1) return;
-		
+
 		switch(instruction->type)
 		{
 		case InstructionType::AssertEndOfInput:
@@ -573,15 +573,15 @@ void InstructionList::Optimize_RemoveLeadingAsserts()
 				instruction = next;
 			}
 			break;
-				
+
 		case InstructionType::Jump:
 			instruction = ((JumpInstruction*) instruction)->target;
 			break;
-			
+
 		case InstructionType::Save:
 			instruction = instruction->GetNext();
 			break;
-				
+
 		default:
 			return;
 		}
@@ -614,18 +614,18 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 	};
 
 	static const StaticBitTable<256> WORD_MASK = MakeWordMask();
-	
+
 	for(LinkedInstructionList::Iterator it = instructionList.Begin(); it != instructionList.End(); ++it)
 	{
 		if(it->type != InstructionType::AssertWordBoundary
 			&& it->type != InstructionType::AssertNotWordBoundary) continue;
-		
+
 		AssertWordBoundaryBaseInstruction *assertInstruction = static_cast<AssertWordBoundaryBaseInstruction*>(&*it);
-		
+
 		Instruction* afterBoundary = it->GetNext();
 		while(AFTER_SKIP_INSTRUCTIONS.Contains(afterBoundary->type))
 		{
-			afterBoundary = afterBoundary->GetNext();	
+			afterBoundary = afterBoundary->GetNext();
 		}
 
 		bool afterIsWordCharacter = false;
@@ -645,15 +645,15 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 			afterIsNotWordCharacter = true;
 			afterBoundary = nullptr;
 		}
-		
+
 		if(afterIsWordCharacter != afterIsNotWordCharacter)
 		{
 			assertInstruction->isNextWordOnly = afterIsWordCharacter;
 			assertInstruction->isNextNotWordOnly = afterIsNotWordCharacter;
 		}
-		
+
 		if(it->referenceList.GetCount() != 1) continue;
-		
+
 		Instruction* beforeBoundary = it->referenceList[0].GetInstruction(assertInstruction);
 		while(beforeBoundary && beforeBoundary->referenceList.GetCount() == 1
 			  && BEFORE_SKIP_INSTRUCTIONS.Contains(beforeBoundary->type)
@@ -663,7 +663,7 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 		}
 		// Entry points have no predecessor. A partial search can start mid-input.
 		if(!beforeBoundary) continue;
-		
+
 		bool beforeIsWordCharacter = false;
 		bool beforeIsNotWordCharacter = false;
 		StaticBitTable<256> beforeValidBytes;
@@ -680,7 +680,7 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 			beforeIsNotWordCharacter = true;
 			beforeBoundary = nullptr;
 		}
-		
+
 		if(beforeIsWordCharacter != beforeIsNotWordCharacter)
 		{
 			assertInstruction->isPreviousWordOnly = beforeIsWordCharacter;
@@ -692,12 +692,12 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 		{
 			continue;
 		}
-		
+
 		int beforeMask = beforeIsNotWordCharacter + 2*beforeIsWordCharacter;
 		int afterMask  = afterIsNotWordCharacter  + 2*afterIsWordCharacter;
-		
+
 		static const unsigned char FLIP_BITS[4] = { 0, 2, 1, 3 };
-		
+
 		if(it->type == InstructionType::AssertWordBoundary)
 		{
 			// Input    Output
@@ -705,7 +705,7 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 			//  01 (1)   10 (2)
 			//  10 (2)   01 (1)
 			//  11 (3)   11 (3)
-			
+
 			if(beforeMask & afterMask)
 			{
 				// This is a failure case!
@@ -725,7 +725,7 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 				// This is a redundant assert
 				Instruction* remove = &*it;
 				--it;
-				
+
 				remove->GetNext()->referenceList.Remove(nullptr);
 				remove->TransferReferencesTo(remove->GetNext());
 				RemoveInstruction(remove);
@@ -742,7 +742,7 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 				remove->TransferReferencesTo(remove->GetNext());
 				RemoveInstruction(remove);
 				delete remove;
-				
+
 				if(beforeIsWordCharacter)
 				{
 					StaticBitTable<256> validMask = afterValidBytes & ~WORD_MASK;
@@ -813,7 +813,7 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 				// This is a redundant assert
 				Instruction* remove = &*it;
 				--it;
-				
+
 				remove->GetNext()->referenceList.Remove(nullptr);
 				remove->TransferReferencesTo(remove->GetNext());
 				RemoveInstruction(remove);
@@ -838,13 +838,13 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 				// There is some information that we can use that isn't redundant
 				if((afterIsWordCharacter || afterIsNotWordCharacter) && beforeBoundary == nullptr) continue;
 				if((beforeIsWordCharacter || beforeIsNotWordCharacter) && afterBoundary == nullptr) continue;
-				
+
 				Instruction* remove = &*it;
 				remove->GetNext()->referenceList.Remove(nullptr);
 				remove->TransferReferencesTo(remove->GetNext());
 				RemoveInstruction(remove);
 				delete remove;
-				
+
 				if(beforeIsWordCharacter)
 				{
 					StaticBitTable<256> validMask = afterValidBytes & WORD_MASK;
@@ -920,11 +920,11 @@ void InstructionList::Optimize_RemoveAssertEndOfInput()
 	{
 		if(hasStartAnchor) matchRequiresEndOfInput = true;
 	}
-	
+
 	static constexpr EnumSet<InstructionType, uint64_t> FORWARD_END_SET{ InstructionType::AssertEndOfInput };
 	static constexpr EnumSet<InstructionType, uint64_t> REVERSE_END_SET{ InstructionType::AssertStartOfInput, InstructionType::AssertStartOfSearch };
 	const EnumSet<InstructionType, uint64_t>& END_SET = IsForwards() ? FORWARD_END_SET : REVERSE_END_SET;
-	
+
 	bool hasByteConsumer = false;
 	for(LinkedInstructionList::Iterator it = instructionList.ReverseBegin(); it != instructionList.ReverseEnd(); --it)
 	{
@@ -967,14 +967,14 @@ static void RecurseAddTargets(InstructionTable &targets, Instruction* original, 
 			}
 		}
 		break;
-			
+
 	case InstructionType::Jump:
 		{
 			JumpInstruction* jump = (JumpInstruction*) next;
 			RecurseAddTargets(targets, original, jump->target);
 		}
 		break;
-			
+
 	case InstructionType::ProgressCheck:
 		{
 			Instruction* nextnext = next->GetNext();
@@ -985,7 +985,7 @@ static void RecurseAddTargets(InstructionTable &targets, Instruction* original, 
 
 	case InstructionType::Fail:
 		break;
-			
+
 	default:
 		targets.AppendUnique(next);
 		break;
@@ -1000,7 +1000,7 @@ void InstructionList::Optimize_SplitToSplit(SplitInstruction* split)
 		RecurseAddTargets(targets, split, split->targetList[i]);
 	}
 	if(split->targetList == targets) return;
-	
+
 	split->Unlink();
 	split->targetList = Move(targets);
 	split->Link();
@@ -1020,14 +1020,14 @@ void InstructionList::Optimize_SplitToMatchReorder()
 			fullMatchInstruction->TagReachable(1);
 			partialMatchInstruction->TagReachable(2);
 		}
-		
+
 		for(LinkedInstructionList::Iterator it = instructionList.Begin(); it != instructionList.End();)
 		{
 			Instruction* instruction = &*it;
 			++it;
 			if(instruction->type != InstructionType::Split) continue;
 			if(instruction->startReachable != 2) continue;
-			
+
 			SplitInstruction* split = (SplitInstruction*) instruction;
 			if(split->targetList[0]->LeadsToMatch(false))
 			{
@@ -1046,7 +1046,7 @@ void InstructionList::Optimize_SplitToMatchReorder()
 		for(Instruction& instruction : instructionList)
 		{
 			if(instruction.type != InstructionType::Split) continue;
-			
+
 			SplitInstruction* split = (SplitInstruction*) &instruction;
 			InstructionTable targets, remaining;
 			for(Instruction* target : split->targetList)
@@ -1056,7 +1056,7 @@ void InstructionList::Optimize_SplitToMatchReorder()
 			}
 			// Keep the relative priority of accepting branches.
 			for(Instruction* target : remaining) targets.Append(target);
-			
+
 			if(split->targetList == targets) continue;
 
 			split->Unlink();
@@ -1071,7 +1071,7 @@ void InstructionList::Optimize_SplitToSplit()
 	for(Instruction& instruction : instructionList)
 	{
 		if(instruction.type != InstructionType::Split) continue;
-		
+
 		SplitInstruction* split = (SplitInstruction*) &instruction;
 		Optimize_SplitToSplit(split);
 	}
@@ -1086,7 +1086,7 @@ void InstructionList::Optimize_LeftFactor()
 	{
 	Repeat:
 		if(it->type != InstructionType::Split || it->referenceList.GetCount() == 0) continue;
-		
+
 		SplitInstruction* split = (SplitInstruction*) &*it;
 		Optimize_SplitToSplit(split);
 		LinkedInstructionList::Iterator insertAfter(it);
@@ -1110,7 +1110,7 @@ void InstructionList::Optimize_LeftFactor()
 			}
 			continue;
 		}
-		
+
 		size_t start = 0;
 		while(start < split->targetList.GetCount())
 		{
@@ -1121,7 +1121,7 @@ void InstructionList::Optimize_LeftFactor()
 				Instruction* target = split->targetList[end];
 				if(*startTarget != *target) break;
 			}
-			
+
 			// Two cases
 			// a). All targets equal. ie.
 			//     01 split 2 4 6            ->      01 byte x
@@ -1150,12 +1150,12 @@ void InstructionList::Optimize_LeftFactor()
 			//     09 i4                             09 i4
 			//
 			// The second case is important for the CollapseSplit optimization
-			
+
 			if(end-start > 1 && remainingFactorings-- == 0) return;
 			if(start == 0 && end == split->targetList.GetCount())
 			{
 				Instruction* commonTarget = startTarget->Clone();
-				
+
 				for(size_t j = 0; j < split->targetList.GetCount(); ++j)
 				{
 					Instruction* &target = split->targetList[j];
@@ -1168,7 +1168,7 @@ void InstructionList::Optimize_LeftFactor()
 				}
 				split->TransferReferencesTo(commonTarget);
 				split->referenceList.SetCount(0);
-				
+
 				if(!NO_IMPLICIT_NEXT_INSTRUCTION_SET.Contains(commonTarget->type))
 				{
 					split->referenceList.Append(InstructionReference::PREVIOUS);
@@ -1184,12 +1184,12 @@ void InstructionList::Optimize_LeftFactor()
 					// Create a new split instruction
 					newSplit = new SplitInstruction;
 					newSplit->targetList.Reserve(end-start+1);
-					
+
 					for(size_t j = start; j < end; ++j)
 					{
 						Instruction* &target = split->targetList[j];
 						Instruction* afterTarget = target->GetNext();
-						
+
 						newSplit->targetList.Append(afterTarget);
 						afterTarget->referenceList.Append(InstructionReference{&newSplit->targetList.Back(), newSplit});
 					}
@@ -1197,13 +1197,13 @@ void InstructionList::Optimize_LeftFactor()
 					newSplit->referenceList.Append(InstructionReference::PREVIOUS);
 					InsertAfterInstruction(split, newSplit);
 				}
-				
+
 				Instruction* commonTarget = startTarget->Clone();
 				InsertAfterInstruction(split, commonTarget);
 				split->targetList[start]->referenceList.Remove(&split->targetList[start]);
 				split->targetList[start] = commonTarget;
 				commonTarget->referenceList.Append(InstructionReference{&split->targetList[start], split});
-				
+
 				// Redo references for array being changed in size.
 				for(size_t j = start+1; j < split->targetList.GetCount(); ++j)
 				{
@@ -1217,7 +1217,7 @@ void InstructionList::Optimize_LeftFactor()
 					Instruction* &target = split->targetList[x];
 					target->referenceList.Append(InstructionReference{&target, split});
 				}
-				
+
 				++start;
 			}
 			else
@@ -1233,13 +1233,13 @@ void InstructionList::Optimize_RightFactor()
 	// eg: "axy|bxy " -> "(?:a|b)xy"
 
 	IndexInstructions();
-	
+
 	for(LinkedInstructionList::Iterator it = instructionList.ReverseBegin(); it != instructionList.ReverseEnd(); --it)
 	{
 		if(it->type != InstructionType::Jump) continue;
-		
+
 		JumpInstruction* jump = (JumpInstruction*) &*it;
-		
+
 	Repeat:
 		if(!jump->referenceList.Contains(nullptr))
 		{
@@ -1247,7 +1247,7 @@ void InstructionList::Optimize_RightFactor()
 			continue;
 		}
 		Instruction* previous = jump->GetPrevious();
-		
+
 		Instruction* target = jump->target;
 		for(InstructionReference reference : target->referenceList)
 		{
@@ -1260,7 +1260,7 @@ void InstructionList::Optimize_RightFactor()
 				targetPrevious = targetPrevious->GetPrevious();
 			}
 			if(targetPrevious->index <= jump->index) continue;
-			
+
 			if(*previous == *targetPrevious)
 			{
 				// Forward all other jump references to target now
@@ -1283,12 +1283,12 @@ void InstructionList::Optimize_SplitToByteConsumers(LinkedInstructionList::Itera
 {
 	// If we have split a, b, c, d, e, f
 	// And a,b,c e,f are byte consumers, then change this to:
-	
+
 	//    split x, d, y
 	// x: split a, b, c
 	// y: split e, f
 	if(split->targetList.GetCount() <= 2) return;
-	
+
 	uint32_t start = 0;
 	while(start < split->targetList.GetCount())
 	{
@@ -1300,7 +1300,7 @@ void InstructionList::Optimize_SplitToByteConsumers(LinkedInstructionList::Itera
 				Instruction* target = split->targetList[end];
 				if(!target->IsByteConsumer()) break;
 			}
-			
+
 			if((start == 0 && end == split->targetList.GetCount())
 			   || (end-start) < 2)
 			{
@@ -1318,14 +1318,14 @@ void InstructionList::Optimize_SplitToByteConsumers(LinkedInstructionList::Itera
 				}
 				newSplit->targetList = stateMap.MakeCanonicalStateList(nullptr, newTargetList);
 				ObjectWithHash<InstructionTable&> targetListWithHash(newSplit->targetList);
-				
+
 				StateMap::StatesToInstructionMap::ConstIterator it = stateMap.Find(targetListWithHash);
 				for(uint32_t j = start; j < split->targetList.GetCount(); ++j)
 				{
 					Instruction* &target = split->targetList[j];
 					target->referenceList.Remove(&target);
 				}
-				
+
 				if(it != stateMap.End())
 				{
 					delete newSplit;
@@ -1360,14 +1360,14 @@ void InstructionList::Optimize_SplitToByteFilters(LinkedInstructionList::Iterato
 {
 	// If we have split a, b, c, d, e, f
 	// And a,b,c e,f are byte consumers, then change this to:
-	
+
 	//    split x d y
 	// x: split a b c
 	// y: split e f
 	if(split->optimizationPhase == SplitInstruction::OptimizationPhase::SplitToByteFiltersDone) return;
 	split->optimizationPhase = SplitInstruction::OptimizationPhase::SplitToByteFiltersDone;
 	if(split->targetList.GetCount() <= 2) return;
-	
+
 	uint32_t start = 0;
 	while(start < split->targetList.GetCount())
 	{
@@ -1385,7 +1385,7 @@ void InstructionList::Optimize_SplitToByteFilters(LinkedInstructionList::Iterato
 					break;
 				}
 			}
-			
+
 			if((start == 0 && end == split->targetList.GetCount())
 			   || (end-start) < 2)
 			{
@@ -1439,10 +1439,10 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 	// Make sure "\\w.\\bnnn" is collapsed
 	// Make sure "(?i)Tom|Sawyer|Huckleberry|Finn" is collapsed
 	// Make sure [a-q][^u-z]{13} is not collapsed too far
-	
+
 //	StandardOutput.PrintF("Split: ");
 //	split->targetList.Dump(StandardOutput);
-	
+
 	InstructionTable canonicalStateList = stateMap.MakeCanonicalStateList(split);
 	ObjectWithHash<InstructionTable&> canonicalStateListWithHash(canonicalStateList);
 //	StandardOutput.PrintF("Canonical state list: ");
@@ -1458,7 +1458,7 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 			split->TransferReferencesTo(replacement);
 			ReplaceInstruction(split, replacement);
 			split->Unlink();
-			
+
 			StateMap::InstructionToStatesMap::Iterator it2 = stateMap.instructionToStatesMap.Find(split);
 			if(it2 != stateMap.instructionToStatesMap.End())
 			{
@@ -1470,7 +1470,7 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 			delete split;
 			return;
 		}
-		
+
 		if(growthStateList[AVOID_STATES_REQUIRE_CONSECUTIVE_GROWTH_COUNT-1].Find(canonicalStateListWithHash) != growthStateList[AVOID_STATES_REQUIRE_CONSECUTIVE_GROWTH_COUNT-1].End())
 		{
 			// Lets see whether the split can make use of existing collapses
@@ -1489,7 +1489,7 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 				newTargetList.Append(canonicalStateList[0]);
 				canonicalStateList.RemoveIndex(0);
 			}
-			
+
 			if(split->targetList != newTargetList)
 			{
 				// Remove all references.
@@ -1504,16 +1504,16 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 	{
 		stateMap.Insert(canonicalStateListWithHash, split);
 	}
-	
+
 	Optimize_SplitToSplit(split);
-	
+
 	LinkedInstructionList::Iterator insertAfter = split;
 	Optimize_SplitToByteConsumers(insertAfter, split, stateMap);
 	uint32_t numberOfTargets = (uint32_t) split->targetList.GetCount();
-	
+
 	StaticBitTable<256> bitMask;
 	Instruction* afterTargetInstruction[numberOfTargets];
-	
+
 	bool sameTarget = true;
 	bool hasOverlap = false;
 	for(size_t j = 0; j < numberOfTargets; ++j)
@@ -1525,15 +1525,15 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 			sameTarget = false;
 		}
 	}
-	
+
 	for(size_t j = 0; j < numberOfTargets; ++j)
 	{
 		Instruction* target = split->targetList[j];
-		
+
 		StaticBitTable<256> targetBitMask = target->GetValidBytes();
 		if((bitMask & targetBitMask).HasAnyBitSet()) hasOverlap = true;
 		bitMask |= targetBitMask;
-		
+
 		if(sameTarget)
 		{
 			afterTargetInstruction[j] = GetAfterTargetInstruction(target->GetNext());
@@ -1541,7 +1541,7 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 			   && (!NO_IMPLICIT_NEXT_INSTRUCTION_SET.Contains(afterTargetInstruction[0]->type) || *afterTargetInstruction[0] != *afterTargetInstruction[j])) sameTarget = false;
 		}
 	}
-	
+
 	if(sameTarget)
 	{
 		// Replace with bitmask or byte range.
@@ -1550,7 +1550,7 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 			Instruction* &target = split->targetList[j];
 			target->referenceList.Remove(&target);
 		}
-		
+
 		Instruction* replacement;
 		if(bitMask.HasAllBitsClear())
 		{
@@ -1566,18 +1566,18 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 			bitMaskInstruction->bitMask = bitMask;
 			replacement = bitMaskInstruction;
 		}
-		
+
 		split->TransferReferencesTo(replacement);
 		stateMap.Remove(canonicalStateListWithHash, split);
 		stateMap.Insert(canonicalStateListWithHash, replacement);
 		ReplaceInstruction(split, replacement);
-		
+
 		// Insert jump instruction to afterTarget
 		Instruction* target = GetAfterTargetInstruction(split->targetList[0]->GetNext());
 		JumpInstruction* jump = new JumpInstruction(target);
-		
+
 		jump->referenceList.Append(InstructionReference::PREVIOUS);
-		
+
 		InsertAfterInstruction(replacement, jump);
 		delete split;
 	}
@@ -1586,20 +1586,20 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 		ByteJumpTableInstruction* jumpTableInstruction = new ByteJumpTableInstruction;
 		jumpTableInstruction->targetList.Reserve(256);
 		jumpTableInstruction->referenceList.Reserve(jumpTableInstruction->referenceList.GetCount() + numberOfTargets);
-		
+
 		split->TransferReferencesTo(jumpTableInstruction);
 		stateMap.Remove(canonicalStateListWithHash, split);
 		stateMap.Insert(canonicalStateListWithHash, jumpTableInstruction);
-		
+
 		if(bitMask.GetPopulationCount() != 256)
 		{
 			jumpTableInstruction->targetList.Append(nullptr);
 		}
-		
+
 		for(size_t j = 0; j < numberOfTargets; ++j)
 		{
 			Instruction* &target = split->targetList[j];
-			
+
 			for(int p = 0; p < target->GetNumberOfPlanes(); ++p)
 			{
 				StaticBitTable<256> bitMask = target->GetValidBytesForPlane(p);
@@ -1607,7 +1607,7 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 				{
 					Instruction* afterTargetInstruction = GetAfterTargetInstruction(target->GetTargetForPlane(p));
 					Instruction* newTarget = (afterTargetInstruction == split) ? jumpTableInstruction : afterTargetInstruction;
-					
+
 					size_t index = jumpTableInstruction->targetList.FindIndexForValue(newTarget);
 					if(index == TypeData<size_t>::Maximum())
 					{
@@ -1618,10 +1618,10 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 					bitMask.ForEachSetBit([&](size_t k) { jumpTableInstruction->targetTable[k] = index; });
 				}
 			}
-			
+
 			target->referenceList.Remove(&target);
 		}
-		
+
 		ReplaceInstruction(split, jumpTableInstruction);
 		delete split;
 		stateMap.Remove(canonicalStateListWithHash, jumpTableInstruction);
@@ -1634,35 +1634,35 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 		ByteJumpTableInstruction* jumpTableInstruction = new ByteJumpTableInstruction;
 		jumpTableInstruction->referenceList.Reserve(split->referenceList.GetCount() + 256);
 		jumpTableInstruction->targetList.Reserve(256);
-		
+
 		split->TransferReferencesTo(jumpTableInstruction);
 		stateMap.Remove(canonicalStateListWithHash, split);
 		stateMap.Insert(canonicalStateListWithHash, jumpTableInstruction);
-		
+
 		InstructionTable targetList[256];
 		InstructionTable addedSplitList;
 		Javelin::Map<InstructionTable, uint32_t> jumpStateMap(16);
-		
+
 		if(bitMask.GetPopulationCount() != 256)
 		{
 			InstructionTable emptyTargetList;
 			jumpStateMap.Insert(emptyTargetList, 0);
 			jumpTableInstruction->targetList.Append(nullptr);
 		}
-		
+
 		for(size_t j = 0; j < split->targetList.GetCount(); ++j)
 		{
 			Instruction* target = split->targetList[j];
 			for(int p = 0; p < target->GetNumberOfPlanes(); ++p)
 			{
 				StaticBitTable<256> targetBitMask = split->targetList[j]->GetValidBytesForPlane(p);
-				
+
 				Instruction* afterTargetInstruction = GetAfterTargetInstruction(target->GetTargetForPlane(p));
 				Instruction* newTarget = (afterTargetInstruction == split) ? jumpTableInstruction : afterTargetInstruction;
 				targetBitMask.ForEachSetBit([&](size_t x) { targetList[x].Append(newTarget); });
 			}
 		}
-		
+
 		uint32_t index;
 		for(uint32_t j = 0; j < 256; ++j)
 		{
@@ -1680,11 +1680,11 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 					case 0:
 						target = nullptr;
 						break;
-						
+
 					case 1:
 						target = byteTargets[0];
 						break;
-						
+
 					default:
 						// Create a split instruction
 						{
@@ -1719,25 +1719,25 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 			}
 			jumpTableInstruction->targetTable[j] = index;
 		}
-		
+
 		if(addedSplitList.GetCount() >= 2)
 		{
 			int insertAt = AVOID_STATES_REQUIRE_CONSECUTIVE_GROWTH_COUNT-1;
 			while(insertAt > 0 && !growthStateList[insertAt-1].Contains(canonicalStateListWithHash)) --insertAt;
-			
+
 			for(Instruction* addedSplit : addedSplitList)
 			{
 				SplitInstruction* split = (SplitInstruction*) addedSplit;
 				growthStateList[insertAt].Insert(split->targetList);
 			}
 		}
-		
+
 		for(size_t j = 0; j < numberOfTargets; ++j)
 		{
 			Instruction* &target = split->targetList[j];
 			target->referenceList.Remove(&target);
 		}
-		
+
 		ReplaceInstruction(split, jumpTableInstruction);
 		delete split;
 		stateMap.Remove(canonicalStateListWithHash, jumpTableInstruction);
@@ -1750,13 +1750,13 @@ void InstructionList::Optimize_CollapseSplit()
 {
 	StateMap stateMap(visitMark);
 	StateSet growthStateList[AVOID_STATES_REQUIRE_CONSECUTIVE_GROWTH_COUNT];
-	
+
 	// Looking for two cases here
 	// 1) split -> byte -> same target --- change to BitMask
 	// 2) split -> byte -> different targets --- change to ByteJumpTable
-	
+
 	// This is done in reverse so that references to instructions can be reduced and save can be delayed.
-	
+
 	// eg. processing forward for "([0-9]+)-([0-9]+)-([0-9]+)" gives:
 	//	After optimization pass: CollapseSplit
 	//	000060c000009400   0: 1 ref: jump 2
@@ -1768,8 +1768,8 @@ void InstructionList::Optimize_CollapseSplit()
 	//	000061500000b480   6: 2 ref: byte-jump-table: fail 6 8
 	//	000060c0000097c0   7: 0 ref: byte '-'
 	// ...
-	
-	
+
+
 	LinkedInstructionList::Iterator instructionIterator = instructionList.ReverseBegin();
 	while(instructionIterator != instructionList.ReverseEnd())
 	{
@@ -1778,9 +1778,9 @@ void InstructionList::Optimize_CollapseSplit()
 		{
 			--instructionIterator;
 			continue;
-			
+
 		}
-		
+
 		// This strange iteration is because we want to place extra instructions after the split that we're replacing
 		// We only ever delete the split we're processing, so using the split's next as an anchor while processing is stable
 		++instructionIterator;
@@ -1820,7 +1820,7 @@ void InstructionList::Optimize_RemoveZeroReference()
 	{
 		fullMatchInstruction->TagReachable(1);
 	}
-	
+
 	// First pass, break all links from unreachable instructions
 	for(Instruction& instruction : instructionList)
 	{
@@ -1829,7 +1829,7 @@ void InstructionList::Optimize_RemoveZeroReference()
 			instruction.Unlink();
 		}
 	}
-	
+
 	// Now remove them from the table.
 	int matchReachable = 0;
 	for(LinkedInstructionList::Iterator it = instructionList.ReverseBegin(); it != instructionList.ReverseEnd();)
@@ -1864,7 +1864,7 @@ void InstructionList::Optimize_RemoveZeroReference()
 void InstructionList::ConvertToFail(Instruction* &startingInstruction)
 {
 	InstructionReference reference{&startingInstruction, InstructionReference::START_REFERENCE};
-	
+
 	startingInstruction->referenceList.Remove(reference);
 	Instruction* failInstruction;
 	if(instructionList.Front().type == InstructionType::Fail) failInstruction = &instructionList.Front();
@@ -1880,7 +1880,7 @@ void InstructionList::ConvertToFail(Instruction* &startingInstruction)
 void InstructionList::Optimize_SimpleByteConsumersToAdvanceByte()
 {
 	instructionList.Perform([](Instruction& instruction) { instruction.splitReachable = false; });
-	
+
 	// Tag all instructions reached by splits
 	for(Instruction& instruction : instructionList)
 	{
@@ -1893,7 +1893,7 @@ void InstructionList::Optimize_SimpleByteConsumersToAdvanceByte()
 			}
 		}
 	}
-	
+
 	// Now replace all simple byte consumer instructions not reachable by splits with advance byte
 	for(LinkedInstructionList::Iterator it = instructionList.Begin(); it != instructionList.End();)
 	{
@@ -1935,7 +1935,7 @@ void InstructionList::Optimize_SimpleByteConsumersToAdvanceByte()
 					jump->referenceList.Append(InstructionReference::PREVIOUS);
 					InsertAfterInstruction(jumpTable, jump);
 				}
-				
+
 				jumpTable->TransferReferencesTo(anyByte);
 				ReplaceInstruction(jumpTable, anyByte);
 				jumpTable->Unlink();
@@ -1952,14 +1952,14 @@ void InstructionList::Optimize_RemoveJumpToNext()
 		LinkedInstructionList::Iterator current = it;
 		--it;
 		if(current->type != InstructionType::Jump) continue;
-		
+
 		JumpInstruction* jump = (JumpInstruction*) &*current;
 		if(jump->target == jump->GetNext())
 		{
 			Instruction* target = jump->target;
 			target->referenceList.Remove(&jump->target);
 			jump->TransferReferencesTo(target);
-			
+
 			RemoveInstruction(jump);
 			delete jump;
 		}
@@ -1983,7 +1983,7 @@ Instruction* InstructionList::GetMatchStartingFrom(Instruction* instruction) con
 				continue;
 			}
 			return nullptr;
-				
+
 		case InstructionType::Save:
 		case InstructionType::ProgressCheck:
 		case InstructionType::PropagateBackwards:
@@ -1995,10 +1995,10 @@ Instruction* InstructionList::GetMatchStartingFrom(Instruction* instruction) con
 				DispatchTableInstruction* dispatch = (DispatchTableInstruction*) instruction;
 				return dispatch->targetList[0] != nullptr ? dispatch : nullptr;
 			}
-				
+
 		case InstructionType::Match:
 			return instruction;
-				
+
 		default:
 			return nullptr;
 		}
@@ -2025,11 +2025,11 @@ Instruction* InstructionList::GetByteFilterStartingFrom(Instruction* instruction
 		case InstructionType::DispatchTable:
 		case InstructionType::Fail:
 			return instruction;
-				
+
 		case InstructionType::Jump:
 			instruction = ((JumpInstruction*) instruction)->target;
 			continue;
-				
+
 		case InstructionType::AssertStartOfInput:
 		case InstructionType::AssertEndOfInput:
 		case InstructionType::AssertStartOfLine:
@@ -2041,7 +2041,7 @@ Instruction* InstructionList::GetByteFilterStartingFrom(Instruction* instruction
 		case InstructionType::PropagateBackwards:
 			instruction = instruction->GetNext();
 			continue;
-				
+
 		default:
 			return nullptr;
 		}
@@ -2057,7 +2057,7 @@ Instruction* InstructionList::GetAfterByteFilterStartingFrom(Instruction* instru
 		case InstructionType::Jump:
 			instruction = ((JumpInstruction*) instruction)->target;
 			continue;
-			
+
 		case InstructionType::ProgressCheck:
 		case InstructionType::Save:
 			instruction = instruction->GetNext();
@@ -2068,7 +2068,7 @@ Instruction* InstructionList::GetAfterByteFilterStartingFrom(Instruction* instru
 		case InstructionType::DispatchTable:
 		case InstructionType::Split:
 			return instruction;
-				
+
 		default:
 			return nullptr;
 		}
@@ -2089,7 +2089,7 @@ void InstructionList::Optimize_SplitToDispatch()
 		InstructionTable canonicalTargetList = split->targetList;
 		Optimize_SplitToByteFilters(it, split);
 		split = (SplitInstruction*) &*it;
-		
+
 		// If there is a match target and if it is the last one.
 		Instruction* endOfInputInstruction = nullptr;
 		bool hasMatch = false;
@@ -2107,7 +2107,7 @@ void InstructionList::Optimize_SplitToDispatch()
 				continue;
 			}
 		}
-		
+
 		if(matchRequiresEndOfInput)
 		{
 			for(size_t j = 0; j < numberOfTargets; ++j)
@@ -2127,13 +2127,13 @@ void InstructionList::Optimize_SplitToDispatch()
 				hasMatch = true;
 			}
 		}
-		
+
 		int equivalentCount = 0;
 		for(size_t j = 0; j < numberOfTargets; ++j)
 		{
 			Instruction* target = split->targetList[j];
 			Instruction* byteTarget = GetByteFilterStartingFrom(target);
-			
+
 			if(endOfInputInstruction == nullptr)
 			{
 				if(GetMatchStartingFrom(target) != nullptr)
@@ -2141,14 +2141,14 @@ void InstructionList::Optimize_SplitToDispatch()
 					endOfInputInstruction = target;
 				}
 			}
-			
+
 			if(hasMatch && !byteTarget && GetMatchStartingFrom(target) != nullptr) continue;
 			if(!byteTarget) goto Next;
 
 			if(hasMatch && !matchRequiresEndOfInput)
 			{
 				if(byteTarget->GetNumberOfPlanes() > 1) goto Next;
-				
+
 				Instruction* afterByteFilter = GetAfterByteFilterStartingFrom(byteTarget->GetTargetForPlane(0));
 				if(!afterByteFilter) goto Next;
 				if(afterByteFilter->type != InstructionType::Match
@@ -2156,15 +2156,15 @@ void InstructionList::Optimize_SplitToDispatch()
 				   && !(afterByteFilter->type == InstructionType::DispatchTable && ((DispatchTableInstruction*) afterByteFilter)->targetList[0] != nullptr)
 				   && *split != *afterByteFilter) goto Next;
 			}
-			
+
 			StaticBitTable<256> targetBitMask = byteTarget->GetValidBytes();
 			if(bitMask == targetBitMask || targetBitMask.HasAllBitsSet()) equivalentCount++;
 			if((bitMask & targetBitMask).HasAnyBitSet()) hasOverlap = true;
 			bitMask |= targetBitMask;
 		}
-		
+
 		if(equivalentCount >= numberOfTargets-1) continue;
-		
+
 		if(bitMask.HasAllBitsClear())
 		{
 			Instruction* replacement = new FailInstruction;
@@ -2179,7 +2179,7 @@ void InstructionList::Optimize_SplitToDispatch()
 			DispatchTableInstruction* dispatchTableInstruction = new DispatchTableInstruction;
 			split->TransferReferencesTo(dispatchTableInstruction);
 			dispatchTableInstruction->index = split->index;
-			
+
 			uint32_t numberOfTargets = (uint32_t) split->targetList.GetCount();
 			dispatchTableInstruction->targetList.Reserve(numberOfTargets+1);
 			if(endOfInputInstruction)
@@ -2191,15 +2191,15 @@ void InstructionList::Optimize_SplitToDispatch()
 			{
 				dispatchTableInstruction->targetList.Append(nullptr);
 			}
-			
+
 			for(size_t j = 0; j < numberOfTargets; ++j)
 			{
 				Instruction* &target = split->targetList[j];
 				target->referenceList.Remove(&target);
-				
+
 				Instruction* byteTarget = GetByteFilterStartingFrom(target);
 				if(!byteTarget) continue;
-				
+
 				StaticBitTable<256> bitMask = byteTarget->GetValidBytes();
 				if(bitMask.GetPopulationCount() != 0)
 				{
@@ -2220,9 +2220,9 @@ void InstructionList::Optimize_SplitToDispatch()
 						if(bitMask[k]) dispatchTableInstruction->targetTable[k] = index;
 					}
 				}
-				
+
 			}
-			
+
 			ReplaceInstruction(split, dispatchTableInstruction);
 			delete split;
 			it = dispatchTableInstruction;
@@ -2233,9 +2233,9 @@ void InstructionList::Optimize_SplitToDispatch()
 			DispatchTableInstruction* dispatchTableInstruction = new DispatchTableInstruction;
 			dispatchTableInstruction->referenceList.Reserve(split->referenceList.GetCount() + 256);
 			dispatchTableInstruction->targetList.Reserve(256);
-			
+
 			split->TransferReferencesTo(dispatchTableInstruction);
-			
+
 			InstructionTable targetList[256];
 			Javelin::Map<InstructionTable, uint32_t> stateMap;
 
@@ -2249,31 +2249,31 @@ void InstructionList::Optimize_SplitToDispatch()
 			{
 				dispatchTableInstruction->targetList.Append(nullptr);
 			}
-			
+
 			{
 				InstructionTable emptyTargetList;
 				stateMap.Insert(emptyTargetList, 0);
 			}
-			
+
 			for(size_t j = 0; j < numberOfTargets; ++j)
 			{
 				Instruction* &target = split->targetList[j];
 				Instruction* byteTarget = GetByteFilterStartingFrom(target);
 				if(!byteTarget) continue;
-				
+
 				for(int p = 0; p < byteTarget->GetNumberOfPlanes(); ++p)
 				{
 					StaticBitTable<256> targetBitMask;
 					byteTarget->SetValidBytesForPlane(p, targetBitMask);
-					
+
 					for(uint32_t x = 0; x < 256; ++x)
 					{
 						if(targetBitMask[x]) targetList[x].Append(target);
 					}
 				}
-				
+
 			}
-			
+
 			uint32_t index;
 			for(uint32_t j = 0; j < 256; ++j)
 			{
@@ -2289,11 +2289,11 @@ void InstructionList::Optimize_SplitToDispatch()
 						case 0:
 							target = nullptr;
 							break;
-							
+
 						case 1:
 							target = byteTargets[0];
 							break;
-							
+
 						default:
 							// Create a split instruction
 							{
@@ -2317,18 +2317,18 @@ void InstructionList::Optimize_SplitToDispatch()
 				}
 				dispatchTableInstruction->targetTable[j] = index;
 			}
-			
+
 			for(size_t j = 0; j < split->targetList.GetCount(); ++j)
 			{
 				Instruction* &target = split->targetList[j];
 				target->referenceList.Remove(&target);
 			}
-			
+
 			ReplaceInstruction(split, dispatchTableInstruction);
 			delete split;
 			it = dispatchTableInstruction;
 		}
-		
+
 	Next:
 		;
 	}
@@ -2352,7 +2352,7 @@ void InstructionList::Optimize_DelaySave(SaveInstruction* saveInstruction, bool 
 	while(instructionList.End() != saveInstruction)
 	{
 		Instruction* nextInstruction = saveInstruction->GetNext();
-		
+
 		if(nextInstruction->type == InstructionType::Split)
 		{
 			if(nextInstruction->referenceList.GetCount() != 1) return;
@@ -2366,11 +2366,11 @@ void InstructionList::Optimize_DelaySave(SaveInstruction* saveInstruction, bool 
 				if(target->index < split->index) return;
 				if(target->referenceList.GetCount() > 1) return;
 			}
-	
+
 			nextInstruction->referenceList.Remove(nullptr);
 			saveInstruction->TransferReferencesTo(nextInstruction);
 			RemoveInstruction(saveInstruction);
-			
+
 			// OK.. propagate our save instruction through every branch of the split!
 			for(Instruction* target : split->targetList)
 			{
@@ -2380,17 +2380,17 @@ void InstructionList::Optimize_DelaySave(SaveInstruction* saveInstruction, bool 
 				InsertBeforeInstruction(target, newSave);
 				Optimize_DelaySave(newSave, allowSplittingMultipleReferences);
 			}
-			
+
 			delete saveInstruction;
 			return;
 		}
 		else if(nextInstruction->type == InstructionType::Jump)
 		{
 			if(!allowSplittingMultipleReferences) return;
-			
+
 			JumpInstruction* jump = (JumpInstruction*) nextInstruction;
 			if(jump->referenceList.GetCount() != 1) return;
-			
+
 			// Can we hoist a byte jump target?
 			Instruction* target = jump->target;
 			if(target->IsSimpleByteConsumer())
@@ -2405,7 +2405,7 @@ void InstructionList::Optimize_DelaySave(SaveInstruction* saveInstruction, bool 
 			{
 				return;
 			}
-			
+
 			// Need to transform:
 			//      save                byte x
 			//      jump n              save
@@ -2440,22 +2440,22 @@ void InstructionList::Optimize_DelaySave(SaveInstruction* saveInstruction, bool 
 			{
 				return;
 			}
-			
+
 			if(nextInstruction->referenceList.GetCount() == 1)
 			{
 				nextInstruction->referenceList.Remove(nullptr);
 				saveInstruction->TransferReferencesTo(nextInstruction);
 				saveInstruction->referenceList.Append(InstructionReference::PREVIOUS);
-				
+
 				RemoveInstruction(saveInstruction);
-				
+
 				// Special case
 				if(nextInstruction->type == InstructionType::Fail)
 				{
 					delete saveInstruction;
 					return;
 				}
-				
+
 				InsertAfterInstruction(nextInstruction, saveInstruction);
 			}
 			else
@@ -2479,7 +2479,7 @@ Instruction* InstructionList::Optimize_SimplifyByteJumpTable(ByteJumpTableInstru
 {
 	// If a ByteJumpTable has a single target of itself, then convert to fail
 	// If it has a single target that is the next instruction, then convert to bit mask
-	
+
 	if(jumpTableInstruction->targetList.GetCount() == 1)
 	{
 		Instruction* &target = jumpTableInstruction->targetList[0];
@@ -2506,12 +2506,12 @@ Instruction* InstructionList::Optimize_SimplifyByteJumpTable(ByteJumpTableInstru
 		delete jumpTableInstruction;
 		return replacement;
 	}
-	
+
 	if(jumpTableInstruction->targetList.GetCount() != 2) return jumpTableInstruction;
-	
+
 	if(jumpTableInstruction->targetList[0] != nullptr &&
 	   jumpTableInstruction->targetList[1] != nullptr) return jumpTableInstruction;
-	
+
 	Instruction* target = jumpTableInstruction->targetList[0] != nullptr ? jumpTableInstruction->targetList[0] : jumpTableInstruction->targetList[1];
 	if(target != jumpTableInstruction->GetNext()) return jumpTableInstruction;
 
@@ -2519,13 +2519,13 @@ Instruction* InstructionList::Optimize_SimplifyByteJumpTable(ByteJumpTableInstru
 
 	// We've got a jump table that just jumps to the next instruction!
 	// -> Replace it with a Byte, ByteRange, ByteEitherOf2, ByteEitherOf3 or ByteBitMaskInstruction
-	
+
 	StaticBitTable<256> bitMask;
 	for(size_t i = 0; i < 256; ++i)
 	{
 		if(jumpTableInstruction->targetTable[i] == targetIndex) bitMask.SetBit(i);
 	}
-	
+
 	Instruction* replacement;
 	if(bitMask.IsContiguous())
 	{
@@ -2548,12 +2548,12 @@ Instruction* InstructionList::Optimize_SimplifyByteJumpTable(ByteJumpTableInstru
 // TODO
 //	case 2:
 //	case 3:
-			
+
 	default:
 		replacement = new ByteBitMaskInstruction(bitMask);
 		break;
 	}
-	
+
 	jumpTableInstruction->TransferReferencesTo(replacement);
 	target->referenceList.Remove(&jumpTableInstruction->targetList[targetIndex]);
 	target->referenceList.Append(InstructionReference::PREVIOUS);
@@ -2566,23 +2566,23 @@ void InstructionList::Optimize_DispatchTargetsToAdvanceByte()
 {
 	// If an instruction already has been filtered by dispatch table,
 	// convert it to a (quicker) advance byte instruction.
-	
+
 	Map<Instruction*, int> dispatchReferenceCount;
 	for(Instruction&  instruction : instructionList)
 	{
 		if(instruction.type != InstructionType::DispatchTable) continue;
-		
+
 		DispatchTableInstruction* dispatchInstruction = (DispatchTableInstruction*) &instruction;
 		for(Instruction* target : dispatchInstruction->targetList)
 		{
 			if(target) dispatchReferenceCount[target]++;
 		}
 	}
-	
+
 	for(LinkedInstructionList::Iterator it = instructionList.ReverseBegin(); it != instructionList.ReverseEnd(); --it)
 	{
 		if(!it->IsSimpleByteConsumer()) continue;
-		
+
 		Map<Instruction*, int>::Iterator entry = dispatchReferenceCount.Find(&*it);
 		if(entry != dispatchReferenceCount.End())
 		{
@@ -2603,13 +2603,13 @@ void InstructionList::Optimize_ByteJumpTableToFindByte()
 	for(LinkedInstructionList::Iterator it = instructionList.Begin(); it != instructionList.End(); ++it)
 	{
 		if(it->type != InstructionType::ByteJumpTable) continue;
-		
+
 		ByteJumpTableInstruction* jumpTableInstruction = (ByteJumpTableInstruction*) &*it;
 		size_t index = jumpTableInstruction->targetList.FindIndexForValue(jumpTableInstruction);
 		if(index == TypeData<size_t>::Maximum()) continue;
 
 		StaticBitTable<256> afterMask;
-		
+
 		for(int j = 0; j < 256; ++j)
 		{
 			if(jumpTableInstruction->targetTable[j] != index)
@@ -2619,28 +2619,28 @@ void InstructionList::Optimize_ByteJumpTableToFindByte()
 		}
 
 		size_t count = afterMask.GetPopulationCount();
-		
+
 		if(count == 0)
 		{
 			// This means that we're stuck permanently in this state, with no exit. Convert to fail
 			it = ReplaceWithFail(jumpTableInstruction);
 			continue;
 		}
-		
+
 		if(count > 32) continue;
-		
+
 		if(afterMask.IsContiguous())
 		{
 			Interval<size_t> range = afterMask.GetContiguousRange();
 			if(range.GetSize() == 1)
 			{
-				
+
 				Instruction* target = jumpTableInstruction->targetList[jumpTableInstruction->targetTable[range.min]];
 				FindByteInstruction* replacement = new FindByteInstruction(range.min, target);
 				replacement->referenceList.Append(InstructionReference{InstructionReference::SELF_REFERENCE, replacement});
 				target->referenceList.Append(InstructionReference{&replacement->target, replacement});
 				jumpTableInstruction->TransferReferencesTo(replacement);
-				
+
 				ReplaceInstruction(jumpTableInstruction, replacement);
 				jumpTableInstruction->Unlink();
 				delete jumpTableInstruction;
@@ -2673,7 +2673,7 @@ void InstructionList::Optimize_ByteJumpTableToFindByte()
 			Instruction* searcher = new SearchByteInstruction(count, bytes, 0);
 			InsertBeforeInstruction(jumpTableInstruction, searcher);
 			jumpTableInstruction->TransferReferencesTo(searcher);
-			jumpTableInstruction->referenceList.Append(InstructionReference::PREVIOUS);	
+			jumpTableInstruction->referenceList.Append(InstructionReference::PREVIOUS);
 		}
 	}
 }
@@ -2683,17 +2683,17 @@ void InstructionList::Optimize_ForwardJumpTargets()
 	for(Instruction& instruction : instructionList)
 	{
 		if(instruction.type != InstructionType::Jump) continue;
-		
+
 		Instruction* target = ((JumpInstruction&) instruction).target;
 		while(target->type == InstructionType::Jump) target = ((JumpInstruction*) target)->target;
-		
+
 		for(size_t i = instruction.referenceList.GetCount(); i > 0;)
 		{
 			--i;
-			
+
 			InstructionReference ref = instruction.referenceList[i];
 			if(!ref.storage) continue;
-			
+
 			*ref.storage = target;
 			instruction.referenceList.RemoveIndex(i);
 			target->referenceList.Append(ref);
@@ -2742,13 +2742,13 @@ static AnyByteResult IsJumpAnyByteSequence(JumpInstruction* jump)
 	Instruction* next = jump->GetNext();
 	if(next->type != InstructionType::AnyByte) return AnyByteResult::False;
 	Instruction* anyByte = next;
-	
+
 	Instruction* afterAnyByte = anyByte->GetNext();
 	if(afterAnyByte->type != InstructionType::Split) return AnyByteResult::False;
 	SplitInstruction* split = (SplitInstruction*) afterAnyByte;
 	if(split->targetList.GetCount() != 2) return AnyByteResult::False;
 	if(jump->target != split) return AnyByteResult::False;
-	
+
 	if(split->targetList[0] == anyByte && split->targetList[1] == split->GetNext()) return AnyByteResult::Minimal;
 	else if(split->targetList[1] == anyByte && split->targetList[0] == split->GetNext()) return AnyByteResult::Maximal;
 	return AnyByteResult::False;
@@ -2760,9 +2760,9 @@ bool InstructionList::RequiresAnyByteMinimalForPartialMatch(IComponent* headComp
 	{
 		if(hasStartAnchor || hasEndAnchor) return false;
 	}
-	
+
 	if(!headComponent->RequiresAnyByteMinimalForPartialMatch()) return false;
-	
+
 	for(const Instruction& instruction : instructionList)
 	{
 		switch(instruction.type)
@@ -2770,19 +2770,19 @@ bool InstructionList::RequiresAnyByteMinimalForPartialMatch(IComponent* headComp
 		case InstructionType::AnyByte:		// Any bytes followed immediately by AnyByteMiminal/AnyByteMaximal represent .+ or .+?
 			if(IsAnyByteSequence((AnyByteInstruction*) &instruction) != AnyByteResult::False) return false;
 			continue;
-				
+
 		case InstructionType::AssertStartOfInput:
 			return false;
-				
+
 		case InstructionType::AssertStartOfSearch:
 			return false;
-			
+
 		case InstructionType::Save:
 			continue;
 
 		case InstructionType::Jump:
 			return IsJumpAnyByteSequence((JumpInstruction*) &instruction) == AnyByteResult::False;
-				
+
 		default:
 			return true;
 		}
@@ -2795,7 +2795,7 @@ bool InstructionList::RequiresAnyByteMinimalForPartialMatch(IComponent* headComp
 void InstructionList::Optimize_CaptureSearch()
 {
 //	Dump(StandardOutput);
-//	
+//
 	for(Instruction& instruction : instructionList)
 	{
 		AnyByteResult anyByteResult;
@@ -2809,7 +2809,7 @@ void InstructionList::Optimize_CaptureSearch()
 			{
 			case AnyByteResult::False:
 				continue;
-					
+
 			default:
 				original = instruction.GetNext();
 				afterAnyByte = original->GetNext();
@@ -2820,14 +2820,14 @@ void InstructionList::Optimize_CaptureSearch()
 		default:
 			continue;
 		}
-	
+
 		AddToSearchOptimizer(original, afterAnyByte, anyByteResult, true, StaticBitTable<256>{});
 	}
 }
 
 void InstructionList::AddToSearchOptimizer(Instruction* split, Instruction* afterAnyByte, AnyByteResult mode, bool canSkipBackwardsPropagate, const StaticBitTable<256>& ReversePropagate)
 {
-	
+
 	// Build the BM table!
 	SearchOptimizer* optimizer = new SearchOptimizer;
 	optimizer->isMaximal = mode == AnyByteResult::Maximal;
@@ -2835,15 +2835,15 @@ void InstructionList::AddToSearchOptimizer(Instruction* split, Instruction* afte
 	optimizer->canSkipBackwardsPropagate = canSkipBackwardsPropagate;
 	optimizer->backwardsPropagate = ReversePropagate;
 	searchOptimizerList.Append(optimizer);
-	
+
 	InstructionWalker& walker = optimizer->instructionWalker;
 	walker.AddInitialInstruction(afterAnyByte);
-	
+
 	while(walker.ShouldContinue())
 	{
 		walker.AdvanceAllInstructions();
 	}
-	
+
 	if(walker.GetPresenceListCount() == 0)
 	{
 		delete optimizer;
@@ -2859,7 +2859,7 @@ void InstructionList::AddToSearchOptimizer(Instruction* split, Instruction* afte
 // It's not entirely scientific, but it does reveal searching for "z" is better than searching for "a"
 static constexpr uint32_t DISTRIBUTION_TABLE[256] =
 {
-	
+
 	1876,  176,   88,  116,  152,   48,   45,   46,   61,  390, 1594,   37,   40,  259,   72,   42,
 	  49,   35,   33,   32,   38,   35,   32,   32,   39,   34,   31,   31,   33,   31,   32,   38,
  	7964,   65,  816,  129,   88,   52,   94,  130,  390,  384,  556,   85,  426,  473,  721,  822,		//  !@#$%&'()*+,-./
@@ -2908,7 +2908,7 @@ static uint32_t ScaleBaseSpeedForProbability(uint32_t baseSpeed, float probabili
 {
 	constexpr float    PROBABILITY_FOR_LENGTH	= 0.90f;
 	constexpr uint32_t RELAXATION_LENGTH 		= 224;
-	
+
 	float length = Math::Log(1.0f-PROBABILITY_FOR_LENGTH) / Math::Log(1.0f-probability);
 	return uint32_t(baseSpeed * (1.0 - exp(-length/RELAXATION_LENGTH)));
 }
@@ -2919,14 +2919,14 @@ void InstructionList::SearchOptimizer::ReplaceOriginal(Instruction* searcher, bo
 	InsertBeforeInstruction(localOriginal, searcher);
 	localOriginal->TransferReferencesTo(searcher);
 	localOriginal->referenceList.Append(InstructionReference::PREVIOUS);
-	
+
 	if(backwardsPropagate.HasAnyBitSet()
 	   && (!hasZeroOffsetCheck || !canSkipBackwardsPropagate))
 	{
 		Instruction* propagateBackwards = new PropagateBackwardsInstruction(backwardsPropagate);
 		InsertAfterInstruction(searcher, propagateBackwards);
 		propagateBackwards->referenceList.Append(InstructionReference::PREVIOUS);
-		
+
 		// Special case -- Don't allow partial match to go before a propagate Reverse
 		if(partialMatchInstruction == searcher)
 		{
@@ -2936,7 +2936,7 @@ void InstructionList::SearchOptimizer::ReplaceOriginal(Instruction* searcher, bo
 		}
 		return;
 	}
-	
+
 	// Common case -- search at offset 0 to a byte jump table that only has itself and the next instruction as targets
 	if(replaceByteJumpTableWithAdvanceByte
 	   && localOriginal->type == InstructionType::ByteJumpTable
@@ -2963,18 +2963,18 @@ void InstructionList::Optimize_AccelerateSearch()
 {
 	constexpr uint64_t PROBABILITY_SCALER                    = 476;           // This scales the probability table of [A-Za-z] to be 1.0 in fixed .24 format
 	constexpr uint64_t SHIFT_OR_PROBABILITY_SCALER           = 2;
-	
+
 	constexpr uint32_t PAIR_TAG                              = 0x80000000;
 	constexpr uint32_t TRIPLET_TAG                           = 0xc0000000;
-	
+
 	constexpr uint32_t MIN_SHIFT_OR_THRESHOLD                = 3;
 	constexpr uint32_t MIN_BOYER_MOORE_THRESHOLD             = 3;
 	constexpr uint32_t MAX_SHIFT_OR_THRESHOLD                = 24;
 	constexpr uint64_t BOYER_MOORE_SCAN_SPEED_PER_CHARACTER  = 320;
 	constexpr uint32_t SCAN_SPEED_THRESHOLD                  = 800;
-	
+
 	constexpr uint32_t SHIFT_OR_RAMP_LENGTH					 = 6;
-	
+
 	// These values were measured performance in MB/sec
 	constexpr uint32_t FIND_BYTE_SCAN_SPEED[]                = { 25000, 20000, 16500, 13000, 10100, 9200, 7700, 6900 };
 	constexpr uint32_t FIND_BYTE_PAIR_SCAN_SPEED[]           = { 16500, 11400, 8500, 6500 };
@@ -2982,14 +2982,14 @@ void InstructionList::Optimize_AccelerateSearch()
 	constexpr uint32_t FIND_BYTE_RANGE_SCAN_SPEED            = 22000;
 	constexpr uint32_t FIND_BYTE_RANGE_PAIR_SCAN_SPEED       = 13000;
 	constexpr uint32_t SHIFT_OR_SCAN_SPEED                   = 2500;
-	
+
 	constexpr uint32_t FIND_BYTE_PAIR_PROBABILITY_SCALE		 = 1;
 	constexpr uint32_t FIND_BYTE_TRIPLET_PROBABILITY_SCALE	 = 1;
-	
+
 	constexpr uint32_t MAX_SHIFT_OR_PROBABILITY				 = 13421772;      // this is 80% in Fixed.24
 	constexpr uint32_t MAX_SEARCH_BYTE_PROBABILITY           = 15099494;      // this is 90% in Fixed.24
 	constexpr uint32_t MIN_SEARCH_BYTE_PROBABILITY           = 12582912;      // this is 75% in Fixed.24
-	
+
 	for(SearchOptimizer& optimizer : searchOptimizerList)
 	{
 		if(optimizer.original->type == InstructionType::FindByte
@@ -3004,7 +3004,7 @@ void InstructionList::Optimize_AccelerateSearch()
 		uint32_t bestSearchIndex = 0;
 		uint32_t searchData[256];
 		memset(searchData, -1, sizeof(searchData));
-		
+
 		if(optimizer.instructionWalker.GetPresenceListCount() >= MIN_BOYER_MOORE_THRESHOLD)
 		{
 			for(size_t i = 0; i < optimizer.instructionWalker.GetPresenceListCount(); ++i)
@@ -3019,7 +3019,7 @@ void InstructionList::Optimize_AccelerateSearch()
 						searchData[j] = uint32_t(i);
 					}
 				}
-				
+
 				int score = CalculateSearchEffectivenessValue(searchData, i);
 				int scanSpeed = BOYER_MOORE_SCAN_SPEED_PER_CHARACTER * score * (0x10000 - lastCharacterProbability) >> 32;
 				if(scanSpeed > bestScanSpeed)
@@ -3040,7 +3040,7 @@ void InstructionList::Optimize_AccelerateSearch()
 				uint32_t count;
 				uint64_t score;
 			};
-			
+
 			Table<SearchData> searchDataList(optimizer.instructionWalker.GetPresenceListCount());
 			uint32_t bestIndex = TypeData<uint32_t>::Maximum();
 			uint32_t bestSearchByteScanSpeed = 0;
@@ -3098,8 +3098,8 @@ void InstructionList::Optimize_AccelerateSearch()
 					// ie. the higher the probabilty, the lower the usefulness of the search
 					// eg. if there's a ".{2,4}(abc|def)", it's going to end up having a LOT of checks that fail
 					// Conversely, if most characters are acutally meant to match, then the accelerator doens't matter
-					// Limit the maximum probability to achieve the effect that long strings 
-					
+					// Limit the maximum probability to achieve the effect that long strings
+
 					// totalProbability is the chance that all positions match
 					uint64_t totalProbability = 1<<24;
 					bool isLeading = true;
@@ -3112,23 +3112,23 @@ void InstructionList::Optimize_AccelerateSearch()
 							if(probability > MAX_SHIFT_OR_PROBABILITY) continue;
 							else isLeading = false;
 						}
-						
+
 						++effectiveLength;
 						probability *= SHIFT_OR_PROBABILITY_SCALER;
 
 						if(probability > MAX_SHIFT_OR_PROBABILITY) probability = MAX_SHIFT_OR_PROBABILITY;
 						totalProbability = totalProbability * probability >> 24;
 					}
-					
+
 					scanSpeed = scanSpeed  * ((1ull<<24) - totalProbability) >> 24;
-					
+
 					// Linear ramp up
 					if(effectiveLength < SHIFT_OR_RAMP_LENGTH)
 					{
 						scanSpeed = scanSpeed * effectiveLength / SHIFT_OR_RAMP_LENGTH;
 					}
 				}
-				
+
 				DEBUG_SEARCH_PRINTF("ShiftOrScanSpeed: %u, BoyerMooreScanSpeed: %u\n", scanSpeed, bestScanSpeed);
 				if(scanSpeed > bestScanSpeed)
 				{
@@ -3148,13 +3148,13 @@ void InstructionList::Optimize_AccelerateSearch()
 					if(searchDataList[i].count > 8) continue;
 				}
 
-				
+
 				// For each of the search byte approaches, the performance is only attained when it can skip a large number of bytes
 				// Given a probability, we can calculate the the length required for a > 90% match probability:
 				// (1-p)^length = (1.0-0.9)
 				// length.log(1-p) = log(0.1)
 				// length = log(0.1) / log(1-p)
-				
+
 				// Do we have a SearchByteRangeTriplet candidate
 				if(i+2 < searchDataList.GetCount()
 				   && searchDataList[i].count <= 2
@@ -3163,7 +3163,7 @@ void InstructionList::Optimize_AccelerateSearch()
 				{
 					uint32_t length = Maximum(searchDataList[i].count, searchDataList[i+1].count, searchDataList[i+2].count);
 					uint32_t baseScanSpeed = FIND_BYTE_TRIPLET_SCAN_SPEED[length-1];
-					
+
 					int64_t scoreScale1 = searchDataList[i].score * PROBABILITY_SCALER;
 					int64_t scoreScale2 = searchDataList[i+1].score * PROBABILITY_SCALER;
 					int64_t scoreScale3 = searchDataList[i+2].score * PROBABILITY_SCALER;
@@ -3172,12 +3172,12 @@ void InstructionList::Optimize_AccelerateSearch()
 					if(scoreScale3 > (1<<24)) scoreScale3 = 1<<24;
 					uint64_t scoreScale12 = (scoreScale1 * scoreScale2) >> 24;
 					uint64_t scoreScale123 = (scoreScale12 * scoreScale3) >> 24;
-					
+
 					float probability = scoreScale123 * (FIND_BYTE_TRIPLET_PROBABILITY_SCALE / 16777216.0f);
 					if(probability < 1.0)
 					{
 						uint32_t scanSpeed = ScaleBaseSpeedForProbability(baseScanSpeed, probability);
-						
+
 						if(searchDataList.GetCount() > 3)
 						{
 							uint64_t probabilityScale = 1<<24;
@@ -3195,10 +3195,10 @@ void InstructionList::Optimize_AccelerateSearch()
 								if(probability < MIN_SEARCH_BYTE_PROBABILITY) probability = MIN_SEARCH_BYTE_PROBABILITY;
 								probabilityScale = probabilityScale * probability >> 24;
 							}
-							
+
 							scanSpeed = scanSpeed * ((1<<24) - probabilityScale) >> 24;
 						}
-						
+
 						DEBUG_SEARCH_PRINTF("SearchByteTriplet scan speed: %u, %z (p: %g)\n", scanSpeed, i, probability);
 						if(scanSpeed > bestSearchByteScanSpeed)
 						{
@@ -3207,7 +3207,7 @@ void InstructionList::Optimize_AccelerateSearch()
 						}
 					}
 				}
-				
+
 				// Not an else if intentionally since byte pair could well be faster
 				// Do we have a SearchByteRangePair candidate
 				if(searchDataList[i].isContinugous
@@ -3218,18 +3218,18 @@ void InstructionList::Optimize_AccelerateSearch()
 					uint32_t baseScanSpeed = (searchDataList[i].count == 1 && searchDataList[i+1].count == 1) ?
 												FIND_BYTE_PAIR_SCAN_SPEED[0] :
 												FIND_BYTE_RANGE_PAIR_SCAN_SPEED;
-					
+
 					int64_t scoreScale1 = searchDataList[i].score * PROBABILITY_SCALER;
 					int64_t scoreScale2 = searchDataList[i+1].score * PROBABILITY_SCALER;
 					if(scoreScale1 > (1<<24)) scoreScale1 = 1<<24;
 					if(scoreScale2 > (1<<24)) scoreScale2 = 1<<24;
 					uint64_t scoreScale12 = (scoreScale1 * scoreScale2) >> 24;
-					
+
 					float probability = scoreScale12 * (FIND_BYTE_PAIR_PROBABILITY_SCALE / 16777216.0f);
 					if(probability < 1.0)
 					{
 						uint32_t scanSpeed = ScaleBaseSpeedForProbability(baseScanSpeed, probability);
-						
+
 						if(searchDataList.GetCount() > 2)
 						{
 							uint64_t probabilityScale = 1<<24;
@@ -3247,10 +3247,10 @@ void InstructionList::Optimize_AccelerateSearch()
 								if(probability < MIN_SEARCH_BYTE_PROBABILITY) probability = MIN_SEARCH_BYTE_PROBABILITY;
 								probabilityScale = probabilityScale * probability >> 24;
 							}
-							
+
 							scanSpeed = scanSpeed * ((1<<24) - probabilityScale) >> 24;
 						}
-						
+
 						DEBUG_SEARCH_PRINTF("SearchByteRangePair scan speed: %u, %z (p: %g)\n", scanSpeed, i, probability);
 						if(scanSpeed > bestSearchByteScanSpeed)
 						{
@@ -3268,7 +3268,7 @@ void InstructionList::Optimize_AccelerateSearch()
 
 					uint32_t length = Maximum(searchDataList[i].count, searchDataList[i+1].count);
 					uint32_t baseScanSpeed = FIND_BYTE_PAIR_SCAN_SPEED[length-1];
-					
+
 					int64_t scoreScale1 = searchDataList[i].score * PROBABILITY_SCALER;
 					int64_t scoreScale2 = searchDataList[i+1].score * PROBABILITY_SCALER;
 					if(scoreScale1 > (1<<24)) scoreScale1 = 1<<24;
@@ -3279,7 +3279,7 @@ void InstructionList::Optimize_AccelerateSearch()
 					if(probability < 1.0)
 					{
 						uint32_t scanSpeed = ScaleBaseSpeedForProbability(baseScanSpeed, probability);
-						
+
 						if(searchDataList.GetCount() > 2)
 						{
 							uint64_t probabilityScale = 1<<24;
@@ -3297,10 +3297,10 @@ void InstructionList::Optimize_AccelerateSearch()
 								if(probability < MIN_SEARCH_BYTE_PROBABILITY) probability = MIN_SEARCH_BYTE_PROBABILITY;
 								probabilityScale = probabilityScale * probability >> 24;
 							}
-							
+
 							scanSpeed = scanSpeed * ((1<<24) - probabilityScale) >> 24;
 						}
-						
+
 						DEBUG_SEARCH_PRINTF("SearchBytePair scan speed: %u, %z (p: %g)\n", scanSpeed, i, probability);
 						if(scanSpeed > bestSearchByteScanSpeed)
 						{
@@ -3325,7 +3325,7 @@ void InstructionList::Optimize_AccelerateSearch()
 					if(probability < 1.0)
 					{
 						uint32_t scanSpeed = ScaleBaseSpeedForProbability(baseScanSpeed, probability);
-						
+
 						if(searchDataList.GetCount() > 1)
 						{
 							uint64_t probabilityScale = 1<<24;
@@ -3343,10 +3343,10 @@ void InstructionList::Optimize_AccelerateSearch()
 								if(probability < MIN_SEARCH_BYTE_PROBABILITY) probability = MIN_SEARCH_BYTE_PROBABILITY;
 								probabilityScale = probabilityScale * probability >> 24;
 							}
-							
+
 							scanSpeed = scanSpeed * ((1<<24) - probabilityScale) >> 24;
 						}
-						
+
 						if(bestIndex & PAIR_TAG) scanSpeed = scanSpeed * 3 / 4;
 						DEBUG_SEARCH_PRINTF("SearchByte scan speed: %u, %z (p: %g)\n", scanSpeed, i, probability);
 						if(scanSpeed > bestSearchByteScanSpeed)
@@ -3359,7 +3359,7 @@ void InstructionList::Optimize_AccelerateSearch()
 			}
 
 			DEBUG_SEARCH_PRINTF("SearchScanSpeed: %u, SearchByteScanSpeed: %u\n", bestScanSpeed, bestSearchByteScanSpeed);
-			
+
 			if(bestSearchByteScanSpeed > bestScanSpeed)
 			{
 				Instruction* searcher;
@@ -3369,9 +3369,9 @@ void InstructionList::Optimize_AccelerateSearch()
 				{
 					uint32_t index = bestIndex & ~TRIPLET_TAG;
 					uint8_t bytes[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-					
+
 					uint32_t tripletCount = Maximum(searchDataList[index].count, searchDataList[index+1].count, searchDataList[index+2].count);
-						
+
 					for(int b = 0; b < 3; ++b)
 					{
 						StaticBitTable<256> presenceBits = optimizer.instructionWalker.GetPresenceBits(index+b);
@@ -3388,7 +3388,7 @@ void InstructionList::Optimize_AccelerateSearch()
 							}
 						}
 					}
-					
+
 					DEBUG_SEARCH_PRINTF("Using search byte triplet %u\n", index);
 					Table<NibbleMask> nibbleMaskList = optimizer.instructionWalker.BuildNibbleMaskList(index, 3, false);
 					searcher = new SearchByteInstruction(InstructionType(int(InstructionType::SearchByteTriplet) + (tripletCount-1)), bytes, index, nibbleMaskList);
@@ -3397,7 +3397,7 @@ void InstructionList::Optimize_AccelerateSearch()
 				{
 					uint32_t index = bestIndex & ~PAIR_TAG;
 					uint8_t bytes[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-					
+
 					Table<NibbleMask> nibbleMaskList = optimizer.instructionWalker.BuildNibbleMaskList(index, 2, false);
 					if(searchDataList[index].isContinugous && searchDataList[index+1].isContinugous
 					   && (searchDataList[index].count > 1 || searchDataList[index+1].count > 1))
@@ -3408,14 +3408,14 @@ void InstructionList::Optimize_AccelerateSearch()
 						bytes[1] = range0.max-1;
 						bytes[2] = range1.min;
 						bytes[3] = range1.max-1;
-						
+
 						DEBUG_SEARCH_PRINTF("Using search byte range pair %u\n", index);
 						searcher = new SearchByteInstruction(InstructionType::SearchByteRangePair, bytes, index, nibbleMaskList);
 					}
 					else
 					{
 						uint32_t pairCount = Maximum(searchDataList[index].count, searchDataList[index+1].count);
-						
+
 						for(int b = 0; b < 2; ++b)
 						{
 							StaticBitTable<256> presenceBits = optimizer.instructionWalker.GetPresenceBits(index+b);
@@ -3432,7 +3432,7 @@ void InstructionList::Optimize_AccelerateSearch()
 								}
 							}
 						}
-						
+
 						DEBUG_SEARCH_PRINTF("Using search byte pair %u\n", index);
 						searcher = new SearchByteInstruction(InstructionType(int(InstructionType::SearchBytePair) + (pairCount-1)), bytes, index, nibbleMaskList);
 					}
@@ -3442,7 +3442,7 @@ void InstructionList::Optimize_AccelerateSearch()
 //						StandardOutput.PrintF("Using index: %u\n", bestIndex);
 					// Let FindByte optimization take over instead
 					if(bestIndex == 0 && searchDataList[bestIndex].count == 1 && original->type == InstructionType::ByteJumpTable) continue;
-				
+
 					if(searchDataList[bestIndex].isContinugous && searchDataList[bestIndex].count != 1)
 					{
 						unsigned char bytes[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -3457,7 +3457,7 @@ void InstructionList::Optimize_AccelerateSearch()
 					else
 					{
 						StaticBitTable<256> presenceBits = optimizer.instructionWalker.GetPresenceBits(bestIndex);
-						
+
 						int numberOfBytes = 0;
 						unsigned char bytes[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 						while(!presenceBits.HasAllBitsClear())
@@ -3466,7 +3466,7 @@ void InstructionList::Optimize_AccelerateSearch()
 							bytes[numberOfBytes++] = byte;
 							presenceBits.ClearBit(byte);
 						}
-						
+
 						DEBUG_SEARCH_PRINTF("Using search byte %u\n", bestIndex);
 						searcher = new SearchByteInstruction(numberOfBytes, bytes, bestIndex);
 					}
@@ -3479,7 +3479,7 @@ void InstructionList::Optimize_AccelerateSearch()
 		}
 
 		if(bestScanSpeed < SCAN_SPEED_THRESHOLD) continue;
-		
+
 		Instruction* searcher;
 		if(useShiftOr)
 		{
@@ -3515,11 +3515,11 @@ void InstructionList::Optimize_AccelerateSearch()
 			{
 				searchData[j] = bestSearchIndex - searchData[j];
 			}
-			
+
 			DEBUG_SEARCH_PRINTF("Using BoyerMoore\n");
 			searcher = new SearchDataInstruction(InstructionType::SearchBoyerMoore, bestSearchIndex, searchData);
 		}
-		
+
 		optimizer.ReplaceOriginal(searcher, useShiftOr, false, partialMatchInstruction);
 	}
 }
@@ -3540,7 +3540,7 @@ void InstructionList::Build(uint32_t aOptions, ScanDirection aScanDirection, ICo
 	minimumLength = headComponent->GetMinimumLength();
 	maximumLength = headComponent->GetMaximumLength();
 	isFixedLength = headComponent->IsFixedLength();
-	
+
 	headComponent->BuildInstructions(*this);
 	compiler.ResolveRecurseInstructions();
 	if(instructionList.GetCount() == 0
@@ -3549,30 +3549,30 @@ void InstructionList::Build(uint32_t aOptions, ScanDirection aScanDirection, ICo
 	{
 		AddInstruction(new MatchInstruction);
 	}
-	
+
 	bool isAnchored = (options & Pattern::ANCHORED) != 0;
 	hasStartAnchor = isAnchored || instructionList.Front().HasStartAnchor();
 	hasEndAnchor = isAnchored || headComponent->HasEndAnchor();
 	// Set before optimization: fixed-length anchored searches omit the scan loop.
 	matchRequiresEndOfInput = IsForwards() ? hasEndAnchor : hasStartAnchor;
-	
+
 	fullMatchInstruction = &instructionList.Front();
 	partialMatchInstruction = (scanDirection == Forwards) ? fullMatchInstruction : nullptr;
 
 	// This is required to detect AssertStartOfInput opportunities
 	UpdateReferencesForInstructions();
-	
+
 	if(scanDirection == Forwards
 	   && !isAnchored
 	   && RequiresAnyByteMinimalForPartialMatch(headComponent))
 	{
 		Optimize_DelaySave(false);
 		InsertPartialMatchAnyByteMinimal();
-		
+
 		if(options & Pattern::NO_FULL_MATCH) fullMatchInstruction = partialMatchInstruction;
 		UpdateReferencesForInstructions();
 	}
-	
+
 	Optimize();
 }
 
@@ -3581,7 +3581,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 	StateMap map(visitMark);
 	InstructionTable targetList;
 	map.RecurseAddTargets(targetList, nullptr, fullMatchInstruction, map.NextMark());
-	
+
 	Instruction* splitTarget = fullMatchInstruction;
 	Instruction** anyByteInsertionPoint = &partialMatchInstruction;
 	if(targetList.ContainsInstruction(InstructionType::AssertStartOfInput))
@@ -3589,13 +3589,13 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 		// .*?(abc|^def)ghi
 		// becomes:
 		// ((abc|^def) | .*? abc)hgi
-		
+
 		SplitInstruction* initialSplit = new SplitInstruction;
 		*anyByteInsertionPoint = initialSplit;
 		initialSplit->targetList.Append(splitTarget);
 		anyByteInsertionPoint = &initialSplit->targetList.Append();
 		InsertBeforeInstruction(splitTarget, initialSplit);
-		
+
 		splitTarget = new SplitInstruction;
 		for(Instruction* instruction : targetList)
 		{
@@ -3605,10 +3605,10 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 			}
 		}
 		InsertAfterInstruction(initialSplit, splitTarget);
-		
+
 		targetList = ((SplitInstruction*) splitTarget)->targetList;
 	}
-	
+
 	if (targetList.ContainsInstruction(InstructionType::AssertStartOfLine))
 	{
 		// (?m).*?(abc|^def)ghi
@@ -3619,7 +3619,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 		initialSplit->targetList.Append(splitTarget);
 		anyByteInsertionPoint = &initialSplit->targetList.Append();
 		InsertBeforeInstruction(splitTarget, initialSplit);
-		
+
 		SplitInstruction* innerSplit = new SplitInstruction;
 		for(Instruction* instruction : targetList)
 		{
@@ -3628,10 +3628,10 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 				innerSplit->targetList.Append(instruction);
 				continue;
 			}
-			
+
 			ByteInstruction* newLineInstruction = new ByteInstruction('\n');
 			SplitInstruction* afterNewlineSplit = new SplitInstruction;
-			
+
 			for(Instruction* target : targetList)
 			{
 				if(target->type == InstructionType::AssertStartOfLine)
@@ -3647,7 +3647,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 					afterNewlineSplit->targetList.Append(target);
 				}
 			}
-			
+
 			InsertBeforeInstruction(splitTarget, newLineInstruction);
 			InsertBeforeInstruction(splitTarget, afterNewlineSplit);
 			innerSplit->targetList.Append(newLineInstruction);
@@ -3656,7 +3656,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 		splitTarget = innerSplit;
 		targetList = innerSplit->targetList;
 	}
-	
+
 	static const StaticBitTable<256> WORD_MASK = MakeWordMask();
 
 	// First check special case: \b\w*, \b\w+, \b\W*, \b\W+
@@ -3670,7 +3670,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 		{
 			StaticBitTable<256> validBytes = repeatedByteInstruction.Get<Instruction*>()->GetValidBytes();
 			Instruction* afterRepeat = GetByteFilterStartingFrom(repeatedByteInstruction.Get<Instruction*>()->GetNext()->GetNext());
-			
+
 			// Transform \b\w+x -> (?:\b\w+|search-\W.*?(propagate-back-\w))x
 			if((validBytes == WORD_MASK || validBytes == ~WORD_MASK)
 				&& (repeatedByteInstruction.Get<bool>() || (afterRepeat && (afterRepeat->GetValidBytes() & ~validBytes).HasAllBitsClear())))
@@ -3680,25 +3680,25 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 				Instruction*				notValidByteMaskInstruction		= new ByteBitMaskInstruction(~validBytes);
 				SplitInstruction*			repeatInvalidSplitInstruction	= new SplitInstruction;
 				SplitInstruction*			initialSplitInstruction			= new SplitInstruction;
-				
+
 				*anyByteInsertionPoint = initialSplitInstruction;
-				
+
 				initialSplitInstruction->targetList.Append(targetList[0]);
 				initialSplitInstruction->targetList.Append(repeatValidSplitInstruction);
-				
+
 				repeatValidSplitInstruction->targetList.Append(validByteMaskInstruction);
 				repeatValidSplitInstruction->targetList.Append(notValidByteMaskInstruction);
-				
+
 				repeatInvalidSplitInstruction->targetList.Append(testList[0]);
 				repeatInvalidSplitInstruction->targetList.Append(notValidByteMaskInstruction);
 				repeatInvalidSplitInstruction->targetList.Append(validByteMaskInstruction);
-				
+
 				InsertBeforeInstruction(splitTarget, initialSplitInstruction);
 				InsertBeforeInstruction(splitTarget, validByteMaskInstruction);
 				InsertBeforeInstruction(splitTarget, repeatValidSplitInstruction);
 				InsertBeforeInstruction(splitTarget, notValidByteMaskInstruction);
 				InsertBeforeInstruction(splitTarget, repeatInvalidSplitInstruction);
-				
+
 				Instruction* afterRepeatInstruction = repeatedByteInstruction.Get<Instruction*>()->GetNext()->GetNext();
 				Instruction* splitBreakOutInstruction = afterRepeatInstruction;
 				if(repeatedByteInstruction.Get<bool>())
@@ -3709,27 +3709,27 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 					InsertBeforeInstruction(splitTarget, new JumpInstruction(afterRepeatInstruction));
 					splitBreakOutInstruction = singleInstance;
 				}
-				
+
 				AddToSearchOptimizer(repeatInvalidSplitInstruction, splitBreakOutInstruction, AnyByteResult::Minimal, repeatedByteInstruction.Get<bool>(), validBytes);
 				return;
 			}
 		}
 	}
-	
+
 	if(targetList.ContainsInstruction(InstructionType::AssertWordBoundary))
 	{
 		// .*?(a|\b|c)\w ->
 		// (a|\b|c|.*?(a|\W|c))\w
-		
+
 		// Only do this if the byte filters after an assert word boundary make it advantageous
 		bool isAdvantageous = false;
 		for(Instruction* instruction : targetList)
 		{
 			if(instruction->type != InstructionType::AssertWordBoundary) continue;
-			
+
 			Instruction* byteFilter = GetByteFilterStartingFrom(instruction);
 			if(!byteFilter) continue;
-			
+
 			StaticBitTable<256> targetBitMask = byteFilter->GetValidBytes();
 			if((targetBitMask & WORD_MASK).HasAllBitsClear() || (targetBitMask & ~WORD_MASK).HasAllBitsClear())
 			{
@@ -3737,7 +3737,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 				break;
 			}
 		}
-		
+
 		if(isAdvantageous)
 		{
 			SplitInstruction* initialSplit = new SplitInstruction;
@@ -3745,7 +3745,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 			initialSplit->targetList.Append(splitTarget);
 			anyByteInsertionPoint = &initialSplit->targetList.Append();
 			InsertBeforeInstruction(splitTarget, initialSplit);
-			
+
 			SplitInstruction* innerSplit = new SplitInstruction;
 			for(Instruction* instruction : targetList)
 			{
@@ -3754,14 +3754,14 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 					innerSplit->targetList.Append(instruction);
 					continue;
 				}
-				
+
 				Instruction* byteFilter = GetByteFilterStartingFrom(instruction);
 				if(!byteFilter)
 				{
 					innerSplit->targetList.Append(instruction);
 					continue;
 				}
-				
+
 				StaticBitTable<256> targetBitMask = byteFilter->GetValidBytes();
 				if((targetBitMask & WORD_MASK).HasAllBitsClear())
 				{
@@ -3769,11 +3769,11 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 					wordCharacterInstruction->bitMask = WORD_MASK;
 					JumpInstruction* jumpInstruction = new JumpInstruction;
 					jumpInstruction->target = instruction->GetNext();
-					
+
 					InsertBeforeInstruction(splitTarget, wordCharacterInstruction);
 					InsertBeforeInstruction(splitTarget, jumpInstruction);
 					innerSplit->targetList.Append(wordCharacterInstruction);
-					
+
 				}
 				else if((targetBitMask & ~WORD_MASK).HasAllBitsClear())
 				{
@@ -3781,7 +3781,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 					nonWordCharacterInstruction->bitMask = ~WORD_MASK;
 					JumpInstruction* jumpInstruction = new JumpInstruction;
 					jumpInstruction->target = instruction->GetNext();
-					
+
 					InsertBeforeInstruction(splitTarget, nonWordCharacterInstruction);
 					InsertBeforeInstruction(splitTarget, jumpInstruction);
 					innerSplit->targetList.Append(nonWordCharacterInstruction);
@@ -3796,7 +3796,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 			targetList = innerSplit->targetList;
 		}
 	}
-	
+
 	// Detect if the pattern starts with a single byte repeat, eg. \w+
 	// Transform .*?\w+abc -> \w+abc|.*?(propagate-back-\w)\wabc
 	// Transform .*?\w*abc -> \w*abc|.*?(propagate-back-\w)abc
@@ -3804,32 +3804,32 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 	if(repeatedByteInstruction.Get<Instruction*>() != nullptr)
 	{
 		const StaticBitTable<256> validBytes = repeatedByteInstruction.Get<Instruction*>()->GetValidBytes();
-		
+
 		if(validBytes.HasAllBitsSet())
 		{
 			*anyByteInsertionPoint = splitTarget;
 			return;
 		}
-		
+
 		Instruction*				validByteMaskInstruction		= new ByteBitMaskInstruction(validBytes);
 		SplitInstruction*			repeatValidSplitInstruction		= new SplitInstruction;
 		Instruction*				notValidByteMaskInstruction		= new ByteBitMaskInstruction(~validBytes);
 		SplitInstruction*			repeatInvalidSplitInstruction	= new SplitInstruction;
-		
+
 		*anyByteInsertionPoint = repeatInvalidSplitInstruction;
-		
+
 		repeatValidSplitInstruction->targetList.Append(validByteMaskInstruction);
 		repeatValidSplitInstruction->targetList.Append(notValidByteMaskInstruction);
-		
+
 		repeatInvalidSplitInstruction->targetList.Append(splitTarget);
 		repeatInvalidSplitInstruction->targetList.Append(notValidByteMaskInstruction);
 		repeatInvalidSplitInstruction->targetList.Append(validByteMaskInstruction);
-		
+
 		InsertBeforeInstruction(splitTarget, validByteMaskInstruction);
 		InsertBeforeInstruction(splitTarget, repeatValidSplitInstruction);
 		InsertBeforeInstruction(splitTarget, notValidByteMaskInstruction);
 		InsertBeforeInstruction(splitTarget, repeatInvalidSplitInstruction);
-		
+
 		Instruction* afterRepeatInstruction = repeatedByteInstruction.Get<Instruction*>()->GetNext()->GetNext();
 		Instruction* splitBreakOutInstruction = afterRepeatInstruction;
 		if(repeatedByteInstruction.Get<bool>())
@@ -3840,27 +3840,27 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 			InsertBeforeInstruction(splitTarget, new JumpInstruction(afterRepeatInstruction));
 			splitBreakOutInstruction = singleInstance;
 		}
-		
+
 		AddToSearchOptimizer(repeatInvalidSplitInstruction, splitBreakOutInstruction, AnyByteResult::Minimal, repeatedByteInstruction.Get<bool>(), validBytes);
 		return;
 	}
-	
+
 	// This inserts an any-byte-minimal instruction
 	//
 	// 0: jump 2
 	// 1: any-byte
 	// 2: split 3, 1
 	//
-	
+
 	SplitInstruction* split = new SplitInstruction;
 	JumpInstruction* jump = new JumpInstruction(split);
 	if(anyByteInsertionPoint) *anyByteInsertionPoint = jump;
-	
+
 	Instruction* anyByteInstruction = new AnyByteInstruction;
-	
+
 	split->targetList.Append(splitTarget);
 	split->targetList.Append(anyByteInstruction);
-	
+
 	InsertBeforeInstruction(splitTarget, jump);
 	InsertBeforeInstruction(splitTarget, anyByteInstruction);
 	InsertBeforeInstruction(splitTarget, split);
@@ -3869,7 +3869,7 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 void InstructionList::WriteByteCode(DataBlockWriter& writer, const String& pattern, uint32_t numberOfCaptures)
 {
 	IndexInstructions();
-	
+
 	ByteCodeBuilder builder(pattern,
 							options,
 							totalNumberOfInstructions,
@@ -3909,12 +3909,12 @@ void InstructionList::AppendByteCode(DataBlockWriter& writer)
 							isFixedLength,
 							scanDirection == Forwards,
 							hasResetCapture);
-	
+
 	for(Instruction& instruction : instructionList)
 	{
 		instruction.BuildByteCode(builder);
 	}
-	
+
 	builder.AppendByteCode(writer);
 }
 

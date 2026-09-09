@@ -64,7 +64,7 @@
 
 //============================================================================
 
-namespace Javelin 
+namespace Javelin
 {
 //============================================================================
 
@@ -99,14 +99,14 @@ namespace Javelin
 	#define JUNLIKELY(x)	(x)
 
 	#define JANALYZER_NO_RETURN
-	
+
 	#define JCOMPILER_MSVC
 	#define JENDIAN_LITTLE
 	#define JWCHAR_BYTES	2
 
 	#define final
 	#define constexpr	const
-	
+
 	JINLINE void BreakPoint()			{ __debugbreak();	}
 
 	#define INFINITY					(DBL_MAX+DBL_MAX)
@@ -126,10 +126,10 @@ namespace Javelin
 		#define JPLATFORM_WIN64
 	#elif defined(_WIN32)
 		#define JPLATFORM_WIN32
-		#pragma intrinsic (_InterlockedIncrement) 
-		#pragma intrinsic (_InterlockedDecrement) 
-		#pragma intrinsic (_InterlockedExchangeAdd) 
-		#define InterlockedIncrement _InterlockedIncrement 
+		#pragma intrinsic (_InterlockedIncrement)
+		#pragma intrinsic (_InterlockedDecrement)
+		#pragma intrinsic (_InterlockedExchangeAdd)
+		#define InterlockedIncrement _InterlockedIncrement
 		#define InterlockedDecrement _InterlockedDecrement
 		#define InterlockedExchangeAdd _InterlockedExchangeAdd
 	#else
@@ -137,7 +137,7 @@ namespace Javelin
 	#endif
 
 #elif defined(__GNUC__)
-	
+
 	#ifdef JAVELIN_EXPORTS
 		#define JEXPORT			__attribute__((visibility("default")))
 		#define JVTABLE_EXPORT	__attribute__((visibility("default")))
@@ -163,7 +163,7 @@ namespace Javelin
         #define JCOMPILER_GCC
 		#define JANALYZER_NO_RETURN
     #endif
-    
+
 	#define JABSTRACT
 	#define JWCHAR_BYTES	4
 
@@ -266,7 +266,7 @@ namespace Javelin
 	#endif
 
 	JINLINE void BreakPoint()						{ __builtin_trap();		}
-	
+
 
 #endif
 
@@ -282,21 +282,21 @@ namespace Javelin
 	constexpr const MakeReference* MAKE_REFERENCE = nullptr;
 	class RawInitialize;
 	constexpr const RawInitialize* RAW_INITIALIZE = nullptr;
-	
+
 	// Allow the use of iterator syntax without duplicating begin/end methods!
 	template<typename T> JINLINE auto begin(T&& a) -> decltype(a.Begin()) 		{ return a.Begin(); }
 	template<typename T> JINLINE auto end(T&& a) -> decltype(a.End()) 			{ return a.End(); 	}
-	
+
 	// Helper methods to extract Class/Member types
 	template <typename T, typename M> T GetClassType(M T::*);
 	template <typename T, typename M> M GetMemberType(M T::*);
 	template <typename T, typename R, R T::*M> constexpr size_t OffsetOf()			{ return reinterpret_cast<size_t>(&(((T*)0)->*M));	}
-	
+
 	#define JCLASS_MEMBER(x) decltype(Javelin::GetClassType(x)), decltype(Javelin::GetMemberType(x)), x
-	
+
 	#undef offsetof
 	#define offsetof(m) OffsetOf<JCLASS_MEMBER(m)>()
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================
@@ -337,7 +337,7 @@ JINLINE void  operator delete[](void *,   Javelin::PlacementPointer* p, const Ja
 		memset(returnValue, 0, t);																		\
 		return returnValue;																				\
 	}																									\
-	inline static void  JCALL operator delete[](void *p,  const ZeroMemory*) { operator delete[](p); }	
+	inline static void  JCALL operator delete[](void *p,  const ZeroMemory*) { operator delete[](p); }
 
 #if defined(JCOMPILER_CLANG)
   #define JDISABLE_COPY_AND_ASSIGNMENT(CLASS) CLASS(const CLASS&) = delete; void operator=(const CLASS&) = delete

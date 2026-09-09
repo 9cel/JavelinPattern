@@ -25,7 +25,7 @@ namespace Javelin
 														Remove();
 														new(Placement(this)) ListNodeBase((ListNodeBase&&) fromNode);
 													}
-		
+
 		void InsertAfter(ListNodeBase* newNode)		{
 														newNode->next = next;
 														newNode->previous = this;
@@ -40,25 +40,25 @@ namespace Javelin
 														next->previous = newNode;
 														SetIsolated();
 													}
-		
-		void InsertBefore(ListNodeBase* newNode)	{ 
+
+		void InsertBefore(ListNodeBase* newNode)	{
 														newNode->next = this;
 														newNode->previous = previous;
 														previous->next = newNode;
 														previous = newNode;
 													}
 
-		void Remove()								{ 
+		void Remove()								{
 														previous->next = next;
 														next->previous = previous;
 													}
-		
+
 	protected:
 		JINLINE ListNodeBase(const NoInitialize*)	{ }
 
 	private:
 		JINLINE void SetIsolated()					{ next = this; previous = this; }
-			
+
 		JEXPORT size_t GetCount(const ListNodeBase* sentinel) const;
 		friend class ListBase;
 	};
@@ -67,13 +67,13 @@ namespace Javelin
 	{
 	public:
 		typedef T DataType;
-		
+
 		JINLINE TypedListNode() : ListNodeBase(NO_INITIALIZE)	{ }
 		template<typename A>
 		JINLINE TypedListNode(A&& a) : ListNodeBase(NO_INITIALIZE), data((A&&) a)	{ }
 
 		JINLINE TypedListNode*	GetNext() const					{ return static_cast<TypedListNode*>(next); }
-		JINLINE TypedListNode*	GetPrevious() const				{ return static_cast<TypedListNode*>(previous); }		
+		JINLINE TypedListNode*	GetPrevious() const				{ return static_cast<TypedListNode*>(previous); }
 
 		T	data;
 	};
@@ -96,18 +96,18 @@ namespace Javelin
 	public:
 		JINLINE ListIterator()									{ }
 		JINLINE ListIterator(NodeType* aNode)					{ node = aNode; }
-		
+
 		JINLINE ListIterator& operator++()						{ node = node->GetNext(); return *this; }
 		JINLINE ListIterator& operator++(int)					{ ListIterator it(*this); node = node->GetNext(); return it; }
 		JINLINE ListIterator& operator--()						{ node = node->GetPrevious(); return *this; }
 		JINLINE ListIterator& operator--(int)					{ ListIterator it(*this); node = node->GetPevious(); return it; }
-		
+
 		JINLINE bool operator==(const ListIterator& a) const	{ return node == a.node; }
 		JINLINE bool operator!=(const ListIterator& a) const	{ return node != a.node; }
-		
+
 		JINLINE typename NodeType::DataType& operator*() const	{ return node->data; }
 		JINLINE typename NodeType::DataType* operator->() const	{ return &node->data; }
-		
+
 	private:
 		NodeType*	node;
 	};
@@ -119,17 +119,17 @@ namespace Javelin
 	public:
 		ListBase() { }
 		ListBase(ListBase&& a) : sentinel((ListNodeBase&&) a.sentinel) { }
-		
+
 		JINLINE size_t JCALL GetCount() const		{ return sentinel.next->GetCount(&sentinel); }
 		JINLINE bool JCALL IsEmpty()	const		{ return sentinel.next == &sentinel; }
 		JINLINE bool JCALL HasData()	const		{ return sentinel.next != &sentinel; }
 
 	protected:
 		JEXPORT ListNodeBase* JCALL GetIndex(size_t index) const;
-		
+
 		// Used by IntrusiveList
 		JEXPORT void JCALL UnlinkAll();
-			
+
 		ListNodeBase	sentinel;
 	};
 
@@ -142,14 +142,14 @@ namespace Javelin
 	public:
 		typedef ListIterator< TypedListNode<T> > Iterator;
 		typedef ListIterator< TypedListNode<const T> > ConstIterator;
-		
+
 		List()										{ }
 		List(const List& l);
 		void operator=(const List& l);
 		~List()										{ DestroyAll(); }
 
 		JINLINE void Reset()						{ DestroyAll(); sentinel.next = &sentinel; sentinel.previous = &sentinel; }
-		
+
 		JINLINE T& Append()							{ NodeType* p = new NodeType; sentinel.InsertBefore(p); return p->data; }
 		JINLINE T& PushBack()						{ NodeType* p = new NodeType; sentinel.InsertBefore(p); return p->data; }
 		JINLINE T& PushFront()						{ NodeType* p = new NodeType; sentinel.InsertAfter(p); return p->data; }
@@ -164,12 +164,12 @@ namespace Javelin
 		using Inherited::GetCount;
 		using Inherited::HasData;
 		using Inherited::IsEmpty;
-		
+
 		JINLINE T& operator[](size_t i)				{ return static_cast<TypedListNode<T>*>(GetIndex(i))->data; }
 		JINLINE const T& operator[](size_t i) const	{ return static_cast<TypedListNode<T>*>(GetIndex(i))->data; }
 
-		JINLINE void Pop()							{ 
-														JASSERT(HasData()); 
+		JINLINE void Pop()							{
+														JASSERT(HasData());
 														NodeType* p = (NodeType*) sentinel.previous;
 														p->Remove();
 														delete p;
@@ -180,10 +180,10 @@ namespace Javelin
 														p->Remove();
 														delete p;
 													}
-		
+
 		JINLINE T& Front() const					{ JASSERT(HasData()); return ((NodeType*) sentinel.next)->data; }
 		JINLINE T& Back() const						{ JASSERT(HasData()); return ((NodeType*) sentinel.previous)->data; }
-		
+
 		template<typename A>
 		JINLINE T& Find(const A& a)					{
 														NodeType* p = static_cast<NodeType*>(sentinel.next);
@@ -212,7 +212,7 @@ namespace Javelin
 	};
 
 //============================================================================
-	
+
 	template<typename T, typename Allocator> void List<T,Allocator>::DestroyAll()
 	{
 		NodeType* p = (NodeType*) sentinel.next;

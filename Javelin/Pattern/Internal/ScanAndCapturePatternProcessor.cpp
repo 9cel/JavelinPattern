@@ -16,7 +16,7 @@ public:
 	ScanAndCapturePatternProcessor(const void* data, size_t length);
 	ScanAndCapturePatternProcessor(DataBlock&& dataBlock);
 	~ScanAndCapturePatternProcessor();
-	
+
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
@@ -32,7 +32,7 @@ private:
 	PatternProcessor*		scanProcessor;
 	ReverseProcessor*		reverseProcessor;
 	PatternProcessor*		populateCaptureProcessor;
-	
+
 	void Set(const void* data, size_t length);
 	JNOINLINE Interval<const void*> LocateWithCaptures(const void* data, size_t length, size_t offset, const void* result) const;
 };
@@ -54,16 +54,16 @@ void ScanAndCapturePatternProcessor::Set(const void* data, size_t length)
 {
 	const ByteCodeHeader* header = (ByteCodeHeader*) data;
 	numberOfCaptures = header->numberOfCaptures;
-	
+
 	// To prevent the optimizations
 	if(numberOfCaptures == 1 && header->flags.hasResetCapture) numberOfCaptures = 2;
-	
+
 	reverseMatchRequiresStartOfSearch = header->partialMatchStartingInstruction == header->fullMatchStartingInstruction;
 	scanProcessor = PatternProcessor::CreateNfaOrDfaProcessor(data, length);
-	
+
 	preferReverseProcessorForFullMatchCapture = (header->flags.reverseProcessorType == PatternProcessorType::OnePass);
 	reverseProcessor = ReverseProcessor::Create(data, length, true);
-	
+
 	if(header->flags.fullMatchProcessorType == PatternProcessorType::OnePass)
 	{
 		populateCaptureProcessor = PatternProcessor::CreateOnePassProcessor(data, length, false);
@@ -92,7 +92,7 @@ const void* ScanAndCapturePatternProcessor::FullMatch(const void* data, size_t l
 {
 	const void* result = scanProcessor->FullMatch(data, length);
 	if(!result) return nullptr;
-	
+
 	if(numberOfCaptures == 1)
 	{
 		captures[0] = (const char*) data;
@@ -141,7 +141,7 @@ const void* ScanAndCapturePatternProcessor::PartialMatch(const void* data, size_
 			}
 		}
 	}
-	
+
 	return result;
 }
 

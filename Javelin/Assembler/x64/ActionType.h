@@ -8,7 +8,7 @@
 namespace Javelin::x64Assembler
 {
 //============================================================================
-	
+
 	enum class ActionType : uint8_t
 	{
 		#define TAG(x) x,

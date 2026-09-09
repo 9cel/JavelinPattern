@@ -15,9 +15,9 @@
 namespace Javelin
 {
 //==========================================================================
-	
+
 	class ICharacterWriter;
-	
+
 	namespace PatternInternal
 	{
 //==========================================================================
@@ -42,37 +42,37 @@ namespace Javelin
 
 			bool ContainsInstruction(InstructionType type) const;
 			bool HasStartAnchor() const;
-			
+
 			// Boolean is if there is at least one ie.. a+ rather than a*
 			Tuple<Instruction*, bool> GetRepeatedByteInstruction() const;
-			
+
 			void Dump(ICharacterWriter& output) const;
 		};
-		
+
 		struct InstructionReference
 		{
 			Instruction**	storage;
 			Instruction*	instruction;
-			
+
 			static constexpr Instruction **const PREVIOUS_REFERENCE = nullptr;
 			static Instruction **const SELF_REFERENCE;
-			
+
 			static Instruction* const START_REFERENCE;
 			static Instruction* const SEARCH_OPTIMIZER_REFERENCE;
-			
+
 			bool operator==(Instruction** p) const 					{ return storage == p; }
 			bool operator==(const InstructionReference& a) const 	{ return storage == a.storage && instruction == a.instruction; }
 			bool operator!=(const InstructionReference& a) const 	{ return !(*this == a); }
-			
+
 			Instruction* GetInstruction(Instruction* current) const;
-			
+
 			static const InstructionReference PREVIOUS;
 		};
-		
+
 		struct ReferenceTable : public Table<InstructionReference, TableStorage_Dynamic<DynamicTableAllocatePolicy_NewDeleteWithInlineStorage<8>::Policy>>
 		{
 			using Table::Remove;
-			
+
 			// References are usually unlinked in reverse order of linking.
 			void Remove(Instruction** storage)
 			{
@@ -81,7 +81,7 @@ namespace Javelin
 				RemoveIndex(index);
 			}
 		};
-		
+
 //==========================================================================
 
 		struct Instruction
@@ -94,59 +94,59 @@ namespace Javelin
 			uint32_t				visitMark = 0;
 			ReferenceTable			referenceList;
 			IntrusiveListNode		listNode;
-			
+
 			virtual Instruction* Clone() const = 0;
 			virtual ~Instruction() { }
-			
+
 			virtual void 		BuildByteCode(ByteCodeBuilder& builder) const;
 			virtual uint32_t	GetByteCodeData() const { return 0; }
-			
+
 			virtual bool		HasStartAnchor() const		{ return false; }
 			virtual bool		IsEmptyWidth() const		{ return false; }
 			virtual bool		IsByteConsumer() const		{ return IsSimpleByteConsumer(); }
 			virtual bool		IsSimpleByteConsumer() const	{ return false; }
 			virtual void		SetValidBytes(StaticBitTable<256>& mask) const;
 			StaticBitTable<256> GetValidBytes() const 		{ StaticBitTable<256> result; SetValidBytes(result); return result; }
-			
+
 			virtual int				GetNumberOfPlanes() const											{ return 1; 			}
 			virtual void			SetValidBytesForPlane(int plane, StaticBitTable<256>& mask) const	{ SetValidBytes(mask); 	}
 			virtual Instruction*	GetTargetForPlane(int plane) const									{ return GetNext();		}
 			StaticBitTable<256>		GetValidBytesForPlane(int plane) const								{ StaticBitTable<256> result; SetValidBytesForPlane(plane, result); return result; 	}
-			
+
 			bool				HasSingleReference() const		{ return referenceList.GetCount() == 1; }
 			bool				HasMultipleReferences() const	{ return referenceList.GetCount() > 1; }
-			
+
 			Instruction*		GetPrevious() const			{ return listNode.GetPrevious<Instruction, &Instruction::listNode>();	}
 			Instruction*		GetNext() const				{ return listNode.GetNext<Instruction, &Instruction::listNode>();		}
-			
+
 			bool IsSingleReference() const					{ return referenceList.GetCount() <= 1; }
 			bool LeadsToMatch(bool direct) const;		// Returns true if this instruction *always* leads to a match. direct if it cannot go through dispatch or other loops
 			bool CanLeadToMatch() const;
-			
+
 			void TransferReferencesTo(Instruction* target);
 			void TagReachable(int flags);
-			
+
 			virtual void Link();
 			virtual void Unlink();
-			
+
 			virtual void Dump(ICharacterWriter& output) const = 0;
 			friend bool operator==(const Instruction &a, const Instruction& b);
 			friend bool operator!=(const Instruction &a, const Instruction& b) { return !(a == b); }
-			
+
 		protected:
 			Instruction(InstructionType aType) : type(aType) { }
 			Instruction(const Instruction& a);
-			
+
 			// Returns an instruction to process next to avoid deep recursion.
 			virtual Instruction* ProcessReachable(int flags);
 		};
-		
+
 		struct JumpInstruction : public Instruction
 		{
 			JumpInstruction() : Instruction(InstructionType::Jump) { }
 			JumpInstruction(Instruction* aTarget);
 			virtual Instruction* Clone() const final;
-			
+
 			virtual uint32_t GetByteCodeData() const;
 			virtual void 	Dump(ICharacterWriter& output) const;
 			virtual bool	HasStartAnchor() const		{ return target->HasStartAnchor(); }
@@ -156,22 +156,22 @@ namespace Javelin
 
 			Instruction*	target;
 		};
-		
+
 		struct AdvanceByteInstruction : public Instruction
 		{
 			AdvanceByteInstruction() : Instruction(InstructionType::AdvanceByte) { }
 			virtual Instruction* Clone() const final;
-			
+
 			virtual bool IsSimpleByteConsumer() const	{ return true; }
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual void Dump(ICharacterWriter& output) const;
 		};
-		
+
 		struct AnyByteInstruction : public Instruction
 		{
 			AnyByteInstruction() : Instruction(InstructionType::AnyByte) { }
 			virtual Instruction* Clone() const final;
-			
+
 			virtual bool IsSimpleByteConsumer() const	{ return true; }
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual void Dump(ICharacterWriter& output) const;
@@ -185,7 +185,7 @@ namespace Javelin
 			virtual void Dump(ICharacterWriter& output) const;
 			virtual bool HasStartAnchor() const			{ return true; }
 		};
-		
+
 		struct AssertEndOfInputInstruction : public Instruction
 		{
 			AssertEndOfInputInstruction() : Instruction(InstructionType::AssertEndOfInput) { }
@@ -193,7 +193,7 @@ namespace Javelin
 			virtual bool IsEmptyWidth() const final		{ return true; }
 			virtual void Dump(ICharacterWriter& output) const;
 		};
-		
+
 		struct AssertStartOfLineInstruction : public Instruction
 		{
 			AssertStartOfLineInstruction() : Instruction(InstructionType::AssertStartOfLine) { }
@@ -201,7 +201,7 @@ namespace Javelin
 			virtual bool IsEmptyWidth() const final		{ return true; }
 			virtual void Dump(ICharacterWriter& output) const;
 		};
-		
+
 		struct AssertEndOfLineInstruction : public Instruction
 		{
 			AssertEndOfLineInstruction() : Instruction(InstructionType::AssertEndOfLine) { }
@@ -218,7 +218,7 @@ namespace Javelin
 			  isPreviousNotWordOnly(false),
 			  isNextWordOnly(false),
 			  isNextNotWordOnly(false) { }
-			
+
 			bool isPreviousWordOnly;
 			bool isPreviousNotWordOnly;
 			bool isNextWordOnly;
@@ -234,13 +234,13 @@ namespace Javelin
 			AssertWordBoundaryInstruction() : AssertWordBoundaryBaseInstruction(InstructionType::AssertWordBoundary) { }
 			virtual Instruction* Clone() const final;
 		};
-		
+
 		struct AssertNotWordBoundaryInstruction : public AssertWordBoundaryBaseInstruction
 		{
 			AssertNotWordBoundaryInstruction() : AssertWordBoundaryBaseInstruction(InstructionType::AssertNotWordBoundary) { }
 			virtual Instruction* Clone() const final;
 		};
-		
+
 		struct AssertStartOfSearchInstruction : public Instruction
 		{
 			AssertStartOfSearchInstruction() : Instruction(InstructionType::AssertStartOfSearch) { }
@@ -266,10 +266,10 @@ namespace Javelin
 			virtual Instruction* Clone() const final;
 			virtual uint32_t GetByteCodeData() const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			uint32_t index;
 		};
-		
+
 		struct ByteInstruction : public Instruction
 		{
 			ByteInstruction(unsigned char aC) : Instruction(InstructionType::Byte), c(aC) { }
@@ -279,10 +279,10 @@ namespace Javelin
 			virtual bool IsSimpleByteConsumer() const	{ return true; }
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			unsigned char c;
 		};
-		
+
 		struct ByteEitherOf2Instruction : public Instruction
 		{
 			ByteEitherOf2Instruction() : Instruction(InstructionType::ByteEitherOf2) { }
@@ -293,7 +293,7 @@ namespace Javelin
 			virtual bool IsSimpleByteConsumer() const	{ return true; }
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			unsigned char c[2];
 		};
 
@@ -302,14 +302,14 @@ namespace Javelin
 			ByteEitherOf3Instruction() : Instruction(InstructionType::ByteEitherOf3) { }
 			virtual Instruction* Clone() const;
 			virtual uint32_t GetByteCodeData() const;
-			
+
 			virtual bool IsSimpleByteConsumer() const	{ return true; }
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			unsigned char c[3];
 		};
-		
+
 		struct ByteRangeInstruction : public Instruction
 		{
 			ByteRangeInstruction() : Instruction(InstructionType::ByteRange) { }
@@ -322,7 +322,7 @@ namespace Javelin
 			virtual void Dump(ICharacterWriter& output) const;
 
 			Interval<unsigned char, true> byteRange;
-			
+
 			bool Contains(unsigned char c) const { return byteRange.Contains(c); }
 		};
 
@@ -339,7 +339,7 @@ namespace Javelin
 
 			StaticBitTable<256>	bitMask;
 		};
-		
+
 		struct JumpTableInstruction : public Instruction
 		{
 			JumpTableInstruction(InstructionType type) : Instruction(type) { ClearMemory(targetTable); }
@@ -349,17 +349,17 @@ namespace Javelin
 			virtual void Link() final;
 			virtual void Unlink() final;
 			virtual const char* GetName() const = 0;
-			
+
 			virtual void BuildByteCode(ByteCodeBuilder& builder) const final;
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual int				GetNumberOfPlanes() const;
 			virtual void			SetValidBytesForPlane(int plane, StaticBitTable<256>& mask) const;
 			virtual Instruction*	GetTargetForPlane(int plane) const;
-			
+
 			uint8_t				targetTable[256];
 			InstructionTable	targetList;
 		};
-		
+
 		struct ByteJumpTableInstruction : public JumpTableInstruction
 		{
 			ByteJumpTableInstruction() : JumpTableInstruction(InstructionType::ByteJumpTable) { }
@@ -368,14 +368,14 @@ namespace Javelin
 			virtual bool IsByteConsumer() const		{ return true; }
 			virtual bool IsSimpleByteConsumer() const	{ return false; }
 		};
-		
+
 		struct DispatchTableInstruction : public JumpTableInstruction
 		{
 			DispatchTableInstruction() : JumpTableInstruction(InstructionType::DispatchTable) { }
 			virtual Instruction* Clone() const;
 			virtual const char* GetName() const { return "dispatch-table"; }
 		};
-		
+
 		struct ByteNotInstruction : public Instruction
 		{
 			ByteNotInstruction(unsigned char aC) : Instruction(InstructionType::ByteNot), c(aC) { }
@@ -385,10 +385,10 @@ namespace Javelin
 			virtual bool IsSimpleByteConsumer() const	{ return true; }
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			unsigned char c;
 		};
-		
+
 		struct ByteNotEitherOf2Instruction : public Instruction
 		{
 			ByteNotEitherOf2Instruction(unsigned char c0, unsigned char c1) : Instruction(InstructionType::ByteNotEitherOf2) { c[0] = c0; c[1] = c1; }
@@ -398,10 +398,10 @@ namespace Javelin
 			virtual bool IsSimpleByteConsumer() const	{ return true; }
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			unsigned char c[2];
 		};
-		
+
 		struct ByteNotEitherOf3Instruction : public Instruction
 		{
 			ByteNotEitherOf3Instruction(unsigned char c0, unsigned char c1, unsigned char c2) : Instruction(InstructionType::ByteNotEitherOf3) { c[0] = c0; c[1] = c1; c[2] = c2; }
@@ -411,10 +411,10 @@ namespace Javelin
 			virtual bool IsSimpleByteConsumer() const	{ return true; }
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			unsigned char c[3];
 		};
-		
+
 		struct ByteNotRangeInstruction : public Instruction
 		{
 			ByteNotRangeInstruction() : Instruction(InstructionType::ByteNotRange) { }
@@ -424,7 +424,7 @@ namespace Javelin
 			virtual bool IsSimpleByteConsumer() const	{ return true; }
 			virtual void SetValidBytes(StaticBitTable<256>& mask) const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			Interval<unsigned char, true> byteRange;
 		};
 
@@ -432,7 +432,7 @@ namespace Javelin
 		{
 			FailInstruction() : Instruction(InstructionType::Fail) { }
 			virtual Instruction* Clone() const;
-			
+
 			// Fail is a byte consumer where nothing matches.
 			virtual bool IsSimpleByteConsumer() const					{ return true; }
 			virtual int	 GetNumberOfPlanes() const						{ return 0; }
@@ -447,10 +447,10 @@ namespace Javelin
 		{
 			ReturnIfRecurseValueInstruction(uint32_t aRecurseValue) : Instruction(InstructionType::ReturnIfRecurseValue), recurseValue(aRecurseValue) { }
 			virtual Instruction* Clone() const;
-			
+
 			virtual void 	 Dump(ICharacterWriter& output) const;
 			virtual uint32_t GetByteCodeData() 	const 					{ return recurseValue; }
-			
+
 			uint32_t recurseValue;
 		};
 
@@ -458,7 +458,7 @@ namespace Javelin
 		{
 			SuccessInstruction() : Instruction(InstructionType::Success) 	{ }
 			virtual Instruction* Clone() const;
-			
+
 			virtual void Dump(ICharacterWriter& output) const;
 			virtual Instruction* ProcessReachable(int flags)				{ return nullptr; }
 			virtual void Link() final										{ }
@@ -474,7 +474,7 @@ namespace Javelin
 			virtual Instruction* ProcessReachable(int flags);
 			virtual void Link() final;
 			virtual void Unlink() final;
-		
+
 			Instruction* callTarget;
 			Instruction* falseTarget	= nullptr;
 			Instruction* trueTarget		= nullptr;
@@ -489,7 +489,7 @@ namespace Javelin
 			virtual Instruction* ProcessReachable(int flags);
 			virtual void Link() final;
 			virtual void Unlink() final;
-		
+
 			Instruction* callTarget;
 			Instruction* trueTarget;
 		};
@@ -503,7 +503,7 @@ namespace Javelin
 			virtual Instruction* ProcessReachable(int flags);
 			virtual void Link() final;
 			virtual void Unlink() final;
-			
+
 			Instruction*	callTarget;
 			int32_t		 	recurseValue;
 		};
@@ -526,7 +526,7 @@ namespace Javelin
 			virtual uint32_t GetByteCodeData() const 	{ return index; }
 			virtual void Dump(ICharacterWriter& output) const;
 			virtual bool HasStartAnchor() const			{ return GetNext()->HasStartAnchor(); }
-			
+
 			uint32_t index;
 		};
 
@@ -548,13 +548,13 @@ namespace Javelin
 		{
 			SearchByteInstruction(unsigned char aC, unsigned aOffset);
 			SearchByteInstruction(unsigned char numberOfBytes, unsigned char aBytes[8], unsigned aOffset);
-			
+
 			// For range instructions
 			SearchByteInstruction(InstructionType type, unsigned char aBytes[8], unsigned aOffset);
-			
+
 			// For pair instructions
 			SearchByteInstruction(InstructionType type, unsigned char aBytes[8], unsigned aOffset, const Table<NibbleMask>& nibbleMaskList);
-			
+
 			virtual Instruction* Clone() const;
 			virtual void BuildByteCode(ByteCodeBuilder& builder) const;
 			virtual void Dump(ICharacterWriter& output) const;
@@ -568,7 +568,7 @@ namespace Javelin
 		{
 			SearchDataInstruction(InstructionType type, uint32_t length, uint32_t data[256]);
 			SearchDataInstruction(InstructionType type, uint32_t length, uint32_t data[256], const Table<NibbleMask>& nibbleMaskList);
-			
+
 			virtual Instruction* Clone() const;
 			virtual void BuildByteCode(ByteCodeBuilder& builder) const;
 			virtual void Dump(ICharacterWriter& output) const;
@@ -586,7 +586,7 @@ namespace Javelin
 			virtual void BuildByteCode(ByteCodeBuilder& builder) const;
 			virtual void Dump(ICharacterWriter& output) const;
 			virtual bool HasStartAnchor() const			{ return GetNext()->HasStartAnchor(); }
-			
+
 			bool		neverRecurse;
 			uint32_t	saveIndex;
 			uint32_t	saveOffset;
@@ -601,9 +601,9 @@ namespace Javelin
 			virtual Instruction* ProcessReachable(int flags);
 			virtual void Link() final;
 			virtual void Unlink() final;
-			
+
 			InstructionTable targetList;
-			
+
 			enum class OptimizationPhase
 			{
 				None,
@@ -617,7 +617,7 @@ namespace Javelin
 			StepBackInstruction(uint32_t aStep) : Instruction(InstructionType::StepBack), step(aStep) { }
 			virtual Instruction* Clone() const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			virtual uint32_t GetByteCodeData() const { return step; }
 			uint32_t step;
 		};
@@ -627,9 +627,9 @@ namespace Javelin
 			PropagateBackwardsInstruction(const StaticBitTable<256>& aBitMask) : Instruction(InstructionType::PropagateBackwards), bitMask(aBitMask) { }
 			virtual Instruction* Clone() const;
 			virtual void Dump(ICharacterWriter& output) const;
-			
+
 			virtual void BuildByteCode(ByteCodeBuilder& builder) const final;
-			
+
 			StaticBitTable<256> bitMask;
 		};
 

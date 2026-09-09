@@ -25,17 +25,17 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	template<typename T> class RangeIterator
 	{
 	public:
 		JINLINE RangeIterator(T aN) : n(aN) { }
-		
+
 		JINLINE T operator*() 		{ return n; }
 		JINLINE void operator++() 	{ ++n;		}
-		
+
 		JINLINE bool operator!=(const RangeIterator &a) const { return n != a.n; }
-		
+
 	private:
 		T n;
 	};
@@ -44,7 +44,7 @@ namespace Javelin
 
 	template<typename T> JINLINE const Interval<RangeIterator<T>> Range(T count)		{ return Interval<RangeIterator<T>>(0, count); 		}
 	template<typename T> JINLINE const Interval<RangeIterator<T>> Range(T min, T max)	{ return Interval<RangeIterator<T>>(min, max); 		}
-	
+
 //============================================================================
 }
 //============================================================================

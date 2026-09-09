@@ -18,7 +18,7 @@ public:
 	ConsistencyCheckPatternProcessor(const void* data, size_t length);
 	ConsistencyCheckPatternProcessor(DataBlock&& dataBlock);
 	~ConsistencyCheckPatternProcessor();
-	
+
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
@@ -30,13 +30,13 @@ private:
 	bool 				reverseMatchRequiresStartOfSearch;
 	uint32_t			numberOfCaptures;
 	DataBlock			dataStore;
-	
+
 	PatternProcessor*	processorList[7];
 	int					numberOfProcessors = 0;
-	
+
 	ReverseProcessor*	reverseProcessorList[4];
 	int					numberOfReverseProcessors = 0;
-	
+
 	void SetForwards(const void* data, size_t length);
 	void SetReverse(const void* data, size_t length);
 };
@@ -62,7 +62,7 @@ ConsistencyCheckPatternProcessor::~ConsistencyCheckPatternProcessor()
 	{
 		delete processorList[i];
 	}
-	
+
 	for(int i = 0; i < numberOfReverseProcessors; ++i)
 	{
 		delete reverseProcessorList[i];
@@ -73,22 +73,22 @@ void ConsistencyCheckPatternProcessor::SetForwards(const void* data, size_t leng
 {
 	const ByteCodeHeader* header = (const ByteCodeHeader*) data;
 	numberOfCaptures = header->numberOfCaptures;
-	
+
 	const PatternData patternData(header->GetForwardProgram());
 	bool containsBackTrackingOnly = patternData.ContainsInstruction(InstructionType::BackReference, header->numberOfInstructions)
 									|| patternData.ContainsInstruction(InstructionType::Recurse, header->numberOfInstructions)
 									|| patternData.ContainsInstruction(InstructionType::Call, header->numberOfInstructions)
 									|| patternData.ContainsInstruction(InstructionType::Possess, header->numberOfInstructions);
-	
+
 	bool containsSplit = patternData.ContainsInstruction(InstructionType::Split, header->numberOfInstructions)
 						 || patternData.ContainsInstruction(InstructionType::SplitMatch, header->numberOfInstructions)
 						 || patternData.ContainsInstruction(InstructionType::SplitNextN, header->numberOfInstructions)
 						 || patternData.ContainsInstruction(InstructionType::SplitNNext, header->numberOfInstructions)
 						 || patternData.ContainsInstruction(InstructionType::SplitNextMatchN, header->numberOfInstructions)
 						 || patternData.ContainsInstruction(InstructionType::SplitNMatchNext, header->numberOfInstructions);
-	
+
 	processorList[numberOfProcessors++] = PatternProcessor::CreateBackTrackingProcessor(data, length, false);
-	
+
 	if(!containsSplit)
 	{
 		processorList[numberOfProcessors++] = PatternProcessor::CreateOnePassProcessor(data, length, false);
@@ -101,7 +101,7 @@ void ConsistencyCheckPatternProcessor::SetForwards(const void* data, size_t leng
 		processorList[numberOfProcessors++] = PatternProcessor::CreatePikeNfaProcessor(data, length);
 		processorList[numberOfProcessors++] = PatternProcessor::CreateBitStateProcessor(data, length);
 	}
-	
+
 	if(header->flags.reverseProcessorType != PatternProcessorType::None)
 	{
 		processorList[numberOfProcessors++] = PatternProcessor::CreateScanAndCaptureProcessor(data, length, false);
@@ -114,9 +114,9 @@ void ConsistencyCheckPatternProcessor::SetReverse(const void* data, size_t lengt
 	if(header->flags.reverseProcessorType == PatternProcessorType::None
 	   || header->flags.reverseProcessorType == PatternProcessorType::FixedLength
 	   || header->flags.reverseProcessorType == PatternProcessorType::Anchored) return;
-	
+
 	reverseMatchRequiresStartOfSearch = header->partialMatchStartingInstruction == header->fullMatchStartingInstruction;
-	
+
 	if(header->flags.reverseProcessorType == PatternProcessorType::OnePass)
 	{
 		reverseProcessorList[numberOfReverseProcessors++] = ReverseProcessor::CreateOnePassReverseProcessor(data, length);
@@ -145,7 +145,7 @@ const void* ConsistencyCheckPatternProcessor::FullMatch(const void* data, size_t
 		{
 			const void* resultN = processor->FullMatch(data, length);
 			if(resultN == (const void*) DFA_FAILED) continue;
-			
+
 			JDATA_VERIFY(result == resultN);
 		}
 	}
@@ -164,7 +164,7 @@ const void* ConsistencyCheckPatternProcessor::FullMatch(const void* data, size_t
 			memset(localCaptures, 0, 2*sizeof(const char*)*numberOfCaptures);
 			const void* resultN = processor->FullMatch(data, length, localCaptures);
 			if(resultN == (const void*) DFA_FAILED) continue;
-			
+
 			JDATA_VERIFY(result == resultN);
 			if(result == nullptr) continue;
 			JDATA_VERIFY(memcmp(captures, localCaptures, 2*sizeof(const char*)*numberOfCaptures) == 0);
@@ -183,7 +183,7 @@ const void* ConsistencyCheckPatternProcessor::PartialMatch(const void* data, siz
 		{
 			const void* resultN = processor->PartialMatch(data, length, offset);
 			if(resultN == (const void*) DFA_FAILED) continue;
-			
+
 			JDATA_VERIFY(result == resultN);
 		}
 	}
@@ -203,13 +203,13 @@ const void* ConsistencyCheckPatternProcessor::PartialMatch(const void* data, siz
 			memset(localCaptures, 0, 2*sizeof(const char*)*numberOfCaptures);
 			const void* resultN = processor->PartialMatch(data, length, offset, localCaptures);
 			if(resultN == (const void*) DFA_FAILED) continue;
-			
+
 			JDATA_VERIFY(result == resultN);
 			if(result == nullptr) continue;
 			JDATA_VERIFY(memcmp(captures, localCaptures, 2*sizeof(const char*)*numberOfCaptures) == 0);
 		}
 	}
-	
+
 	if(result)
 	{
 		for(uint32_t i = 0; i < numberOfReverseProcessors; ++i)
@@ -231,7 +231,7 @@ const void* ConsistencyCheckPatternProcessor::PartialMatch(const void* data, siz
 			}
 		}
 	}
-	
+
 	return result;
 }
 
@@ -262,7 +262,7 @@ const void* ConsistencyCheckPatternProcessor::PopulateCaptures(const void* data,
 			memset(localCaptures, 0, 2*sizeof(const char*)*numberOfCaptures);
 			const void* resultN = processor->PopulateCaptures(data, length, offset, localCaptures);
 			if(resultN == (const void*) DFA_FAILED) continue;
-			
+
 			JDATA_VERIFY(result == resultN);
 			if(result == nullptr) continue;
 			JDATA_VERIFY(memcmp(captures, localCaptures, 2*sizeof(const char*)*numberOfCaptures) == 0);

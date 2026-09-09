@@ -31,28 +31,28 @@ namespace Javelin::Assembler::x64
 		extern const RegisterOperand CX;
 		extern const RegisterOperand ECX;
 		extern const RegisterOperand RCX;
-		
+
 		extern const RegisterOperand DL;
 		extern const RegisterOperand DH;
 		extern const RegisterOperand DX;
 		extern const RegisterOperand EDX;
 		extern const RegisterOperand RDX;
-		
+
 		extern const RegisterOperand SIL;
 		extern const RegisterOperand SI;
 		extern const RegisterOperand ESI;
 		extern const RegisterOperand RSI;
-		
+
 		extern const RegisterOperand DIL;
 		extern const RegisterOperand DI;
 		extern const RegisterOperand EDI;
 		extern const RegisterOperand RDI;
-		
+
 		extern const RegisterOperand BPL;
 		extern const RegisterOperand BP;
 		extern const RegisterOperand EBP;
 		extern const RegisterOperand RBP;
-		
+
 		extern const RegisterOperand SPL;
 		extern const RegisterOperand SP;
 		extern const RegisterOperand ESP;
@@ -67,37 +67,37 @@ namespace Javelin::Assembler::x64
 		extern const RegisterOperand R9W;
 		extern const RegisterOperand R9D;
 		extern const RegisterOperand R9;
-		
+
 		extern const RegisterOperand R10B;
 		extern const RegisterOperand R10W;
 		extern const RegisterOperand R10D;
 		extern const RegisterOperand R10;
-		
+
 		extern const RegisterOperand R11B;
 		extern const RegisterOperand R11W;
 		extern const RegisterOperand R11D;
 		extern const RegisterOperand R11;
-		
+
 		extern const RegisterOperand R12B;
 		extern const RegisterOperand R12W;
 		extern const RegisterOperand R12D;
 		extern const RegisterOperand R12;
-		
+
 		extern const RegisterOperand R13B;
 		extern const RegisterOperand R13W;
 		extern const RegisterOperand R13D;
 		extern const RegisterOperand R13;
-		
+
 		extern const RegisterOperand R14B;
 		extern const RegisterOperand R14W;
 		extern const RegisterOperand R14D;
 		extern const RegisterOperand R14;
-		
+
 		extern const RegisterOperand R15B;
 		extern const RegisterOperand R15W;
 		extern const RegisterOperand R15D;
 		extern const RegisterOperand R15;
-		
+
 		extern const RegisterOperand RIP;
 
 		extern const RegisterOperand ST0;
@@ -167,7 +167,7 @@ namespace Javelin::Assembler::x64
 		extern const RegisterOperand YMM13;
 		extern const RegisterOperand YMM14;
 		extern const RegisterOperand YMM15;
-		
+
 		extern const RegisterOperand ZMM0;
 		extern const RegisterOperand ZMM1;
 		extern const RegisterOperand ZMM2;
@@ -184,7 +184,7 @@ namespace Javelin::Assembler::x64
 		extern const RegisterOperand ZMM13;
 		extern const RegisterOperand ZMM14;
 		extern const RegisterOperand ZMM15;
-		
+
 //============================================================================
 	} // namespace Register
 //============================================================================
@@ -193,10 +193,10 @@ namespace Javelin::Assembler::x64
 	{
 	public:
 		static const RegisterMap& GetInstance() { return instance; }
-		
+
 	private:
 		RegisterMap();
-		
+
 		static const RegisterMap instance;
 	};
 
@@ -206,7 +206,7 @@ namespace Javelin::Assembler::x64
 	{
 	public:
 		ParameterizedRegisterMap();
-		
+
 		static const ParameterizedRegisterMap instance;
 	};
 

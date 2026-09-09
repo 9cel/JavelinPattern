@@ -59,7 +59,7 @@ void Compiler::Compile(int options)
 	ResolveRecurseComponents();
 	if (!(options & (Pattern::NO_OPTIMIZE | Pattern::ANCHORED)) && !usesBacktrackingComponents)
 		literalPrefilter = BuildLiteralPrefilter(component);
-	
+
 	if(options & Pattern::AUTO_CLUSTER)
 	{
 		numberOfCaptures = 0;
@@ -81,21 +81,21 @@ void Compiler::Compile(int options)
 	{
 		numberOfCaptures = captureGroups.GetCount();
 	}
-	
+
 #if JDUMP_PATTERN_INFORMATION
 	PrintInformation(StandardOutput, component);
 #endif
-	
+
 	PatternProcessorType processorType = GetProcessorTypeForOptions(options);
 	instructionList.Build(options, InstructionList::Forwards, component, *this, usesBacktrackingComponents, processorType);
-	
+
 	DataBlockWriter byteCodeWriter;
 	instructionList.WriteByteCode(byteCodeWriter, pattern, GetNumberOfCaptures());
 
 #if JDUMP_PATTERN_INFORMATION
 	instructionList.Dump(StandardOutput);
 #endif
-	
+
 	ByteCodeHeader* header = (ByteCodeHeader*) byteCodeWriter.GetData();
 	if(header->RequiresReverseProgram() && header->flags.reverseProcessorType == PatternProcessorType::None)
 	{
@@ -137,7 +137,7 @@ void Compiler::Compile(int options)
 			break;
 		}
 	}
-	
+
 #if JDUMP_PATTERN_INFORMATION
 	StandardOutput.PrintF("ByteCode\n");
 	StandardOutput.DumpCStructure(byteCode);
@@ -152,7 +152,7 @@ void Compiler::ResolveRecurseInstructions()
 
 		CaptureComponent* target = component.target;
 		JPATTERN_VERIFY(target->firstInstruction != nullptr, InternalError, nullptr);
-		
+
 		for(RecurseInstruction* instruction : component.recurseInstructionList)
 		{
 			instruction->callTarget = target->firstInstruction;
@@ -176,7 +176,7 @@ void Compiler::PrintInformation(ICharacterWriter& output, IComponent* headCompon
 #if JDUMP_PATTERN_INFORMATION
 	StandardOutput.PrintF("Information for pattern: %A\n", &pattern);
 #endif
-	
+
 	headComponent->Dump(StandardOutput, 0);
 	StandardOutput.PrintF("MinimumLength: %z\n", headComponent->GetMinimumLength());
 	StandardOutput.PrintF("HasStartAnchor: %s\n", headComponent->HasStartAnchor() ? "true" : "false");
@@ -188,7 +188,7 @@ IComponent*	Compiler::CompilePattern(int options)
 	IComponent* component = CompileGroup(options);
 
 	if(tokenizer->PeekCurrentTokenType() != TokenType::Alternate) return component;
-	
+
 	AutoPointer<AlternationComponent> alternation = new AlternationComponent;
 	alternation->componentList.Append(component);
 	do
@@ -198,21 +198,21 @@ IComponent*	Compiler::CompilePattern(int options)
 	} while(tokenizer->PeekCurrentTokenType() == TokenType::Alternate);
 
 	alternation->Optimize();
-	
+
 	if(alternation->componentList.GetCount() == 1)
 	{
 		IComponent* singleChild = alternation->componentList[0];
 		alternation->componentList.SetCount(0);
 		return singleChild;
 	}
-	
+
 	return alternation.RelinquishPointer();
 }
 
 IComponent* Compiler::CompileGroup(int &options)
 {
 	AutoPointer<ConcatenateComponent> group = new ConcatenateComponent;
-	
+
 	for(;;)
 	{
 		const Token& currentToken = tokenizer->PeekCurrentToken();
@@ -264,24 +264,24 @@ IComponent* Compiler::CompileGroup(int &options)
 						break;
 					}
 				}
-				
+
 				group->componentList.Append(component);
 				break;
 			}
-				
+
 		default:
 			switch(group->componentList.GetCount())
 			{
 			case 0:
 				return new EmptyComponent;
-				
+
 			case 1:
 				{
 					IComponent* result = group->componentList[0];
 					group->componentList.Reset();
 					return result;
 				}
-				
+
 			default:
 				return group.RelinquishPointer();
 			}
@@ -301,7 +301,7 @@ bool Compiler::CoalesceComponent(CounterComponent* previousComponent, IComponent
 		if(previousComponent->maximum != TypeData<uint32_t>::Maximum()) previousComponent->maximum++;
 		return true;
 	}
-	
+
 	if(!component->IsCounter()) return false;
 
 	CounterComponent* newComponent = (CounterComponent*) component;
@@ -314,7 +314,7 @@ bool Compiler::CoalesceComponent(CounterComponent* previousComponent, IComponent
 	// a{3,}a{10,}?  -> a{13,}    a{3,5}a{10,}?  -> XXX		    a{10,}a{3,5)?  -> a{13,}    a{3,5}a{10,12}?  -> XXX
 	// a{3,}?a{10,}  -> a{13,}    a{3,5}?a{10,}  -> XXX         a{10,}?a{3,5}  -> XXX       a{3,5}?a{10,12}  -> XXX
 	// a{3,}?a{10,}? -> a{13,}?   a{3,5}?a{10,}? -> a{13,)?     a{10,}?a{3,5}? -> a{10,}?   a{3,5)?a{10,12}? -> a{13,17}?
-	
+
 	// Note that for the XXX cases we can still modify the minimum/maximum to generate better code.
 	// eg.
 	//		a{3,5}a{10,}? -> a{13,15}a{0,}? -> a{12,15}a{1,}?
@@ -436,7 +436,7 @@ IComponent* Compiler::CompileAtom(int options)
 		component = new CharacterRangeListComponent(false, {0, 255});
 		tokenizer->ProcessTokens();
 		break;
-	
+
 	case TokenType::BackReference:
 		{
 			JPATTERN_VERIFY((size_t) currentToken.i < captureGroups.GetCount(), InvalidBackReference, tokenizer->GetExceptionData());
@@ -448,7 +448,7 @@ IComponent* Compiler::CompileAtom(int options)
 			tokenizer->ProcessTokens();
 		}
 		break;
-			
+
 	case TokenType::Character:
 		if(options & Pattern::IGNORE_CASE)
 		{
@@ -463,7 +463,7 @@ IComponent* Compiler::CompileAtom(int options)
 			{
 				Character upper = currentToken.c.ToUpper();
 				Character lower = currentToken.c.ToLower();
-				
+
 				CharacterRangeListComponent* characterRangeListComponent = new CharacterRangeListComponent(false);
 				component = characterRangeListComponent;
 				if(upper == lower)
@@ -485,57 +485,57 @@ IComponent* Compiler::CompileAtom(int options)
 		}
 		tokenizer->ProcessTokens();
 		break;
-			
+
 	case TokenType::ResetCapture:
 		tokenizer->ProcessTokens();
 		return new ResetCaptureComponent(outerCapture);
-		
+
 	case TokenType::StartOfInput:
 		tokenizer->ProcessTokens();
 		return new AssertComponent(AssertType::StartOfInput);
-		
+
 	case TokenType::EndOfInput:
 		tokenizer->ProcessTokens();
 		return new AssertComponent(AssertType::EndOfInput);
-		
+
 	case TokenType::StartOfSearch:
 		tokenizer->ProcessTokens();
 		return new AssertComponent(AssertType::StartOfSearch);
-		
+
 	case TokenType::StartOfLine:
 		tokenizer->ProcessTokens();
 		return new AssertComponent((options & Pattern::MULTILINE) ? AssertType::StartOfLine : AssertType::StartOfInput);
-			
+
 	case TokenType::EndOfLine:
 		tokenizer->ProcessTokens();
 		return new AssertComponent((options & Pattern::MULTILINE) ? AssertType::EndOfLine : AssertType::EndOfInput);
-		
+
 	case TokenType::Accept:
 		tokenizer->ProcessTokens();
 		return new TerminalComponent(true);
-			
+
 	case TokenType::Fail:
 		tokenizer->ProcessTokens();
 		return new TerminalComponent(false);
-		
+
 	case TokenType::WhitespaceCharacter:
 		component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, CharacterRangeList::WHITESPACE_CHARACTERS);
 		tokenizer->ProcessTokens();
 		break;
-			
+
 	case TokenType::NotWhitespaceCharacter:
 		component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, CharacterRangeList::WHITESPACE_CHARACTERS.CreateComplement());
 		tokenizer->ProcessTokens();
 		break;
-			
+
 	case TokenType::WordBoundary:
 		tokenizer->ProcessTokens();
 		return new AssertComponent(AssertType::WordBoundary);
-		
+
 	case TokenType::NotWordBoundary:
 		tokenizer->ProcessTokens();
 		return new AssertComponent(AssertType::NotWordBoundary);
-		
+
 	case TokenType::Wildcard:
 		if(options & (Pattern::DOTALL | Pattern::GLOB_SYNTAX))
 		{
@@ -544,7 +544,7 @@ IComponent* Compiler::CompileAtom(int options)
 				component = new CharacterRangeListComponent(true, {0, Character::Maximum()});
 			}
 			else
-			{				
+			{
 				component = new CharacterRangeListComponent(false, {0, 255});
 			}
 		}
@@ -596,7 +596,7 @@ IComponent* Compiler::CompileAtom(int options)
 			tokenizer->ProcessTokens();
 		}
 		break;
-		
+
 	case TokenType::NotRange:
 		if(options & Pattern::IGNORE_CASE)
 		{
@@ -615,7 +615,7 @@ IComponent* Compiler::CompileAtom(int options)
 		}
 		tokenizer->ProcessTokens();
 		break;
-		
+
 	case TokenType::WordCharacter:
 		component = new CharacterRangeListComponent(false, CharacterRangeList::WORD_CHARACTERS);
 		tokenizer->ProcessTokens();
@@ -634,7 +634,7 @@ IComponent* Compiler::CompileAtom(int options)
 			tokenizer->ProcessTokens();
 			break;
 		}
-		
+
 	case TokenType::ClusterStart:
 		{
 			int newOptions = (options & ~currentToken.optionMask) | currentToken.optionSet;
@@ -644,7 +644,7 @@ IComponent* Compiler::CompileAtom(int options)
 			tokenizer->ProcessTokens();
 			break;
 		}
-			
+
 	case TokenType::Conditional:
 		{
 			static constexpr EnumSet<TokenType, uint64_t> VALID_CONDITIONALS
@@ -696,7 +696,7 @@ IComponent* Compiler::CompileAtom(int options)
 			usesBacktrackingComponents = true;
 			return new LookAheadComponent(body.RelinquishPointer(), false);
 		}
-			
+
 	case TokenType::PositiveLookBehind:
 		{
 			int newOptions = (options & ~currentToken.optionMask) | currentToken.optionSet;
@@ -708,7 +708,7 @@ IComponent* Compiler::CompileAtom(int options)
 			usesBacktrackingComponents = true;
 			return new LookBehindComponent(body.RelinquishPointer(), true);
 		}
-			
+
 	case TokenType::NegativeLookBehind:
 		{
 			int newOptions = (options & ~currentToken.optionMask) | currentToken.optionSet;
@@ -720,7 +720,7 @@ IComponent* Compiler::CompileAtom(int options)
 			usesBacktrackingComponents = true;
 			return new LookBehindComponent(body.RelinquishPointer(), false);
 		}
-			
+
 	case TokenType::AtomicGroup:
 		{
 			int newOptions = (options & ~currentToken.optionMask) | currentToken.optionSet;
@@ -732,31 +732,31 @@ IComponent* Compiler::CompileAtom(int options)
 			component = new CounterComponent(1, 1, CounterComponent::Possessive, body.RelinquishPointer());
 			break;
 		}
-			
+
 	default:
 		JPATTERN_ERROR(InternalError, tokenizer->GetExceptionData());
 	}
-	
+
 	if(component->IsCounter())
 	{
 		IComponent* result = CompileAtomQuantifier(component, options);
 		if(result == component) return result;
-		
+
 		JASSERT(result->IsCounter());
-		
+
 		// We have a nested counter!
 		// (a*)*  -> a*         (a*){3}  -> a*           (a?)*  -> a*
 		// (a*?)* -> a*?        (a*?){3} -> a*?          (a??)* -> a*?
 		// (a+)*  -> a+         (a+){3}  -> a{3,}        (a?)*? -> a*?
 		// (a+?)* -> a+?        (a+?){3} -> a{3,}?       (a??)*? -> a*?
 
-		
+
 		CounterComponent* inner = (CounterComponent*) component;
 		if(inner->minimum > 1) return result;
-		
+
 		CounterComponent* outer = (CounterComponent*) result;
 		if(inner->mode == CounterComponent::Possessive || outer->mode == CounterComponent::Possessive) return result;
-		
+
 		// Determine minimal or maximal
 		if(outer->minimum != outer->maximum)
 		{
@@ -769,7 +769,7 @@ IComponent* Compiler::CompileAtom(int options)
 				return result;
 			}
 		}
-		
+
 		inner->minimum = inner->minimum * outer->minimum;
 		inner->maximum = inner->maximum == TypeData<uint32_t>::Maximum() || outer->maximum == TypeData<uint32_t>::Maximum() ? TypeData<uint32_t>::Maximum() : inner->maximum * outer->maximum;
 
@@ -794,7 +794,7 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 	case TokenType::OneOrMoreMinimal:
 		tokenizer->ProcessTokens();
 		return new CounterComponent(1, TypeData<uint32_t>::Maximum(), (options & Pattern::UNGREEDY) ? CounterComponent::Maximal : CounterComponent::Minimal, atom);
-			
+
 	case TokenType::OneOrMorePossessive:
 		tokenizer->ProcessTokens();
 		usesBacktrackingComponents = true;
@@ -807,7 +807,7 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 	case TokenType::ZeroOrMoreMinimal:
 		tokenizer->ProcessTokens();
 		return new CounterComponent(0, TypeData<uint32_t>::Maximum(), (options & Pattern::UNGREEDY) ? CounterComponent::Maximal : CounterComponent::Minimal, atom);
-		
+
 	case TokenType::ZeroOrMorePossessive:
 		tokenizer->ProcessTokens();
 		usesBacktrackingComponents = true;
@@ -816,20 +816,20 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 	case TokenType::ZeroOrOneMaximal:
 		tokenizer->ProcessTokens();
 		return new CounterComponent(0, 1, (options & Pattern::UNGREEDY) ? CounterComponent::Minimal : CounterComponent::Maximal, atom);
-		
+
 	case TokenType::ZeroOrOneMinimal:
 		tokenizer->ProcessTokens();
 		return new CounterComponent(0, 1, (options & Pattern::UNGREEDY) ? CounterComponent::Maximal : CounterComponent::Minimal, atom);
-		
+
 	case TokenType::ZeroOrOnePossessive:
 		tokenizer->ProcessTokens();
 		usesBacktrackingComponents = true;
 		return new CounterComponent(0, 1, CounterComponent::Possessive, atom);
-		
+
 	case TokenType::CounterStart:
 		{
 			tokenizer->ProcessTokens();
-			
+
 			// Cases can be:
 			//
 			// {x}
@@ -839,12 +839,12 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 			// {,max}?
 			// {min,}
 			// {min,}?
-			
+
 			if(tokenizer->PeekCurrentTokenType() == TokenType::CounterValue)
 			{
 				int min = tokenizer->PeekCurrentToken().i;
 				tokenizer->ProcessTokens();
-				
+
 				switch(tokenizer->PeekCurrentTokenType())
 				{
 				case TokenType::CounterEnd:
@@ -870,7 +870,7 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 					}
 					else return new CounterComponent(min, min, CounterComponent::Minimal, atom);
 				}
-						
+
 				case TokenType::CounterSeparator:
 					tokenizer->ProcessTokens();
 					switch(tokenizer->PeekCurrentTokenType())
@@ -881,50 +881,50 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 							JPATTERN_VERIFY(min <= max, MinimumCountExceedsMaximumCount, tokenizer->GetExceptionData());
 							JPATTERN_VERIFY(max <= MAXIMUM_REPETITION_COUNT, MaximumRepetitionCountExceeded, tokenizer->GetExceptionData());
 							tokenizer->ProcessTokens();
-							
+
 							switch(tokenizer->PeekCurrentTokenType())
 							{
 							case TokenType::CounterEnd:
 								// {min,max}
 								tokenizer->ProcessTokens();
 								return new CounterComponent(min, max, (options & Pattern::UNGREEDY) ? CounterComponent::Minimal : CounterComponent::Maximal, atom);
-								
+
 							case TokenType::CounterEndMinimal:
 								// {min,max}?
 								tokenizer->ProcessTokens();
 								return new CounterComponent(min, max, (options & Pattern::UNGREEDY) ? CounterComponent::Maximal : CounterComponent::Minimal, atom);
-								
+
 							case TokenType::CounterEndPossessive:
 								// {min,max}+
 								tokenizer->ProcessTokens();
 								usesBacktrackingComponents = true;
 								return new CounterComponent(min, max, CounterComponent::Possessive, atom);
-								
+
 							default:
 								JPATTERN_ERROR(UnableToParseRepetition, tokenizer->GetExceptionData());
 							}
 						}
-						
+
 					case TokenType::CounterEnd:
 						// {min,}
 						tokenizer->ProcessTokens();
 						return new CounterComponent(min, TypeData<uint32_t>::Maximum(), (options & Pattern::UNGREEDY) ? CounterComponent::Minimal : CounterComponent::Maximal, atom);
-						
+
 					case TokenType::CounterEndMinimal:
 						// {min,}?
 						tokenizer->ProcessTokens();
 						return new CounterComponent(min, TypeData<uint32_t>::Maximum(), (options & Pattern::UNGREEDY) ? CounterComponent::Maximal : CounterComponent::Minimal, atom);
-						
+
 					case TokenType::CounterEndPossessive:
 						// {min,}+
 						tokenizer->ProcessTokens();
 						usesBacktrackingComponents = true;
 						return new CounterComponent(min, TypeData<uint32_t>::Maximum(), CounterComponent::Possessive, atom);
-						
+
 					default:
 						JPATTERN_ERROR(UnableToParseRepetition, tokenizer->GetExceptionData());
 					}
-						
+
 				default:
 					JPATTERN_ERROR(UnableToParseRepetition, tokenizer->GetExceptionData());
 				}
@@ -933,30 +933,30 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 			{
 				JPATTERN_VERIFY(tokenizer->PeekCurrentTokenType() == TokenType::CounterSeparator, UnableToParseRepetition, tokenizer->GetExceptionData());
 				tokenizer->ProcessTokens();
-				
+
 				JPATTERN_VERIFY(tokenizer->PeekCurrentTokenType() == TokenType::CounterValue, UnableToParseRepetition, tokenizer->GetExceptionData());
 				int max = tokenizer->PeekCurrentToken().i;
 				JPATTERN_VERIFY(max <= MAXIMUM_REPETITION_COUNT, MaximumRepetitionCountExceeded, tokenizer->GetExceptionData());
 				tokenizer->ProcessTokens();
-				
+
 				switch(tokenizer->PeekCurrentTokenType())
 				{
 				case TokenType::CounterEnd:
 					// {,max}
 					tokenizer->ProcessTokens();
 					return new CounterComponent(0, max, (options & Pattern::UNGREEDY) ? CounterComponent::Minimal : CounterComponent::Maximal, atom);
-					
+
 				case TokenType::CounterEndMinimal:
 					// {,max}?
 					tokenizer->ProcessTokens();
 					return new CounterComponent(0, max, (options & Pattern::UNGREEDY) ? CounterComponent::Maximal : CounterComponent::Minimal, atom);
-					
+
 				case TokenType::CounterEndPossessive:
 					// {,max}+
 					tokenizer->ProcessTokens();
 					usesBacktrackingComponents = true;
 					return new CounterComponent(0, max, CounterComponent::Possessive, atom);
-					
+
 				default:
 					JPATTERN_ERROR(UnableToParseRepetition, tokenizer->GetExceptionData());
 				}

@@ -18,10 +18,10 @@ public:
 
 	virtual void* Allocate(size_t size) const	{ return custom_allocate(size); }
 	virtual void Free(void* p) const			{ custom_free(p);				}
-	
+
 	static void* (*custom_allocate)(size_t);
 	static void (*custom_free)(void*);
-	
+
 	static const CStackGrowthHandler instance;
 };
 

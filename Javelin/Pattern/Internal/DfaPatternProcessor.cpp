@@ -122,7 +122,7 @@ const uint8_t* DfaPatternProcessor::GetCharacterFlags() const
 		W, W, W, W, W, W, W, W, W, W, W, S, S, S, S, W,
 		S, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W,
 		W, W, W, W, W, W, W, W, W, W, W, S, S, S, S, S,
-		
+
 		S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
 		S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
 		S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
@@ -181,7 +181,7 @@ DfaPatternProcessor::SearchHandler DfaPatternProcessor::GetSearchHandler(SearchH
 	case SearchHandlerEnum::SearchByteRangePairWithAssert:	return &FindByteWithAssertForwarder<FindByteRangePair>;
 	case SearchHandlerEnum::SearchBoyerMooreWithAssert:		return &FindBoyerMooreWithAssertForwarder;
 	case SearchHandlerEnum::SearchShiftOrWithAssert:		return &FindShiftOrWithAssertForwarder;
-			
+
 	default:
 		JERROR("Unexpected search handler");
 		return nullptr;
@@ -223,7 +223,7 @@ template<DfaPatternProcessor::SearchMode SEARCH_MODE> const void* DfaPatternProc
 		state->Dump("Current state");
 #endif
 		int c = *p;
-		
+
 		if(JUNLIKELY(state->stateFlags & (NfaState::Flag::IS_MATCH | NfaState::Flag::HAS_EMPTY_STATES | NfaState::Flag::DFA_NEEDS_POPULATING | NfaState::Flag::IS_SEARCH | NfaState::Flag::DFA_STATE_IS_RESETTING)))
 		{
 			if constexpr(SEARCH_MODE == SearchMode::Partial)
@@ -235,7 +235,7 @@ template<DfaPatternProcessor::SearchMode SEARCH_MODE> const void* DfaPatternProc
 					StandardOutput.PrintF("** MATCH **\n");
 #endif
 				}
-				
+
 				if(state->stateFlags & NfaState::Flag::HAS_EMPTY_STATES)
 				{
 #if VERBOSE_DEBUG_PATTERN
@@ -255,7 +255,7 @@ template<DfaPatternProcessor::SearchMode SEARCH_MODE> const void* DfaPatternProc
 					return nullptr;
 				}
 			}
-			
+
 			if constexpr(SEARCH_MODE == SearchMode::Partial)
 			{
 				if((state->stateFlags & NfaState::Flag::IS_MATCH) && state->minimumRemainingLength > size_t(pEnd - p))
@@ -268,10 +268,10 @@ template<DfaPatternProcessor::SearchMode SEARCH_MODE> const void* DfaPatternProc
 			{
 				bytesProcessedSinceReset += uint64_t(p - pLastByteRecord);
 				pLastByteRecord = (const unsigned char*) p;
-				
+
 				if(state->stateFlags & NfaState::Flag::DFA_STATE_IS_RESETTING) HandleStateReset(state);
 				if(state->stateFlags & NfaState::Flag::DFA_NEEDS_POPULATING) PopulateState(state);
-				
+
 				if(state->stateFlags & NfaState::Flag::DFA_FAILED)
 				{
 #if DEBUG_PATTERN
@@ -280,7 +280,7 @@ template<DfaPatternProcessor::SearchMode SEARCH_MODE> const void* DfaPatternProc
 					return (void*) DFA_FAILED;
 				}
 			}
-			
+
 			if(state->searchHandler)
 			{
 				p = (*state->searchHandler)((const unsigned char*) p, state->searchData, pEnd);
@@ -294,13 +294,13 @@ template<DfaPatternProcessor::SearchMode SEARCH_MODE> const void* DfaPatternProc
 #if VERBOSE_DEBUG_PATTERN
 		StandardOutput.PrintF("Processing char: '%C' (offset %z)\n", c, p-pStart);
 #endif
-		
+
 		++p;
 		state = state->nextStates[c];
 	}
-	
+
 ProcessEOF:
-	
+
 #if VERBOSE_DEBUG_PATTERN
 	state->Dump("Current state");
 #endif
@@ -317,7 +317,7 @@ ProcessEOF:
 				StandardOutput.PrintF("** MATCH **\n");
 #endif
 			}
-			
+
 			if(state->stateFlags & NfaState::Flag::HAS_EMPTY_STATES)
 			{
 #if VERBOSE_DEBUG_PATTERN
@@ -333,7 +333,7 @@ ProcessEOF:
 				return nullptr;
 			}
 		}
-		
+
 		if(state->stateFlags & NfaState::Flag::DFA_NEEDS_POPULATING)
 		{
 			PopulateState(state);
@@ -360,7 +360,7 @@ ProcessEOF:
 #endif
 		return pEnd;
 	}
-	
+
 #if VERBOSE_DEBUG_PATTERN
 	StandardOutput.PrintF("** END-EXIT **\n");
 #endif
@@ -372,7 +372,7 @@ ProcessEOF:
 const void* DfaPatternProcessor::FullMatch(const void* data, size_t length) const
 {
 	BeginMatch();
-	
+
 	// Snapshot volatile pointer
 	State* startingState = fullMatchStartingState;
 	if(startingState == nullptr)
@@ -386,7 +386,7 @@ const void* DfaPatternProcessor::FullMatch(const void* data, size_t length) cons
 			NfaState::UpdateCache* updateCache = (NfaState::UpdateCache*) updateCacheBacking;
 			unsigned char nfaStateBacking[NfaState::GetSizeRequiredForNumberOfStates(numberOfInstructions)];
 			NfaState* nfaState = (NfaState*) nfaStateBacking;
-			
+
 			nfaState->Reset();
 			CharacterRange dummyRange(0, 256);
 			nfaState->AddNextState(patternData, fullMatchStartingInstruction, dummyRange, *updateCache, NfaState::Flag::IS_START_OF_INPUT | NfaState::Flag::WAS_END_OF_LINE | NfaState::Flag::IS_START_OF_SEARCH);
@@ -430,7 +430,7 @@ DfaPatternProcessor::State* DfaPatternProcessor::CreatePartialStartingState(size
 			unsigned char nfaStateBacking[NfaState::GetSizeRequiredForNumberOfStates(numberOfInstructions)];
 			NfaState* nfaState = (NfaState*) nfaStateBacking;
 			nfaState->Reset();
-			
+
 			static const int STARTING_FLAGS[] =
 			{
 				NfaState::Flag::IS_START_OF_INPUT | NfaState::Flag::WAS_END_OF_LINE | NfaState::Flag::IS_START_OF_SEARCH,
@@ -442,7 +442,7 @@ DfaPatternProcessor::State* DfaPatternProcessor::CreatePartialStartingState(size
 			CharacterRange dummyRange(0, 256);
 			nfaState->AddNextState(patternData, partialMatchStartingInstruction, dummyRange, *updateCache, startingFlags);
 			nfaState->ClearIrrelevantFlags();
-			
+
 			startingState = GetStateForNfaState(*nfaState);
 			startingState->activeCounter++;
 			partialMatchStartingStates[startingIndex] = startingState;
@@ -479,7 +479,7 @@ const void* DfaPatternProcessor::PartialMatch(const void* data, size_t length, s
 			return (void*) DFA_FAILED;
 		}
 	}
-	
+
 	const void* result;
 	if(matchRequiresEndOfInput)
 	{

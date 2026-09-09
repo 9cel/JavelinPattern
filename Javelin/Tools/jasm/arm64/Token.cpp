@@ -18,7 +18,7 @@ std::string Token::GetDescription() const
 		#include "TokenTags.h"
 		#undef TAG
 	};
-	
+
 	switch(type)
 	{
 	case Type::Preprocessor:

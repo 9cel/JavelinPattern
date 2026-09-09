@@ -31,17 +31,17 @@ struct ThreadHandle::ThreadData
 #endif
 	Function<void*(void*)> 		threadFunction;
 	void*						threadParameter;
-	
+
 	ThreadData() : thread(0), counter(1) { }
 	void RemoveReference()
 	{
 		if(--counter == 0) delete this;
 	}
-	
+
 	static void* Start(void* data)
 	{
 		ThreadData* td = (ThreadData*) data;
-		
+
 #if WAIT_AFTER_THREAD_START
 		td->barrier.Wait();
 #endif

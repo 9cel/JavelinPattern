@@ -63,7 +63,7 @@ void ByteComponent::Dump(ICharacterWriter& output, int depth)
 
 void ByteComponent::BuildInstructions(InstructionList &instructionList) const
 {
-	ByteInstruction* instruction = new ByteInstruction(c);	
+	ByteInstruction* instruction = new ByteInstruction(c);
 	instructionList.AddInstruction(instruction);
 }
 
@@ -93,14 +93,14 @@ void AssertComponent::Dump(ICharacterWriter& output, int depth)
 		"NotWordBoundary",
 		"StartOfSearch",
 	};
-	
+
 	output.PrintF("%r%s: %s\n", ' ', depth, typeid(*this).name(), ASSERT_TYPE_NAMES[(int) assertType]);
 }
 
 void AssertComponent::BuildInstructions(InstructionList &instructionList) const
 {
 	if(!instructionList.ShouldEmitAssertInstructions()) return;
-	
+
 	Instruction* instruction = nullptr;
 	switch(assertType)
 	{
@@ -271,20 +271,20 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 	else if(!useUtf8 || characterRangeList.IsSingleByteUtf8())
 	{
 		uint32_t numberOfMatchingBytes = characterRangeList.GetNumberOfMatchingBytes();
-		
+
 		if(numberOfMatchingBytes == 1)
 		{
 			ByteInstruction* instruction = new ByteInstruction(characterRangeList[0].min);
 			instructionList.AddInstruction(instruction);
 			return;
 		}
-		
+
 		if(numberOfMatchingBytes == 256)
 		{
 			instructionList.AddInstruction(new AnyByteInstruction);
 			return;
 		}
-		
+
 		if(characterRangeList.GetCount() == 1)
 		{
 			// Use a ByteRangeInstruction
@@ -294,7 +294,7 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 			instructionList.AddInstruction(instruction);
 			return;
 		}
-		
+
 		if(characterRangeList.GetCount() == 2 &&
 		   characterRangeList[0].min == 0 &&
 		   characterRangeList[1].max == 255)
@@ -312,12 +312,12 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 			}
 			return;
 		}
-		
+
 		if(numberOfMatchingBytes == 2 || numberOfMatchingBytes == 3)
 		{
 			size_t matchingByteOffset = 0;
 			unsigned char matchingBytes[3];
-			
+
 			for(const auto& it : characterRangeList)
 			{
 				for(uint32_t c = it.min; c <= it.max; ++c)
@@ -325,7 +325,7 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 					matchingBytes[matchingByteOffset++] = c;
 				}
 			}
-			
+
 			if(numberOfMatchingBytes == 2)
 			{
 				if(matchingBytes[0]+1 == matchingBytes[1])
@@ -359,17 +359,17 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 			}
 			return;
 		}
-		
+
 		if(numberOfMatchingBytes >= 253)
 		{
 			unsigned char notMatchingBytes[3];
 			unsigned int notMatchingByteIndex = 0;
-			
+
 			for(uint32_t j = 0; j < characterRangeList[0].min; ++j)
 			{
 				notMatchingBytes[notMatchingByteIndex++] = j;
 			}
-			
+
 			for(size_t i = 1; i < characterRangeList.GetCount(); ++i)
 			{
 				for(uint32_t j = characterRangeList[i-1].max+1; j < characterRangeList[i].min; ++j)
@@ -377,20 +377,20 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 					notMatchingBytes[notMatchingByteIndex++] = j;
 				}
 			}
-			
+
 			for(uint32_t j = characterRangeList.Back().max+1; j < 256; ++j)
 			{
 				notMatchingBytes[notMatchingByteIndex++] = j;
 			}
-			
+
 			JASSERT(numberOfMatchingBytes + notMatchingByteIndex == 256);
-			
+
 			switch(notMatchingByteIndex)
 			{
 			case 1:
 				instructionList.AddInstruction(new ByteNotInstruction(notMatchingBytes[0]));
 				return;
-					
+
 			case 2:
 				instructionList.AddInstruction(new ByteNotEitherOf2Instruction(notMatchingBytes[0], notMatchingBytes[1]));
 				return;
@@ -422,17 +422,17 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 		//	21	U+10000		U+1FFFFF	4	11110xxx	10xxxxxx	10xxxxxx	10xxxxxx
 		//	26	U+200000	U+3FFFFFF	5	111110xx	10xxxxxx	10xxxxxx	10xxxxxx	10xxxxxx
 		//	31	U+4000000	U+7FFFFFFF	6	1111110x	10xxxxxx	10xxxxxx	10xxxxxx	10xxxxxx	10xxxxxx
-		
+
 		// This is [0x00-0x7f]
 		// | [0xc0-0xdf] [0x80-0xbf]
 		// | [0xe0-0xef] [0x80-0xbf] [0x80-0xbf]
 		// | [0xf0-0xf7] [0x80-0xbf] [0x80-0xbf] [0x80-0xbf]
 		// | [0xf8-0xfb] [0x80-0xbf] [0x80-0xbf] [0x80-0xbf] [0x80-0xbf]
 		// | [0xfc-0xfd] [0x80-0xbf] [0x80-0xbf] [0x80-0xbf] [0x80-0xbf] [0x80-0xbf]
-		
+
 		SplitInstruction* split = new SplitInstruction;
 		instructionList.AddInstruction(split);
-		
+
 		InstructionTable &targetList = split->targetList;
 		targetList.Append(new ByteRangeInstruction(0,    0x7f));
 		targetList.Append(new ByteRangeInstruction(0xc0, 0xdf));
@@ -440,7 +440,7 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 		targetList.Append(new ByteRangeInstruction(0xf0, 0xf7));
 		targetList.Append(new ByteRangeInstruction(0xf8, 0xfb));
 		targetList.Append(new ByteRangeInstruction(0xfc, 0xfd));
-		
+
 		JumpInstruction* jump[5];
 		for(size_t i = 0; i < 5; ++i)
 		{
@@ -448,7 +448,7 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 			instructionList.AddInstruction(targetList[i]);
 			instructionList.AddInstruction(jump[i]);
 		}
-		
+
 		instructionList.AddInstruction(targetList[5]);
 		instructionList.AddInstruction(new ByteRangeInstruction(0x80, 0xbf));
 		for(size_t i = 1; i < 5; ++i)
@@ -480,7 +480,7 @@ void CharacterRangeListComponent::BuildUtf8Components(InstructionList &instructi
 	//	21	U+10000		U+1FFFFF	4	11110xxx	10xxxxxx	10xxxxxx	10xxxxxx
 	//	26	U+200000	U+3FFFFFF	5	111110xx	10xxxxxx	10xxxxxx	10xxxxxx	10xxxxxx
 	//	31	U+4000000	U+7FFFFFFF	6	1111110x	10xxxxxx	10xxxxxx	10xxxxxx	10xxxxxx	10xxxxxx
-	
+
 	// This is:
 	// [0x00-0x7f]
 	// | [0xc0-0xdf] [0x80-0xbf]
@@ -500,12 +500,12 @@ void CharacterRangeListComponent::BuildUtf8Components(InstructionList &instructi
 
 	bool allowLowBytes = characterRangeList.HasData() &&
 						 (CharacterRange{0, 127} & characterRangeList[0]) == CharacterRange{0, 127};
-	
+
 	AlternationComponent* alternation = const_cast<CharacterRangeListComponent*>(this);
-	
+
 	for(size_t i = 0; i < JNUMBER_OF_ELEMENTS(UTF8_BYTE_RANGES); ++i)
 	{
-		const BuildUtf8Data& data = UTF8_BYTE_RANGES[i];		
+		const BuildUtf8Data& data = UTF8_BYTE_RANGES[i];
 		for(const CharacterRange& range : characterRangeList)
 		{
 			CharacterRange intersection = range & data.range;
@@ -516,7 +516,7 @@ void CharacterRangeListComponent::BuildUtf8Components(InstructionList &instructi
 			}
 		}
 	}
-	
+
 	alternation->Optimize();
 	AlternationComponent::BuildInstructions(instructionList);
 }
@@ -532,7 +532,7 @@ void CharacterRangeListComponent::BuildUtf8Components(AlternationComponent* alte
 	{
 		int low  = offset + (interval.min >> bitShift);
 		int high = offset + (interval.max >> bitShift);
-		
+
 		if(low == high)
 		{
 			CharacterRange subInterval;
@@ -545,11 +545,11 @@ void CharacterRangeListComponent::BuildUtf8Components(AlternationComponent* alte
 			CharacterRange midInterval;
 			midInterval.min = 0;
 			midInterval.max = ~(~0U << bitShift);
-			
+
 			CharacterRange lowInterval;
 			lowInterval.min = interval.min & ~(~0U << bitShift);
 			lowInterval.max = ~(~0U << bitShift);
-			
+
 			CharacterRange highInterval;
 			highInterval.min = 0;
 			highInterval.max = interval.max & ~(~0U << bitShift);
@@ -562,15 +562,15 @@ void CharacterRangeListComponent::BuildUtf8Components(AlternationComponent* alte
 			{
 				BuildUtf8Components(alternation, new ByteComponent(low), lowInterval, bitShift);
 			}
-			
+
 			if(highInterval == midInterval)
 			{
 				high++;
 			}
-			
+
 			if(low < high-1)
 			{
-				
+
 				IComponent* component = (low+1 == high-1) ?
 										(IComponent*) new ByteComponent(low+1) :
 										(IComponent*) new CharacterRangeListComponent(false, {low+1, high-1});
@@ -591,7 +591,7 @@ void CharacterRangeListComponent::BuildUtf8Components(AlternationComponent* alte
 	concatenate->componentList.Append(firstConcatenateInstruction);
 	AlternationComponent* subAlternation = new AlternationComponent;
 	BuildUtf8Components(subAlternation, interval, bitShift-6, 0x80);
-	
+
 	subAlternation->Optimize();
 	if(subAlternation->componentList.GetCount() == 1)
 	{
@@ -603,7 +603,7 @@ void CharacterRangeListComponent::BuildUtf8Components(AlternationComponent* alte
 	{
 		concatenate->componentList.Append(subAlternation);
 	}
-	
+
 	if(concatenate->componentList.GetCount() == 1)
 	{
 		alternation->componentList.Append(concatenate->componentList[0]);
@@ -682,19 +682,19 @@ void LookAheadComponent::BuildInstructions(InstructionList &instructionList) con
 		content->BuildInstructions(instructionList);
 		return;
 	}
-	
+
 	uint32_t assertSave = instructionList.GetAssertCounter();
 	instructionList.SetAssertCounter(0);
 	CallInstruction* callInstruction = new CallInstruction();
 	instructionList.AddInstruction(callInstruction);
 	instructionList.AddPatchReference(&callInstruction->callTarget);
 	content->BuildInstructions(instructionList);
-	
+
 	if(instructionList.Back() == callInstruction)
 	{
 		instructionList.RemovePatchReference(&callInstruction->callTarget);
 		delete callInstruction;
-		
+
 		if(!expectedResult)
 		{
 			instructionList.AddInstruction(new FailInstruction);
@@ -705,7 +705,7 @@ void LookAheadComponent::BuildInstructions(InstructionList &instructionList) con
 		instructionList.AddInstruction(new SuccessInstruction);
 		instructionList.AddPatchReference(expectedResult ? &callInstruction->trueTarget : &callInstruction->falseTarget);
 	}
-	
+
 	instructionList.SetAssertCounter(assertSave);
 }
 
@@ -791,7 +791,7 @@ void ConditionalComponent::BuildInstructions(InstructionList &instructionList) c
 	trueComponent->BuildInstructions(instructionList);
 	JumpInstruction* jump = new JumpInstruction;
 	instructionList.AddInstruction(jump);
-	
+
 	instructionList.AddPatchReference(POSITIVE_SET.Contains(conditionType) ? &callInstruction->falseTarget : &callInstruction->trueTarget);
 	falseComponent->BuildInstructions(instructionList);
 	instructionList.AddPatchReference(&jump->target);
@@ -822,10 +822,10 @@ void CaptureComponent::BuildInstructions(InstructionList &instructionList) const
 		bool insertReturnRecurse = isRecurseTarget && captured == false;
 		bool saveNeverRecurses = instructionList.SaveNeverRecurses();
 		captured = true;
-		
+
 		int startCaptureIndex = captureIndex*2;
 		if(instructionList.IsReverse()) ++startCaptureIndex;
-		
+
 		if(insertReturnRecurse)
 		{
 			instructionList.AddPatchReference(&firstInstruction);
@@ -850,7 +850,7 @@ void CaptureComponent::BuildInstructions(InstructionList &instructionList) const
 				delete instruction;
 			}
 		}
-		
+
 		if(insertReturnRecurse)
 		{
 			ReturnIfRecurseValueInstruction* returnRecurseToInstruction = new ReturnIfRecurseValueInstruction(captureIndex);
@@ -858,7 +858,7 @@ void CaptureComponent::BuildInstructions(InstructionList &instructionList) const
 		}
 
 		if(emitCaptureStart || instructionList.IsForwards())
-		{			
+		{
 			SaveInstruction* instruction = new SaveInstruction(saveNeverRecurses, startCaptureIndex^1);
 			instructionList.AddInstruction(instruction);
 		}
@@ -907,7 +907,7 @@ void ResetCaptureComponent::BuildInstructions(InstructionList &instructionList) 
 		bool saveNeverRecurses = instructionList.SaveNeverRecurses();
 		SaveInstruction* instruction = new SaveInstruction(saveNeverRecurses, 0);
 		instructionList.AddInstruction(instruction);
-		
+
 		if(saveNeverRecurses) captureComponent->emitCaptureStart = false;
 	}
 	instructionList.SetHasResetCapture();
@@ -1019,7 +1019,7 @@ Instruction* CounterComponent::BuildMinimumInstructions(InstructionList &instruc
 		else
 		{
 			instructionList.StopSaveInstructions();
-			
+
 			for(size_t i = 1; i < minimum; ++i)
 			{
 				content->BuildInstructions(instructionList);
@@ -1036,7 +1036,7 @@ Instruction* CounterComponent::BuildMinimumInstructions(InstructionList &instruc
 void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList) const
 {
 	Instruction* lastContent = BuildMinimumInstructions(instructionList);
-	
+
 	if(content->GetMaximumLength() != 0)
 	{
 		if(maximum == TypeData<uint32_t>::Maximum())
@@ -1055,8 +1055,8 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
 				}
 				content->BuildRepeatInstructions(instructionList);
-				
-				instructionList.AddInstruction(split);			
+
+				instructionList.AddInstruction(split);
 				instructionList.AddPatchReference(&split->targetList[0]);
 			}
 			else
@@ -1064,12 +1064,12 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 				SplitInstruction* split = new SplitInstruction;
 				split->targetList.SetCount(2);
 				split->targetList[1] = lastContent;
-				
+
 				if(content->GetMinimumLength() == 0)
 				{
 					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
 				}
-				
+
 				instructionList.AddInstruction(split);
 				instructionList.AddPatchReference(&split->targetList[0]);
 			}
@@ -1077,7 +1077,7 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 		else
 		{
 			Table<SplitInstruction*> splitInstructionList;
-			
+
 			size_t repeat = maximum - minimum;
 			for(size_t i = 0; i < repeat; ++i)
 			{
@@ -1088,7 +1088,7 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 				instructionList.AddPatchReference(&split->targetList[1]);
 				content->BuildInstructions(instructionList);
 			}
-			
+
 			for(SplitInstruction* split : splitInstructionList)
 			{
 				instructionList.AddPatchReference(&split->targetList[0]);
@@ -1100,7 +1100,7 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList) const
 {
 	Instruction* lastContent = BuildMinimumInstructions(instructionList);
-	
+
 	if(content->GetMaximumLength() != 0)
 	{
 		if(maximum == TypeData<uint32_t>::Maximum())
@@ -1118,7 +1118,7 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
 				}
 				content->BuildRepeatInstructions(instructionList);
-				
+
 				instructionList.AddInstruction(split);
 				instructionList.AddPatchReference(&split->targetList[1]);
 			}
@@ -1127,12 +1127,12 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 				SplitInstruction* split = new SplitInstruction;
 				split->targetList.SetCount(2);
 				split->targetList[0] = lastContent;
-				
+
 				if(content->GetMinimumLength() == 0)
 				{
 					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
 				}
-				
+
 				instructionList.AddInstruction(split);
 				instructionList.AddPatchReference(&split->targetList[1]);
 			}
@@ -1140,7 +1140,7 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 		else
 		{
 			Table<SplitInstruction*> splitInstructionList;
-			
+
 			size_t repeat = maximum - minimum;
 			for(size_t i = 0; i < repeat; ++i)
 			{
@@ -1151,7 +1151,7 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 				instructionList.AddPatchReference(&split->targetList[0]);
 				content->BuildInstructions(instructionList);
 			}
-			
+
 			for(SplitInstruction* split : splitInstructionList)
 			{
 				instructionList.AddPatchReference(&split->targetList[1]);
@@ -1318,7 +1318,7 @@ bool ConcatenateComponent::RequiresAnyByteMinimalForPartialMatch() const
 uint32_t AlternationComponent::GetMinimumLength() const
 {
 	if(componentList.GetCount() == 0) return 0;
-	
+
 	uint32_t minimum = TypeData<uint32_t>::Maximum();
 	for(IComponent* component : componentList)
 	{
@@ -1353,17 +1353,17 @@ void AlternationComponent::BuildInstructions(InstructionList &instructionList) c
 	{
 		instructionList.IncrementSaveRecurse();
 		Table<JumpInstruction*> jumpInstructionList;
-		
+
 		SplitInstruction* split = new SplitInstruction;
 		split->targetList.SetCount(componentList.GetCount());
-		
+
 		instructionList.AddInstruction(split);
-		
+
 		for(size_t i = 0; i < componentList.GetCount(); ++i)
 		{
 			instructionList.AddPatchReference(&split->targetList[i]);
 			componentList[i]->BuildInstructions(instructionList);
-			
+
 			if(i != componentList.GetCount()-1)
 			{
 				JumpInstruction* jumpInstruction = new JumpInstruction;
@@ -1371,7 +1371,7 @@ void AlternationComponent::BuildInstructions(InstructionList &instructionList) c
 				instructionList.AddInstruction(jumpInstruction);
 			}
 		}
-		
+
 		for(JumpInstruction* jump : jumpInstructionList)
 		{
 			instructionList.AddPatchReference(&jump->target);
@@ -1435,18 +1435,18 @@ void AlternationComponent::Optimize_LeftFactor()
 			const IComponent* component = componentList[end]->GetFront();
 			if(!frontComponent->IsEqual(component)) break;
 		}
-		
+
 		if(start+1 != end)
 		{
 			// Currently: Alternation has a0a1a2 | b0b1b2 | c0c1c2 | ...  where a0 == b0 == c0 ...
 			// New: Alternation has a single member which is a concatenation with 2nd element as an alternation:
 			// 			[a0, a1a2 | b1b2 | c1c2 | ...]
-			
+
 			AlternationComponent* alternation = new AlternationComponent;
 			ConcatenateComponent* concatenation = new ConcatenateComponent;
 			concatenation->componentList.Append((IComponent*) frontComponent);
 			concatenation->componentList.Append(alternation);
-			
+
 			for(size_t i = start; i < end; ++i)
 			{
 				const IComponent* component = componentList[i]->GetFront();
@@ -1466,7 +1466,7 @@ void AlternationComponent::Optimize_LeftFactor()
 					case 0:
 						delete concatenate;
 						break;
-						
+
 					case 1:
 						{
 							IComponent* child = concatenate->componentList[0];
@@ -1475,17 +1475,17 @@ void AlternationComponent::Optimize_LeftFactor()
 							alternation->componentList.Append(child);
 						}
 						break;
-						
+
 					default:
 						alternation->componentList.Append(concatenate);
 						break;
 					}
 				}
 			}
-			
+
 			componentList[start] = concatenation;
 			componentList.RemoveCount(start+1, end-start-1);
-			
+
 			alternation->Optimize();
 		}
 		else
@@ -1513,18 +1513,18 @@ void AlternationComponent::Optimize_RightFactor()
 			const IComponent* component = componentList[end]->GetBack();
 			if(!backComponent->IsEqual(component)) break;
 		}
-		
+
 		if(start+1 != end)
 		{
 			// Currently: Alternation has a0a1a2 | b0b1b2 | c0c1c2 | ...  where a2 == b2 == c2 ...
 			// New: Alternation has a single member which is a concatenation with 2nd element as an alternation:
 			// 			[a0a1 | b0b1 | c0c1 | ... , a2]
-			
+
 			AlternationComponent* alternation = new AlternationComponent;
 			ConcatenateComponent* concatenation = new ConcatenateComponent;
 			concatenation->componentList.Append(alternation);
 			concatenation->componentList.Append((IComponent*) backComponent);
-			
+
 			for(size_t i = start; i < end; ++i)
 			{
 				const IComponent* component = componentList[i]->GetBack();
@@ -1544,7 +1544,7 @@ void AlternationComponent::Optimize_RightFactor()
 					case 0:
 						delete concatenate;
 						break;
-							
+
 					case 1:
 						{
 							IComponent* child = concatenate->componentList[0];
@@ -1553,17 +1553,17 @@ void AlternationComponent::Optimize_RightFactor()
 							alternation->componentList.Append(child);
 						}
 						break;
-							
+
 					default:
 						alternation->componentList.Append(concatenate);
 						break;
 					}
 				}
 			}
-			
+
 			componentList[start] = concatenation;
 			componentList.RemoveCount(start+1, end-start-1);
-			
+
 			alternation->Optimize();
 		}
 		else
@@ -1585,14 +1585,14 @@ void AlternationComponent::Optimize_MergeBytesToChracterSets()
 		{
 			CharacterRangeList rangeList;
 			componentList[end]->AddToCharacterRangeList(rangeList);
-			
+
 			int start = end-1;
 			while(start >= 0 && componentList[start]->IsByte())
 			{
 				componentList[start]->AddToCharacterRangeList(rangeList);
 				--start;
 			}
-			
+
 			if(end-start >= 2)
 			{
 				rangeList.Sort();
@@ -1604,7 +1604,7 @@ void AlternationComponent::Optimize_MergeBytesToChracterSets()
 			}
 		}
 	}
-	
+
 	// Step through components and left
 }
 

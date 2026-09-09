@@ -47,10 +47,10 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	class IReader;
 	class IWriter;
-	
+
 //============================================================================
 // Base class for intrusive reference counting
 //============================================================================
@@ -60,9 +60,9 @@ namespace Javelin
 	public:
 		bool HasUniqueReference() const	{ return referenceCount == 1; }
 
-		void AddReference()	const		{ ++referenceCount; }		
+		void AddReference()	const		{ ++referenceCount; }
 		bool RemoveReference() const	{ return --referenceCount == 0; }
-		
+
 	protected:
 		SmartObject()					: referenceCount(0)			{ }
 		SmartObject(bool isStatic)		: referenceCount(isStatic)	{ }
@@ -80,7 +80,7 @@ namespace Javelin
 	public:
 		bool HasUniqueReference() const	{ return referenceCount == 1; }
 
-		void AddReference()	const		{ ++referenceCount; }		
+		void AddReference()	const		{ ++referenceCount; }
 		bool RemoveReference() const	{ return --referenceCount == 0; }
 
 	protected:
@@ -179,23 +179,23 @@ namespace Javelin
 	protected:
 		SmartPointerOwnershipPolicy_SingleAssignSmartObject() { }
 		SmartPointerOwnershipPolicy_SingleAssignSmartObject(const SmartPointerOwnershipPolicy_SingleAssignSmartObject&) { }
-		
+
 		JINLINE void OnInitialise(T* p)				{ if(p) ++(p->referenceCount); }
 		JINLINE void OnStoredTypeInitialise(T* p)	{ JASSERT(p->referenceCount == 1); }
-		
+
 		JINLINE T*	Clone(T* p) const				{
 														if(p) ++(p->referenceCount);
 														return p;
 													}
-		
+
 		JINLINE int Release(T* p)					{
 														if(!p) return false;
 														return --(p->referenceCount);
 													}
-		
+
 		enum { destructiveCopy = false };
 	};
-	
+
 	template<typename T> class SmartPointerOwnershipPolicy_SingleAssignSmartObjectPointerAlwaysValid
 	{
 	protected:
@@ -383,7 +383,7 @@ namespace Javelin
 	protected:
 		static bool ShouldWriteObject(IWriter& output, void* object);
 	};
-	
+
 //============================================================================
 // SmartPointer
 //============================================================================
@@ -425,9 +425,9 @@ namespace Javelin
 													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnInitialise(StoragePolicy<T>::GetPointerReference());
 												}
 
-		SmartPointer(CopyType p)				: StoragePolicy<T>(p), 
+		SmartPointer(CopyType p)				: StoragePolicy<T>(p),
 												  OwnershipPolicy<T>(p)
-												{ 
+												{
 													StoragePolicy<T>::GetPointerReference() = OwnershipPolicy<T>::Clone(p.GetPointerReference());
 													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnInitialise(StoragePolicy<T>::GetPointerReference());
 												}
@@ -438,8 +438,8 @@ namespace Javelin
 													StoragePolicy<T>::GetPointerReference() = OwnershipPolicy<T>::Clone(p.GetPointerReference());
 													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnInitialise(StoragePolicy<T>::GetPointerReference());
 												}
-		
-		
+
+
 		~SmartPointer()							{ if(!OwnershipPolicy<T>::Release(StoragePolicy<T>::GetPointer())) StoragePolicy<T>::Destroy(); }
 
 
@@ -461,35 +461,35 @@ namespace Javelin
 													return (*this);
 												}
 
-		PointerType operator->()				{ 
-													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnDereference(StoragePolicy<T>::GetPointer()); 
+		PointerType operator->()				{
+													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnDereference(StoragePolicy<T>::GetPointer());
 													return StoragePolicy<T>::operator->();
 												}
 		ConstPointerType operator->() const		{
-													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnDereference(StoragePolicy<T>::GetPointer()); 
+													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnDereference(StoragePolicy<T>::GetPointer());
 													return StoragePolicy<T>::operator->();
 												}
-		ReferenceType operator*()				{ 
-													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnDereference(StoragePolicy<T>::GetPointer()); 
+		ReferenceType operator*()				{
+													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnDereference(StoragePolicy<T>::GetPointer());
 													return StoragePolicy<T>::operator*();
 												}
 		ConstReferenceType operator*() const	{
-													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnDereference(StoragePolicy<T>::GetPointer()); 
+													CheckingPolicy<typename StoragePolicy<T>::PointerType>::OnDereference(StoragePolicy<T>::GetPointer());
 													return StoragePolicy<T>::operator*();
 												}
 
 		JINLINE bool operator!() const						{ return StoragePolicy<T>::GetPointer() == 0;	}
 		JINLINE operator ConditionalType() const			{ return StoragePolicy<T>::GetPointer() != 0 ? &SmartPointer::operator! : 0; }
 		JINLINE operator AutomaticConversionType() const	{ return StoragePolicy<T>::GetPointer();		}
-		
+
 		JINLINE bool JCALL operator==(const SmartPointer& a) const	{ return StoragePolicy<T>::GetPointer() == a.StoragePolicy<T>::GetPointer(); }
 		JINLINE bool JCALL operator!=(const SmartPointer& a) const	{ return StoragePolicy<T>::GetPointer() != a.StoragePolicy<T>::GetPointer(); }
-		
+
 		template<typename U>
 		JINLINE bool JCALL operator==(U* p) const				{ return StoragePolicy<T>::GetPointer() == p; }
 		template<typename U>
 		JINLINE bool JCALL operator!=(U* p) const				{ return StoragePolicy<T>::GetPointer() == p; }
-		
+
 		JINLINE friend IWriter& operator<<(IWriter& output, const SmartPointer& p) { if(ShouldWriteObject(output, p.StoragePolicy<T>::GetPointer())) output << *p.StoragePolicy<T>::GetPointer(); return output; }
 
 	protected:

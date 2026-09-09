@@ -44,12 +44,12 @@ void CharacterRangeList::Add(CharacterRange interval)
 	{
 		if(it.Contains(interval)) return;
 	}
-	
+
 	int mergeIndex = -1;
 	for(size_t i = GetCount(); i > 0; --i)
 	{
 		CharacterRange& range = (*this)[i-1];
-		
+
 		CharacterRange checkInterval;
 		checkInterval.min = (range.min < interval.min) ? interval.min-1 : interval.min;
 		checkInterval.max = (range.max > interval.max) ? interval.max+1 : interval.max;
@@ -122,7 +122,7 @@ CharacterRangeList CharacterRangeList::CreateAsciiRange() const
     static constexpr CharacterRange ASCII_RANGE{0,255};
 
     CharacterRangeList result;
-	
+
 	for(const CharacterRange& range : *this)
 	{
 		CharacterRange intersection = range & ASCII_RANGE;
@@ -138,19 +138,19 @@ CharacterRangeList CharacterRangeList::CreateCaseInsensitive() const
 {
 	static constexpr CharacterRange UPPER{'A', 'Z'};
 	static constexpr CharacterRange LOWER{'a', 'z'};
-	
+
 	CharacterRangeList result;
-	
+
 	for(const CharacterRange& range : *this)
 	{
 		result.Add(range);
-		
+
 		CharacterRange upperOverlap = range & UPPER;
 		if(upperOverlap.IsValid())
 		{
 			result.Add(upperOverlap + ('a' - 'A'));
 		}
-		
+
 		CharacterRange lowerOverlap = range & LOWER;
 		if(lowerOverlap.IsValid())
 		{
@@ -158,7 +158,7 @@ CharacterRangeList CharacterRangeList::CreateCaseInsensitive() const
 		}
 	}
 	result.Sort();
-	
+
 	return result;
 }
 
@@ -167,7 +167,7 @@ CharacterRangeList CharacterRangeList::CreateUnicodeCaseInsensitive() const
 	CharacterRangeList result;
 	const CaseConversionData* conversionData = CaseConversionData::DATA;
 	const CaseConversionData* conversionDataEnd = CaseConversionData::DATA + CaseConversionData::COUNT;
-	
+
 	// Ranges are sorted, so this will process increasing ranges.
 	for(const CharacterRange& range : *this)
 	{
@@ -179,7 +179,7 @@ CharacterRangeList CharacterRangeList::CreateUnicodeCaseInsensitive() const
 			if(conversionData == conversionDataEnd-1) goto Next;
 			++conversionData;
 		}
-		
+
 		{
 			const CaseConversionData* p = conversionData;
 			while(p->range.min <= range.max && p < conversionDataEnd)
@@ -195,7 +195,7 @@ CharacterRangeList CharacterRangeList::CreateUnicodeCaseInsensitive() const
 							result.Add(p->range);
 						}
 						break;
-					
+
 					case CaseConversionData::MERGE_EVEN_ODD:
 						if(overlap != p->range)
 						{
@@ -204,7 +204,7 @@ CharacterRangeList CharacterRangeList::CreateUnicodeCaseInsensitive() const
 							result.Add(overlap);
 						}
 						break;
-					
+
 					case CaseConversionData::MERGE_ODD_EVEN:
 						if(overlap != p->range)
 						{
@@ -226,17 +226,17 @@ CharacterRangeList CharacterRangeList::CreateUnicodeCaseInsensitive() const
 						break;
 					}
 				}
-				
+
 				++p;
 			}
 		}
-		
+
 	Next:
 		;
 	}
 	result.Sort();
-	
-	
+
+
 	return result;
 }
 

@@ -20,9 +20,9 @@ class BackTrackingReverseProcessor final : public ReverseProcessor
 public:
 	BackTrackingReverseProcessor(const void* data, size_t length);
 	~BackTrackingReverseProcessor();
-	
+
 	virtual const void* Match(const void* data, size_t length, size_t startOffset, const void* matchEnd, const char** captures, bool matchIsAnchored) const final;
-	
+
 private:
 	struct ProcessData
 	{
@@ -41,7 +41,7 @@ private:
 
 	void Process(uint32_t pc, const unsigned char* p, const ProcessData& processData) const;
 	void DoMatch(const unsigned char* p, const ProcessData& processData) const;
-	
+
 	void Set(const void* data, size_t length);
 };
 
@@ -88,33 +88,33 @@ Loop:
 		--p;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AnyByte:
 		if(p == processData.pStop) return;
 		--p;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertStartOfInput:
 		if(p != processData.pStart) return;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertEndOfInput:
 		if(p != processData.pEnd) return;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertStartOfLine:
 		if(p != processData.pStart && p[-1] != '\n') return;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfLine:
 		if(p != processData.pEnd && *p != '\n') return;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertWordBoundary:
 		if(p != processData.pEnd && Character::IsWordCharacter(*p))
 		{
@@ -128,7 +128,7 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertNotWordBoundary:
 		if(p != processData.pEnd && Character::IsWordCharacter(*p))
 		{
@@ -142,19 +142,19 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertStartOfSearch:
 		if(p != processData.pStop) return;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::Byte:
 		if(p == processData.pStop) return;
 		--p;
 		if(*p != instruction.data) return;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteEitherOf2:
 		if(p == processData.pStop) return;
 		--p;
@@ -162,7 +162,7 @@ Loop:
 		   && *p != ((instruction.data>>8) & 0xff)) return;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteEitherOf3:
 		if(p == processData.pStop) return;
 		--p;
@@ -171,7 +171,7 @@ Loop:
 		   && *p != ((instruction.data>>16) & 0xff)) return;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteRange:
 		if(p == processData.pStop) return;
 		else
@@ -183,7 +183,7 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteBitMask:
 		if(p == processData.pStop) return;
 		{
@@ -193,14 +193,14 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteNot:
 		if(p == processData.pStop) return;
 		--p;
 		if(*p == instruction.data) return;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteNotEitherOf2:
 		if(p == processData.pStop) return;
 		--p;
@@ -208,7 +208,7 @@ Loop:
 		   || *p == ((instruction.data>>8) & 0xff)) return;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteNotEitherOf3:
 		if(p == processData.pStop) return;
 		--p;
@@ -217,7 +217,7 @@ Loop:
 		   || *p == ((instruction.data>>16) & 0xff)) return;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteNotRange:
 		if(p == processData.pStop) return;
 		else
@@ -229,7 +229,7 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteJumpTable:
 	case InstructionType::ByteJumpMask:
 		if(p == processData.pStop) return;
@@ -241,7 +241,7 @@ Loop:
 			--p;
 			goto Loop;
 		}
-			
+
 	case InstructionType::ByteJumpRange:
 		if(p == processData.pStop) return;
 		else
@@ -252,7 +252,7 @@ Loop:
 			--p;
 			goto Loop;
 		}
-			
+
 	case InstructionType::DispatchTable:
 		if(p == processData.pStop)
 		{
@@ -266,7 +266,7 @@ Loop:
 		}
 		if(pc == TypeData<uint32_t>::Maximum()) return;
 		goto Loop;
-			
+
 	case InstructionType::DispatchMask:
 		if(p == processData.pStop)
 		{
@@ -280,7 +280,7 @@ Loop:
 		}
 		if(pc == TypeData<uint32_t>::Maximum()) return;
 		goto Loop;
-			
+
 	case InstructionType::DispatchRange:
 		if(p == processData.pStop)
 		{
@@ -294,7 +294,7 @@ Loop:
 		}
 		if(pc == TypeData<uint32_t>::Maximum()) return;
 		goto Loop;
-		
+
 	case InstructionType::Fail:
 		return;
 
@@ -307,15 +307,15 @@ Loop:
 			pc = instruction.data >> 8;
 			goto Loop;
 		}
-			
+
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
-			
+
 	case InstructionType::Match:
 		DoMatch(p, processData);
 		return;
-			
+
 	case InstructionType::ProgressCheck:
 		if(processData.progressCheck[instruction.data] <= p) return;
 		else
@@ -326,7 +326,7 @@ Loop:
 			processData.progressCheck[instruction.data] = old;
 			return;
 		}
-			
+
 	case InstructionType::Split:
 		{
 			const ByteCodeSplitData* split = patternData.GetData<ByteCodeSplitData>(instruction.data);
@@ -338,7 +338,7 @@ Loop:
 			pc = split->targetList[numberOfTargets-1];
 			goto Loop;
 		}
-		
+
 	case InstructionType::SplitMatch:
 		{
 			const uint32_t* splitData = patternData.GetData<uint32_t>(instruction.data);
@@ -346,14 +346,14 @@ Loop:
 			pc = splitData[1];
 			goto Loop;
 		}
-			
+
 	case InstructionType::SplitNextN:
 		{
 			Process(pc+1, p, processData);
 			pc = instruction.data;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SplitNextMatchN:
 		{
 			DoMatch(p, processData);
@@ -367,7 +367,7 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SplitNMatchNext:
 		{
 			DoMatch(p, processData);
@@ -409,7 +409,7 @@ Loop:
 	case InstructionType::Success:
 		JERROR("Unexpected instruction");
 	}
-	
+
 	JERROR("Unhandled switch case");
 	return;
 }
@@ -430,7 +430,7 @@ const void* BackTrackingReverseProcessor::Match(const void* data, size_t length,
 	processData.progressCheck = progressCheck;
 
 	Process(startingInstruction, (const unsigned char*) matchEnd, processData);
-	
+
 	return processData.leftMostMatch;
 }
 

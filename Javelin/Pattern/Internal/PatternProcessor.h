@@ -9,18 +9,18 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	class DataBlock;
-	
+
 //============================================================================
-	
+
 	namespace PatternInternal
 	{
 //============================================================================
 
 		struct ByteCodeSearchData;
 		class InstructionListBuilder;
-		
+
 		class PatternProcessor : public PatternProcessorBase
 		{
 		public:
@@ -30,7 +30,7 @@ namespace Javelin
 			virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const = 0;
 			virtual const void* PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const = 0;
 			virtual Interval<const void*> LocatePartialMatch(const void* data, size_t length, size_t offset) const = 0;
-			
+
 			// PopulateCaptures is used by scan processors that can't process captures.
 			// It should use the full match program, starting at offset into data.
 			virtual const void* PopulateCaptures(const void* data, size_t length, size_t offset, const char **captures) const = 0;
@@ -38,7 +38,7 @@ namespace Javelin
 			virtual bool ProvidesCaptures() const { return true; }
 			virtual bool CanUseFullMatchProgram(size_t inputLength) const { return true; }
 			virtual bool CanUsePartialMatchProgram(size_t inputLength) const { return true; }
-			
+
 			static PatternProcessor* CreateBackTrackingProcessor(DataBlock&& dataBlock);
 			static PatternProcessor* CreateBackTrackingProcessor(const void* data, size_t length, bool makeCopy);
 			static PatternProcessor* CreateConsistencyCheckProcessor(DataBlock&& dataBlock);
@@ -60,9 +60,9 @@ namespace Javelin
 			static PatternProcessor* CreatePikeNfaProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateSimplePikeNfaProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateThompsonNfaProcessor(const void* data, size_t length);
-			
+
 			static bool CanUseBitFieldGlushkovNfaPatternProcessor(const void* data, size_t length);
-			
+
 			static const void* FindByte(const void* p, uint64_t v, const void* pEnd);
 			static const void* FindBytePair(const void* p, uint64_t v, const void* pEnd);	// Lowest 16 bits of v contains 2 bytes to search for
 			static const void* FindBytePair2(const void* p, uint64_t v, const void* pEnd);

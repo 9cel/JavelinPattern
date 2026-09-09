@@ -83,7 +83,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	class DataBlock;
 	class ICharacterWriter;
 	class String;
@@ -98,9 +98,9 @@ namespace Javelin
 		class PatternProcessor;
 		enum class PatternProcessorType : uint16_t;
 	}
-	
+
 //============================================================================
-	
+
 	class MatchResult
 	{
 	public:
@@ -111,7 +111,7 @@ namespace Javelin
 		JEXPORT const String JCALL operator[](size_t i) const	{ return captureList[i].GetString(); 		}
 		JEXPORT bool HasResult(size_t i) const					{ return captureList[i].capture.IsValid(); 	}
 		JEXPORT bool IsEmpty(size_t i) const					{ return captureList[i].capture.max <= captureList[i].capture.min; }
-		
+
 		JEXPORT const char* GetCaptureBegin(size_t captureIndex) const;
 		JEXPORT const char* GetCaptureEnd(size_t captureIndex) const;
 
@@ -122,12 +122,12 @@ namespace Javelin
 			MatchData() : capture(nullptr, nullptr) { }
 			const String GetString() const;
 		};
-		
+
 		MatchResult(const char** captures, uint32_t numberOfCaptures);
-		
-		typedef Table<MatchData, TableStorage_Dynamic<DynamicTableAllocatePolicy_NewDeleteWithInlineStorage<8>::Policy>> CaptureList;		
+
+		typedef Table<MatchData, TableStorage_Dynamic<DynamicTableAllocatePolicy_NewDeleteWithInlineStorage<8>::Policy>> CaptureList;
 		CaptureList	captureList;
-		
+
 		friend class Pattern;
 	};
 
@@ -135,7 +135,7 @@ namespace Javelin
 	String ToString(const MatchResult& a);
 
 //============================================================================
-	
+
 	class PatternException : public GeneralException
 	{
 	public:
@@ -166,12 +166,12 @@ namespace Javelin
 			UnknownEscape,
 			UnknownPosixCharacterClass,
 		};
-		
+
 		PatternException(Type aType, const void* p) : GeneralException(GeneralExceptionType::InvalidData), type(aType) { }
 
 		Type 		GetType() 	 const 	{ return type; 	}
 		const void*	GetContext() const 	{ return p; 	}
-		
+
 	private:
 		Type 		type;
 		const void* p;
@@ -185,7 +185,7 @@ namespace Javelin
 		GlobalLimit,
 		PerPatternLimit,
 	};
-	
+
 //============================================================================
 
 	class Pattern
@@ -196,30 +196,30 @@ namespace Javelin
 		static const int DOTALL						= 4;		// "s" option. This allows . to match newlines
 		static const int UNICODE_CASE				= 8;		// "u" option. when IGNORE_CASE is used, this allows unicode case folding
 		static const int UNGREEDY					= 0x10;		// "U" option
-		
+
 		static const int UTF8						= 0x100;	// Without this, text is treated as ASCII
 		static const int AUTO_CLUSTER				= 0x200;	// Automatically use clusters instead of captures when possible.
-		
+
 		static const int GLOB_SYNTAX				= 0x400;
-		
+
 		static const int ANCHORED					= 0x800;
-		
+
 		static const int NO_OPTIMIZE				= 0x1000;
-		
+
 		static const int PREFER_NFA					= 0x2000;
 		static const int PREFER_BACK_TRACKING		= 0x4000;
 		static const int PREFER_SCAN_AND_CAPTURE	= 0x6000;
 		static const int PREFER_NO_SCAN				= 0x8000;
-		
+
 		static const int PREFER_MASK				= 0xe000;
-		
+
 		static const int NO_FULL_MATCH				= 0x40000000;
 		static const int DO_CONSISTENCY_CHECK		= 0x80000000;
-		
+
 		JEXPORT Pattern(const String& pattern, int options=0); // Can throw PatternException
-		
+
 		JEXPORT Pattern(const void* data, size_t length, bool makeCopy=true);
-		
+
 		JEXPORT ~Pattern();
 
 		JINLINE size_t GetNumberOfCaptures() const { return numberOfCaptures; }
@@ -241,9 +241,9 @@ namespace Javelin
 
 		JEXPORT MatchResult FullMatch(const String& s) const;
 		JEXPORT MatchResult PartialMatch(const String& s, size_t offset=0) const;
-		
+
 		JINLINE size_t 		CountPartialMatches(const String& s, size_t offset=0) const	{ return CountPartialMatches(s.GetData(), s.GetNumberOfBytes(), offset); }
-		
+
 		static String		EscapeString(const String& literal);
 		static DataBlock 	CreateByteCode(const String& pattern, int options=0); // Can throw PatternException
 		static void 		DumpInstructions(IWriter& output, const DataBlock& data);
@@ -255,17 +255,17 @@ namespace Javelin
 		public:
 			virtual void* Allocate(size_t size) const = 0;
 			virtual void Free(void* p) const = 0;
-		};		
+		};
 
 		static void SetNoStackGrowth();
 		static const StackGrowthHandler* GetStackGrowthHandler() 		{ return stackGrowthHandler; }
 		static void SetStackGrowthHandler(const StackGrowthHandler* a) 	{ stackGrowthHandler = a; }
-		
+
 		static void SetDfaMemoryModeConfiguration(DfaMemoryManagerMode mode, size_t limit=4*1024*1024);
-		
+
 	private:
 		JDISABLE_COPY_AND_ASSIGNMENT(Pattern);
-		
+
 		uint16_t							flags;
 		bool								isUtf8;
 		int32_t								matchLengthCheck;
@@ -278,11 +278,11 @@ namespace Javelin
 		uint8_t								anchoredByteValue = 0;
 
 		static const StackGrowthHandler*	stackGrowthHandler;
-		
+
 		bool AlwaysRequiresCaptures() const;
 		bool HasStartAnchor() const;
 		bool HasEndAnchor() const;
-		
+
 		void Set(const void* data, size_t length, bool makeCopy);
 		void SetAnchoredByteFilter(const PatternInternal::ByteCodeHeader* header);
 		size_t AdvanceAfterEmptyMatch(const void* data, size_t length, size_t offset) const;
@@ -291,7 +291,7 @@ namespace Javelin
 			return anchoredByteMask && (length == 0 ||
 				(*(const unsigned char*)data & anchoredByteMask) != anchoredByteValue);
 		}
-		
+
         JEXPORT const void* JCALL InternalHasFullMatch(const void* data, size_t length) const;
         JEXPORT const void* JCALL InternalHasPartialMatch(const void* data, size_t length, size_t offset = 0) const;
 

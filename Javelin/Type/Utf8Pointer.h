@@ -11,7 +11,7 @@
 namespace Javelin
 {
 //===========================================================================
-	
+
 	class Utf8Pointer
 	{
 	private:
@@ -25,16 +25,16 @@ namespace Javelin
 			PostIncrementHelper(const PostIncrementHelper& a) = delete;
 			PostIncrementHelper(PostIncrementHelper&& a) : active(true), p(a.p)  { a.active = false; }
 			~PostIncrementHelper() 								{ if(active) ++p; }
-			
+
 			JINLINE Utf8Character& operator*()	const			{ return *p; }
 			JINLINE operator Utf8Pointer&() 	const 			{ return p; }
 			JINLINE Utf8Character* operator->()					{ return (Utf8Character*) p.p;	}
-			
+
 		private:
 			bool 			active;
 			Utf8Pointer& 	p;
 		};
-		
+
 	public:
 		Utf8Pointer()									{ p = nullptr;				}
 		Utf8Pointer(const Utf8Character *ip)			{ p = ip;					}
@@ -50,7 +50,7 @@ namespace Javelin
 		JINLINE Utf8Pointer& operator-=(int n)					{ if(n >= 0) SeekBackwards(n); else SeekForwards(-n); return *this; }
 		JINLINE Utf8Pointer& operator+=(size_t n)				{ SeekForwards(n); return *this; }
 		JINLINE Utf8Pointer& operator-=(size_t n)				{ SeekBackwards(n); return *this; }
-		
+
 		JINLINE Utf8Pointer JCALL operator+(int n) const		{ Utf8Pointer r(*this); r += n; return r; }
 		JINLINE Utf8Pointer JCALL operator-(int n) const		{ Utf8Pointer r(*this); r -= n; return r; }
 		JINLINE Utf8Pointer JCALL operator+(size_t n) const		{ Utf8Pointer r(*this); r += n; return r; }
@@ -65,7 +65,7 @@ namespace Javelin
 
 		size_t 		GetNumberOfBytes() const					{ return strlen((const char*) p); }
 		Utf8Pointer	GetPointerToEndOfString() const				{ return Utf8Pointer((const char*) p + GetNumberOfBytes()); }
-		
+
 		void OffsetByByteCount(ssize_t byteCount)				{
 																	const unsigned char *process = reinterpret_cast<const unsigned char*>(p);
 																	p = reinterpret_cast<const Utf8Character*>(process + byteCount);
@@ -77,9 +77,9 @@ namespace Javelin
 		JINLINE Utf8Character* operator->()						{ return (Utf8Character*) p;	}
 		JINLINE const Utf8Character* operator->() const			{ return p;						}
 		JINLINE Character JCALL operator[](int n) const			{ return *(*this+n);			}
-		
+
 		friend size_t operator-(const Utf8Pointer& a, const Utf8Pointer& b);
-		
+
 		JINLINE bool friend operator==(const Utf8Pointer& a, const Utf8Pointer& b)	{ return a.p == b.p; }
 		JINLINE bool friend operator!=(const Utf8Pointer& a, const Utf8Pointer& b)	{ return a.p != b.p; }
 		JINLINE bool friend operator<(const Utf8Pointer& a, const Utf8Pointer& b)	{ return a.p <  b.p; }

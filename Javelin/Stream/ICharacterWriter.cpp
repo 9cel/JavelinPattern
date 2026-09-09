@@ -26,7 +26,7 @@ TextFormatData::TextFormatData(va_list &aArguments, ICharacterWriter &aOutput, c
 	while(1)
 	{
 		char c = *++controlString;
-		
+
 		switch(c)
 		{
 		case '\0':
@@ -90,7 +90,7 @@ void TextFormatData::WriteQueue(const char* head, size_t queueSize) const
 	if(fillCount > 0)
 	{
 		char fillData[fillCount];
-		
+
 		if(flags & Flag::LeftAlign)
 		{
 			memset(fillData, ' ', fillCount);
@@ -163,7 +163,7 @@ void ICharacterWriter::AggregatedVPrintF(const char* format, va_list arguments)
 void ICharacterWriter::DumpHex(const void* data, size_t length)
 {
 	const unsigned char* p = static_cast<const unsigned char*>(data);
-	
+
 	size_t i = 0;
 	while(i < length)
 	{
@@ -173,7 +173,7 @@ void ICharacterWriter::DumpHex(const void* data, size_t length)
 		}
 		PrintF(i % 8 == 0 ? "  %02x" : " %02x", p[i]);
 		++i;
-		
+
 		if(i % 16 == 0)
 		{
 			PrintF("   |");
@@ -185,7 +185,7 @@ void ICharacterWriter::DumpHex(const void* data, size_t length)
 			PrintF("|\n");
 		}
 	}
-	
+
 	size_t remainder = i % 16;
 	if(remainder != 0)
 	{
@@ -207,7 +207,7 @@ void ICharacterWriter::DumpCStructure(const void* data, size_t length, const Str
 {
 	PrintF("const unsigned char %A[%z] =\n", &name, length);
 	PrintF("{\n");
-	
+
 	const unsigned char* p = static_cast<const unsigned char*>(data);
 	size_t i = 0;
 	while(i < length)
@@ -217,7 +217,7 @@ void ICharacterWriter::DumpCStructure(const void* data, size_t length, const Str
 			   i % 8  == 0 ? " 0x%02x, " :
 			                 "0x%02x, ", p[i]);
 		++i;
-		
+
 		if(i % 16 == 0)
 		{
 			PrintF(" // %08x: |", i-16);

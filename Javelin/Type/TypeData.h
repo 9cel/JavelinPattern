@@ -17,7 +17,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	// Generic interface
 	template<typename T> struct TypeData
 	{
@@ -39,7 +39,7 @@ namespace Javelin
 		typedef T NonReferenceType;
 		typedef T NonConstType;
 		typedef T StorageType;			// This will take a const Point3 &p and return Point3. ie. NonConst, NonReference
-		
+
 		// ParameterUpcast is the type that the C compiler will use when passing parameters through "..."
 		typedef T ParameterUpcast;
 
@@ -71,60 +71,60 @@ namespace Javelin
 		typedef T* NonReferenceType;
 		typedef T* NonConstType;
 		typedef T* StorageType;
-		
+
 		typedef T* ParameterUpcast;
 		typedef T* ParameterType;
 		typedef T*&& MoveType;
 		typedef T*& ReferenceType;
-		
+
 		typedef void MathematicalUpcast;
 		typedef size_t DeltaType;
 	};
 
 //============================================================================
-	
+
 	template<typename T> struct TypeData<T&>
 	{
 		enum { IS_FLOAT				= false };
 		enum { IS_POD				= true  };
 		enum { IS_BITWISE_COPY_SAFE	= true  };
 		enum { IS_POINTER			= false };
-		
+
 		typedef T& NonPointerType;
 		typedef T NonReferenceType;
 		typedef T& NonConstType;
 		typedef T StorageType;
-		
+
 		typedef T& ParameterUpcast;
 		typedef T& ParameterType;
 		typedef T&& MoveType;
 		typedef T& ReferenceType;
-		
+
 		typedef void MathematicalUpcast;
 	};
-	
+
 //============================================================================
-	
+
 	template<typename T> struct TypeData<const T&>
 	{
 		enum { IS_FLOAT				= false };
 		enum { IS_POD				= true  };
 		enum { IS_BITWISE_COPY_SAFE	= true  };
 		enum { IS_POINTER			= false };
-		
+
 		typedef const T& NonPointerType;
 		typedef const T NonReferenceType;
 		typedef T NonConstType;
 		typedef T StorageType;
-		
+
 		typedef const T& ParameterUpcast;
 		typedef const T& ParameterType;
 		typedef T&& MoveType;
 		typedef const T& ReferenceType;
-		
+
 		typedef void MathematicalUpcast;
 	};
-	
+
 //============================================================================
 
 	template<typename T> struct TypeData<const T>
@@ -144,7 +144,7 @@ namespace Javelin
 		typedef const T NonReferenceType;
 		typedef T NonConstType;
 		typedef T StorageType;
-		
+
 		typedef const typename TypeData<T>::ParameterUpcast ParameterUpcast;
 		typedef const typename TypeData<T>::MathematicalUpcast MathematicalUpcast;
 		typedef const typename TypeData<T>::DeltaType DeltaType;
@@ -163,7 +163,7 @@ namespace Javelin
 		enum { IS_POD				= true  };
 		enum { IS_BITWISE_COPY_SAFE	= true  };
 		enum { IS_POINTER			= false };
-		
+
 		typedef bool NonPointerType;
 		typedef bool NonReferenceType;
 		typedef bool NonConstType;
@@ -175,20 +175,20 @@ namespace Javelin
 		typedef bool&& MoveType;
 		typedef bool& ReferenceType;
 	};
-	
+
 //---------------------------------------------------------------------------
-	
+
 	template<> struct TypeData<char>
 	{
 		static constexpr char Zero()		{ return 0;	}
 		static constexpr char Identity()	{ return 1;	}
-		
+
 		enum { IS_INTEGRAL			= true };
 		enum { IS_FLOAT				= false };
 		enum { IS_POD				= true };
 		enum { IS_BITWISE_COPY_SAFE	= true };
 		enum { IS_POINTER			= false };
-		
+
 		typedef char NonPointerType;
 		typedef char NonReferenceType;
 		typedef char NonConstType;
@@ -523,22 +523,22 @@ namespace Javelin
 		typedef double&& MoveType;
 		typedef double& ReferenceType;
 	};
-	
+
 //---------------------------------------------------------------------------
-	
+
 	template<> struct TypeData<long double>
 	{
 		static constexpr long double Minimum()		{ return -LDBL_MAX;	}
 		static constexpr long double Maximum()		{ return LDBL_MAX;	}
 		static constexpr long double Zero()			{ return 0.0;		}
 		static constexpr long double Identity()		{ return 1.0;		}
-		
+
 		enum { IS_INTEGRAL			= false };
 		enum { IS_FLOAT				= true  };
 		enum { IS_POD				= true  };
 		enum { IS_BITWISE_COPY_SAFE	= true  };
 		enum { IS_POINTER			= false };
-		
+
 		typedef long double	NonPointerType;
 		typedef long double	NonReferenceType;
 		typedef long double	NonConstType;
@@ -551,7 +551,7 @@ namespace Javelin
 		typedef long double&& MoveType;
 		typedef long double& ReferenceType;
 	};
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

@@ -15,7 +15,7 @@ public:
 	NfaPatternProcessor(const void* data, size_t length);
 	NfaPatternProcessor(DataBlock&& dataBlock);
 	~NfaPatternProcessor();
-	
+
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
@@ -27,7 +27,7 @@ private:
 	DataBlock				dataStore;
 	PatternProcessor*		nonCapturingProcessor;
 	PatternProcessor*		capturingProcessor;
-	
+
 	void Set(const void* data, size_t length);
 };
 

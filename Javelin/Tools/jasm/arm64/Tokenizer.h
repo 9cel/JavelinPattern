@@ -9,13 +9,13 @@
 namespace Javelin::Assembler::arm64
 {
 //============================================================================
-	
+
 	class Tokenizer
 	{
 	public:
 		Tokenizer(const CodeSegmentData &aSource);
 		~Tokenizer();
-		
+
 		void			NextToken();
 		Token			GetToken();
 		Token::Type		GetTokenType();
@@ -41,7 +41,7 @@ namespace Javelin::Assembler::arm64
 												activeLabelScopeId = ++totalLabelScopeId;
 											}
 										}
-		
+
 	private:
 		int					c = ' ';
 		int					activeLabelScopeId = 0;
@@ -51,10 +51,10 @@ namespace Javelin::Assembler::arm64
 		std::vector<int>	labelScopeIds;
 		CodeSegmentSource	source;
 		Token 				token;
-		
+
 		Token InternalGetToken();
 	};
-	
+
 //============================================================================
 }
 //============================================================================

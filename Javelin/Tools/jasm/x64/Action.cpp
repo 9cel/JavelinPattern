@@ -23,7 +23,7 @@ const AlternateActionCondition* ZeroAlternateActionCondition::Create(const Opera
 	assert(operand->type == Operand::Type::Immediate
 		   || operand->type == Operand::Type::Register);
 	assert(operand->IsExpression());
-	
+
 	return new ZeroAlternateActionCondition(operand->expressionIndex);
 }
 
@@ -38,7 +38,7 @@ void ZeroAlternateActionCondition::WriteByteCode(std::vector<uint8_t> &result, A
 	case 64: actionType = x64Assembler::ActionType::Imm0B8Condition; break;
 	default: return;
 	}
-	
+
 	ImmediateAlternateActionCondition::WriteByteCode(result, context, action, (int)actionType);
 }
 
@@ -46,7 +46,7 @@ const AlternateActionCondition* Imm8AlternateActionCondition::Create(const Opera
 {
 	assert(operand->type == Operand::Type::Immediate);
 	assert(operand->IsExpression());
-	
+
 	return new Imm8AlternateActionCondition(operand->expressionIndex);
 }
 
@@ -67,7 +67,7 @@ void Imm8AlternateActionCondition::WriteByteCode(std::vector<uint8_t> &result, A
 	case 64: actionType = x64Assembler::ActionType::Imm8B8Condition; break;
 	default: return;
 	}
-	
+
 	ImmediateAlternateActionCondition::WriteByteCode(result, context, action, (int)actionType);
 }
 
@@ -75,7 +75,7 @@ const AlternateActionCondition* Imm16AlternateActionCondition::Create(const Oper
 {
 	assert(operand->type == Operand::Type::Immediate);
 	assert(operand->IsExpression());
-	
+
 	return new Imm16AlternateActionCondition(operand->expressionIndex);
 }
 
@@ -95,7 +95,7 @@ void Imm16AlternateActionCondition::WriteByteCode(std::vector<uint8_t> &result, 
 		case 64: actionType = x64Assembler::ActionType::Imm16B8Condition; break;
 		default: return;
 	}
-	
+
 	ImmediateAlternateActionCondition::WriteByteCode(result, context, action, (int)actionType);
 }
 
@@ -103,7 +103,7 @@ const AlternateActionCondition* Imm32AlternateActionCondition::Create(const Oper
 {
 	assert(operand->type == Operand::Type::Immediate);
 	assert(operand->IsExpression());
-	
+
 	return new Imm32AlternateActionCondition(operand->expressionIndex);
 }
 
@@ -122,7 +122,7 @@ void Imm32AlternateActionCondition::WriteByteCode(std::vector<uint8_t> &result, 
 		case 64: actionType = x64Assembler::ActionType::Imm32B8Condition; break;
 		default: return;
 	}
-	
+
 	ImmediateAlternateActionCondition::WriteByteCode(result, context, action, (int)actionType);
 }
 
@@ -130,7 +130,7 @@ const AlternateActionCondition* UImm32AlternateActionCondition::Create(const Ope
 {
 	assert(operand->type == Operand::Type::Immediate);
 	assert(operand->IsExpression());
-	
+
 	return new UImm32AlternateActionCondition(operand->expressionIndex);
 }
 
@@ -149,20 +149,20 @@ void UImm32AlternateActionCondition::WriteByteCode(std::vector<uint8_t> &result,
 		case 64: actionType = x64Assembler::ActionType::UImm32B8Condition; break;
 		default: return;
 	}
-	
+
 	ImmediateAlternateActionCondition::WriteByteCode(result, context, action, (int)actionType);
 }
 
 Rel8AlternateActionCondition::Rel8AlternateActionCondition(const LabelOperand &aLabelOperand)
 : labelOperand(aLabelOperand)
 {
-	
+
 }
 
 const AlternateActionCondition* Rel8AlternateActionCondition::Create(const Operand *operand)
 {
 	assert(operand->type == Operand::Type::Label);
-	
+
 	return new Rel8AlternateActionCondition(*(const LabelOperand*)operand);
 }
 
@@ -364,13 +364,13 @@ void Rel8AlternateActionCondition::WriteByteCode(std::vector<uint8_t> &result, A
 Rel32AlternateActionCondition::Rel32AlternateActionCondition(const LabelOperand &aLabelOperand)
 : labelOperand(aLabelOperand)
 {
-	
+
 }
 
 const AlternateActionCondition* Rel32AlternateActionCondition::Create(const Operand *operand)
 {
 	assert(operand->type == Operand::Type::Label);
-	
+
 	return new Rel32AlternateActionCondition(*(const LabelOperand*)operand);
 }
 
@@ -504,7 +504,7 @@ bool AlignAction::Simplify(Common::ListAction *parent, size_t index)
 			if(parent) parent->RemoveActionAtIndex(index);
 			return true;
 		}
-		
+
 		static const uint8_t nop2[] = { 0x66, 0x90 };
 		static const uint8_t nop3[] = { 0x0f, 0x1f, 0x00 };
 		static const uint8_t nop4[] = { 0x0f, 0x1f, 0x40, 0x00 };
@@ -519,7 +519,7 @@ bool AlignAction::Simplify(Common::ListAction *parent, size_t index)
 		};
 
 		std::vector<uint8_t> bytes;
-		
+
 		while(fixedLength)
 		{
 			int nopLength = fixedLength > 15 ? 15 : fixedLength;
@@ -527,7 +527,7 @@ bool AlignAction::Simplify(Common::ListAction *parent, size_t index)
 			bytes.insert(bytes.end(), nop, nop+nopLength);
 			fixedLength -= nopLength;
 		}
-		
+
 		parent->ReplaceActionAtIndex(index, new LiteralAction(bytes));
 		return true;
 	}
@@ -537,7 +537,7 @@ bool AlignAction::Simplify(Common::ListAction *parent, size_t index)
 void AlignAction::WriteByteCode(std::vector<uint8_t> &result, ActionWriteContext &context) const
 {
     if (isFixed && fixedLength == 0) return;
-    
+
 	result.push_back((int) x64Assembler::ActionType::Align);
 	int data = alignment - 1;
 	assert(data == (uint8_t) data);
@@ -602,7 +602,7 @@ void DynamicOpcodeR::WriteByteCode(std::vector<uint8_t> &result, ActionWriteCont
 	result.push_back((int) x64Assembler::ActionType::DynamicOpcodeR);
 	result.push_back(rex);
 	result.push_back(modRM);
-	
+
 	x64Assembler::DynamicOpcodeRRControlByte controlByte = { .value = 0 };
 	controlByte.opcodeLengthM1 = opcodes.size() - 1;
 	if(regExpressionIndex != 0) controlByte.hasRegExpression = 1;
@@ -692,7 +692,7 @@ size_t DynamicOpcodeRM::GetMaximumLength() const
 	    || baseExpressionIndex != 0
 	    || indexExpressionIndex != 0
 	  ? 1 : 0;
-	
+
 	const size_t sibSize = (modRM & 7) == 4
 	    || baseExpressionIndex != 0
 	  ? 1 : 0;
@@ -718,7 +718,7 @@ void DynamicOpcodeRM::WriteByteCode(std::vector<uint8_t> &result, ActionWriteCon
 	result.push_back(rex);
 	result.push_back(modRM);
 	result.push_back(sib);
-	
+
 	x64Assembler::DynamicOpcodeRMControlByte controlByte = { .value = 0 };
 	controlByte.opcodeLengthM1 = opcodes.size() - 1;
 	if(regExpressionIndex != 0) controlByte.hasRegExpression = 1;
@@ -727,10 +727,10 @@ void DynamicOpcodeRM::WriteByteCode(std::vector<uint8_t> &result, ActionWriteCon
 	if(baseExpressionIndex != 0) controlByte.hasBaseExpression = 1;
 	if(displacementExpressionIndex != 0) controlByte.hasDisplacementExpression = 1;
 	result.push_back(controlByte.value);
-	
+
 	if(displacementExpressionIndex) WriteExpressionOffset(result, context, displacementExpressionIndex);
 	else WriteSigned32(result, displacement);
-	
+
 	if(regExpressionIndex) WriteExpressionOffset(result, context, regExpressionIndex);
 	if(scaleExpressionIndex) WriteExpressionOffset(result, context, scaleExpressionIndex);
 	if(indexExpressionIndex) WriteExpressionOffset(result, context, indexExpressionIndex);
@@ -763,7 +763,7 @@ size_t DynamicOpcodeO::GetMaximumLength() const
 void DynamicOpcodeO::WriteByteCode(std::vector<uint8_t> &result, ActionWriteContext &context) const
 {
 	assert(opcodes.size() == 1 || opcodes.size() == 2);
-	
+
 	result.push_back((int) x64Assembler::ActionType::DynamicOpcodeO1 + opcodes.size()-1);
 	result.push_back(rex);
 	WriteExpressionOffset(result, context, expressionIndex);
@@ -813,7 +813,7 @@ void DynamicOpcodeRV::WriteByteCode(std::vector<uint8_t> &result, ActionWriteCon
 	result.push_back(vex3B2);
 	result.push_back(vex3B3);
 	result.push_back(modRM);
-	
+
 	x64Assembler::DynamicOpcodeRVControlByte controlByte = { .value = 0 };
 	controlByte.opcodeLengthM1 = opcodes.size() - 1;
 	if(reg0ExpressionIndex != 0) controlByte.hasReg0Expression = 1;
@@ -869,7 +869,7 @@ void DynamicOpcodeRVR::WriteByteCode(std::vector<uint8_t> &result, ActionWriteCo
 	result.push_back(vex3B2);
 	result.push_back(vex3B3);
 	result.push_back(modRM);
-	
+
 	x64Assembler::DynamicOpcodeRVRControlByte controlByte = { .value = 0 };
 	controlByte.opcodeLengthM1 = opcodes.size() - 1;
 	if(reg0ExpressionIndex != 0) controlByte.hasReg0Expression = 1;
@@ -901,7 +901,7 @@ size_t DynamicOpcodeRVM::GetMinimumLength() const
 {
 	// opcodes + modrm
 	size_t size = opcodes.size() + 1;
-	
+
 	if((vex3B2 & 0x7f) != 1 || (vex3B3 & 0x80)) size += 3;
 	else size += 2;
 
@@ -953,7 +953,7 @@ void DynamicOpcodeRVM::WriteByteCode(std::vector<uint8_t> &result, ActionWriteCo
 	result.push_back(vex3B3);
 	result.push_back(modRM);
 	result.push_back(sib);
-	
+
 	x64Assembler::DynamicOpcodeRVMControlByte controlByte = { .value = 0 };
 	controlByte.opcodeLengthM1 = opcodes.size() - 1;
 	if(reg0ExpressionIndex != 0) controlByte.hasReg0Expression = 1;
@@ -963,10 +963,10 @@ void DynamicOpcodeRVM::WriteByteCode(std::vector<uint8_t> &result, ActionWriteCo
 	if(baseExpressionIndex != 0) controlByte.hasBaseExpression = 1;
 	if(displacementExpressionIndex != 0) controlByte.hasDisplacementExpression = 1;
 	result.push_back(controlByte.value);
-	
+
 	if(displacementExpressionIndex) WriteExpressionOffset(result, context, displacementExpressionIndex);
 	else WriteSigned32(result, displacement);
-	
+
 	if(reg0ExpressionIndex) WriteExpressionOffset(result, context, reg0ExpressionIndex);
 	if(reg1ExpressionIndex) WriteExpressionOffset(result, context, reg1ExpressionIndex);
 	if(scaleExpressionIndex) WriteExpressionOffset(result, context, scaleExpressionIndex);
@@ -1025,7 +1025,7 @@ bool PatchLabelAction::Simplify(Common::ListAction *parent, size_t index)
 	if(!hasFixedDelta) return false;
 
 	assert(index > 0);
-	
+
 	size_t literalActionIndex = index - 1;
 	int offset = this->offset;
 	Action *previousAction;
@@ -1048,7 +1048,7 @@ bool PatchLabelAction::Simplify(Common::ListAction *parent, size_t index)
 
 	assert(previousAction->IsLiteralAction()
 		   && previousAction->GetMaximumLength() >= offset);
-	
+
 	LiteralAction *literal = (LiteralAction*) previousAction;
     std::vector<uint8_t>& literalBytes = literal->GetLiteralData();
 	int64_t value = 0;
@@ -1063,7 +1063,7 @@ bool PatchLabelAction::Simplify(Common::ListAction *parent, size_t index)
 void PatchNameLabelAction::Dump() const
 {
 	const char *JUMP_DIRECTIONS[] = { "", ":b", ":f", ":bf" };
-	
+
 	printf(", #%d@-%d=%s%s%s", bytes, offset, global ? "*" : "", value.c_str(), JUMP_DIRECTIONS[(int) labelOperand.jumpType]);
 	if(hasFixedDelta) printf("=%" PRId64, delta);
 }
@@ -1076,7 +1076,7 @@ bool PatchNameLabelAction::ResolveRelativeAddresses(ActionContext &context)
 
 	// Already resolved!
 	if(hasFixedDelta) return false;
-	
+
 	ActionContext::NamedLabelMap::const_iterator it = context.namedLabels.find(value);
 	if(it == context.namedLabels.end()) return false;
 	hasFoundTarget = true;
@@ -1085,11 +1085,11 @@ bool PatchNameLabelAction::ResolveRelativeAddresses(ActionContext &context)
 
 	const ActionOffset anchorOffset = context.offset;
 	const ActionOffset targetOffset = it->second;
-	
+
 	ssize_t maximumDelta = targetOffset.totalMaximumOffset - anchorOffset.totalMaximumOffset;
 	ssize_t minimumDelta = targetOffset.totalMinimumOffset - anchorOffset.totalMinimumOffset;
 	if(maximumDelta != minimumDelta) return false;
-	
+
 	hasFixedDelta = true;
 	delta = minimumDelta;
 	return true;
@@ -1101,7 +1101,7 @@ void PatchNameLabelAction::WriteByteCode(std::vector<uint8_t> &result, ActionWri
 	{
 		throw AssemblerException("Local named label %s unresolved\n", value.c_str());
 	}
-	
+
 	uint32_t labelId = GetLabelIdForNamed(labelOperand.labelName.c_str());
 	if(global)
 	{
@@ -1145,10 +1145,10 @@ void PatchNumericLabelAction::Dump() const
 bool PatchNumericLabelAction::ResolveRelativeAddresses(ActionContext &context)
 {
 	Inherited::ResolveRelativeAddresses(context);
-	
+
 	// Already resolved!
 	if(hasFixedDelta) return false;
-	
+
 	if(!global)
 	{
 		if(context.forwards)
@@ -1168,7 +1168,7 @@ bool PatchNumericLabelAction::ResolveRelativeAddresses(ActionContext &context)
 			}
 		}
 	}
-	
+
 	if(context.forwards)
 	{
 		if(labelOperand.jumpType == JumpType::Forward) return false;
@@ -1186,11 +1186,11 @@ bool PatchNumericLabelAction::ResolveRelativeAddresses(ActionContext &context)
 
 	const ActionOffset anchorOffset = context.offset;
 	const ActionOffset targetOffset = it->second;
-	
+
 	ssize_t maximumDelta = targetOffset.totalMaximumOffset - anchorOffset.totalMaximumOffset;
 	ssize_t minimumDelta = targetOffset.totalMinimumOffset - anchorOffset.totalMinimumOffset;
 	if(maximumDelta != minimumDelta) return false;
-	
+
 	hasFixedDelta = true;
 	delta = minimumDelta;
 	return true;
@@ -1262,7 +1262,7 @@ void PatchNumericLabelAction::WriteByteCode(std::vector<uint8_t> &result, Action
 PatchExpressionLabelAction::PatchExpressionLabelAction(uint8_t bytes, uint8_t offset, const LabelOperand &labelOperand)
 : PatchLabelAction(true, bytes, offset, labelOperand)
 {
-	
+
 }
 
 void PatchExpressionLabelAction::Dump() const
@@ -1277,7 +1277,7 @@ void PatchExpressionLabelAction::Dump() const
 bool PatchExpressionLabelAction::ResolveRelativeAddresses(ActionContext &context)
 {
 	Inherited::ResolveRelativeAddresses(context);
-	
+
 	// Already resolved!
 	if(hasFixedDelta) return false;
 	if(context.forwards)
@@ -1297,11 +1297,11 @@ bool PatchExpressionLabelAction::ResolveRelativeAddresses(ActionContext &context
 
 	const ActionOffset anchorOffset = context.offset;
 	const ActionOffset targetOffset = it->second;
-	
+
 	ssize_t maximumDelta = targetOffset.totalMaximumOffset - anchorOffset.totalMaximumOffset;
 	ssize_t minimumDelta = targetOffset.totalMinimumOffset - anchorOffset.totalMinimumOffset;
 	if(maximumDelta != minimumDelta) return false;
-	
+
 	hasFixedDelta = true;
 	delta = minimumDelta;
 	return true;
@@ -1406,7 +1406,7 @@ void AlternateAction::WriteByteCode(std::vector<uint8_t> &result, ActionWriteCon
 	//   ...
 	//   [ConditionN] [ActionN] [EndAlternate]
 	// End:
-	
+
 	std::vector<uint8_t> bytes;
 
 	if(alternateList.size() && alternateList.back().condition != &AlwaysAlternateActionCondition::instance)

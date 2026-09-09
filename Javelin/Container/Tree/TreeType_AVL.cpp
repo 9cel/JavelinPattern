@@ -39,12 +39,12 @@ void TreeType_AVL::NodeBase::FixupInsert(NodeBase* &root)
 	left = nullptr;
 	right = nullptr;
 	height = 0;
-	
+
 	NodeBase* grandChild;
 	NodeBase* child = nullptr;
 	NodeBase* node = this;
 	int processHeight = 0;
-	
+
 	while(node->parent)
 	{
 		grandChild = child;
@@ -58,10 +58,10 @@ void TreeType_AVL::NodeBase::FixupInsert(NodeBase* &root)
 			return;
 		}
 		node->height = processHeight;
-		
+
 		int delta = GetHeight((NodeBase*) node->left) - GetHeight((NodeBase*) node->right);
 		JASSERT(-2 <= delta && delta <= 2);
-		
+
 		if(delta == 2)
 		{
 			// Left has greater depth by 2.
@@ -84,7 +84,7 @@ void TreeType_AVL::NodeBase::FixupInsert(NodeBase* &root)
 				root->CheckConsistency();
 				return;
 			}
-			else 
+			else
 			{
 				// LR Rotation
 				// NodeBase* T1 = (NodeBase*) child->left;
@@ -130,7 +130,7 @@ void TreeType_AVL::NodeBase::FixupInsert(NodeBase* &root)
 				root->CheckConsistency();
 				return;
 			}
-			else 
+			else
 			{
 				// RL Rotation
 				// NodeBase* T1 = (NodeBase*) child->right;
@@ -147,11 +147,11 @@ void TreeType_AVL::NodeBase::FixupInsert(NodeBase* &root)
 				if(T3) T3->parent = node;
 				node->parent = grandChild;
 				child->parent = grandChild;
-				
+
 				node->height = grandChild->height;
 				grandChild->height = child->height;
 				child->height = node->height;
-				
+
 				root->CheckConsistency();
 				return;
 			}
@@ -170,10 +170,10 @@ void TreeType_AVL::NodeBase::CheckConsistency() const
 
 	int delta = leftHeight - rightHeight;
 	JASSERT(-2 < delta && delta < 2);
-	
+
 	JASSERT(leftHeight == height-1 || rightHeight == height-1);
 	JASSERT(leftHeight < height && rightHeight < height);
-	
+
 	if(left)
 	{
 		JASSERT( ((NodeBase*) left)->parent == this );

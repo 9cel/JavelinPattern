@@ -7,7 +7,7 @@
 using namespace Javelin::Assembler;
 
 //============================================================================
-	
+
 // This does not skip newlines,
 bool Character::IsIgnorableWhitespace(int c)
 {
@@ -22,7 +22,7 @@ bool Character::IsIgnorableWhitespace(int c)
 		false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false,
 	};
-	
+
 	return (0 <= c && c < 64) ? LUT[c] : false;
 }
 
@@ -39,7 +39,7 @@ int Character::HexValueForCharacter(int c)
 		-1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	};
-	
+
 	return (0 <= c && c < 128) ? LUT[c] : -1;
 }
 
@@ -56,7 +56,7 @@ bool Character::IsWordCharacter(int c)
 		false,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
 		 true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, false, false, false, false, false,
 	};
-	
+
 	return (0 <= c && c < 128) ? LUT[c] : false;
 }
 
@@ -73,7 +73,7 @@ bool Character::IsWhitespace(uint32_t c)
 		false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false,
 	};
-	
+
 	return c < 64 && LUT[c];
 }
 

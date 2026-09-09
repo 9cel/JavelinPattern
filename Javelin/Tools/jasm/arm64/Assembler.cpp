@@ -59,7 +59,7 @@ public:
 		(*this)["hs"] = new Operand(Operand::Condition::CS);
 		(*this)["lo"] = new Operand(Operand::Condition::CC);
 	}
-	
+
 	static const OperandMap instance;
 };
 
@@ -133,7 +133,7 @@ void Assembler::ParseSegment(Tokenizer &tokenizer, const std::vector<std::string
 			case Token::Type::Semicolon:
 			case Token::Type::Newline:
 				continue;
-				
+
 			case Token::Type::EndOfFile:
 				return;
 
@@ -251,18 +251,18 @@ void Assembler::ParseIf(ListAction& listAction, Tokenizer &tokenizer, const std:
 	// .endif
 	AlternateAction *alternateAction = new AlternateAction();
 	listAction.Append(alternateAction);
-	
+
 	const AlternateActionCondition *condition = ParseCondition(tokenizer);
 	if(!condition)
 	{
 		throw AssemblerException("Unable to parse .if condition");
 	}
-	
+
 	ListAction *sublist = new ListAction;
 	bool hasParsedElse = false;
 	int lineNumber;
 	int fileIndex;
-	
+
 	try
 	{
 		for(;;)
@@ -276,10 +276,10 @@ void Assembler::ParseIf(ListAction& listAction, Tokenizer &tokenizer, const std:
 			case Token::Type::Semicolon:
 				tokenizer.NextToken();
 				continue;
-					
+
 			case Token::Type::EndOfFile:
 				throw AssemblerException("Missing .endif directive");
-					
+
 			case Token::Type::Preprocessor:
 				tokenizer.NextToken();
 				if(token.sValue == ".endif")
@@ -306,7 +306,7 @@ void Assembler::ParseIf(ListAction& listAction, Tokenizer &tokenizer, const std:
 						throw AssemblerException("Cannot have .elseif after .else");
 					}
 					alternateAction->Add(sublist, condition);
-					
+
 					sublist = new ListAction();
 					condition = ParseCondition(tokenizer);
 					if(!condition) throw AssemblerException("Unable to parse .elseif condition");
@@ -314,7 +314,7 @@ void Assembler::ParseIf(ListAction& listAction, Tokenizer &tokenizer, const std:
 				}
 				ParsePreprocessor(*sublist, tokenizer, token, filenameList);
 				continue;
-					
+
 			default:
 				try
 				{
@@ -377,7 +377,7 @@ const AlternateActionCondition *Assembler::ParseCondition(Tokenizer &tokenizer)
 	{
 		tokenizer.NextToken();
 		std::string expression = "!(" + token.sValue + ")";
-		
+
 		int expressionIndex = AddExpression(expression, 8, tokenizer.GetCurrentLineNumber(), tokenizer.GetCurrentFileIndex());
 		return new ZeroAlternateActionCondition(expressionIndex);
 	}
@@ -439,7 +439,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 							uint8_t value = ((ImmediateOperand*) operand)->value;
 							listAction.Append(new LiteralAction({(uint8_t*) &value, (uint8_t*) &value + 1}));
 						}
-						
+
 						token = tokenizer.GetToken();
 						if(token.type == Token::Type::EndOfFile
 						   || token.type == Token::Type::Newline) break;
@@ -466,7 +466,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 							uint16_t value = ((ImmediateOperand*) operand)->value;
 							listAction.Append(new LiteralAction({(uint8_t*) &value, (uint8_t*) &value + 2}));
 						}
-						
+
 						token = tokenizer.GetToken();
 						if(token.type == Token::Type::EndOfFile
 						   || token.type == Token::Type::Newline) break;
@@ -513,7 +513,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 						{
 							throw AssemblerException("Parse error");
 						}
-						
+
 						token = tokenizer.GetToken();
 						if(token.type == Token::Type::EndOfFile
 						   || token.type == Token::Type::Newline) break;
@@ -615,11 +615,11 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 						break;
 					}
 				}
-				
+
 				throw AssemblerException("Unknown opcode %s", token.sValue.c_str());
 			}
 			break;
-			
+
 		case Token::Type::IntegerValue:
 		// The only case where an immediate is allowed at the start of a line
 		// is for a label.
@@ -628,11 +628,11 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 			tokenizer.NextToken();
 			listAction.Append(new NumericLabelAction(globalLabel, token.GetLabelValue()));
 			break;
-			
+
 		case Token::Type::Instruction:
 			ParseInstruction(listAction, tokenizer, token);
 			break;
-			
+
 		case Token::Type::Expression:
 		// An expression can start the line if it's a label.
 		// It is always considered global.
@@ -644,14 +644,14 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 				listAction.Append(new ExpressionLabelAction(expressionIndex));
 			}
 			break;
-				
+
 		case Token::Type::Semicolon:
 		case Token::Type::Newline:
 			return;
-			
+
 		case Token::Type::EndOfFile:
 			return;
-			
+
 		default:
 			throw AssemblerException("Unexpected token: %s\n", token.GetDescription().c_str());
 		}
@@ -667,9 +667,9 @@ void Assembler::ParseInstruction(ListAction& listAction, Tokenizer &tokenizer, c
 {
 	const Operand *operands[20];
 	int currentOperandIndex = 0;
-	
+
 	AutoDeleteVector temporaryOperands;
-	
+
 	for(;;)
 	{
 		Token::Type tokenType = tokenizer.PeekTokenType();
@@ -680,12 +680,12 @@ void Assembler::ParseInstruction(ListAction& listAction, Tokenizer &tokenizer, c
 			tokenizer.NextToken();
 			break;
 		}
-		
+
 		if(currentOperandIndex >= sizeof(operands)/sizeof(operands[0]))
 		{
 			throw AssemblerException("Too many operands on line: %s", tokenizer.GetCurrentLine().c_str());
 		}
-		
+
 		Operand *op = ParseOperand(tokenizer, temporaryOperands);
 		if(op == nullptr)
 		{
@@ -693,7 +693,7 @@ void Assembler::ParseInstruction(ListAction& listAction, Tokenizer &tokenizer, c
 		}
 		operands[currentOperandIndex++] = op;
 	}
-	
+
 	// Resolve Reg+1 cases
 	for(int i = currentOperandIndex-1; i >= 2; --i)
 	{
@@ -707,13 +707,13 @@ void Assembler::ParseInstruction(ListAction& listAction, Tokenizer &tokenizer, c
 			{
 				extraMatch = MatchRep;
 			}
-			
+
 			if((operands[i-2]->matchBitfield & operands[i]->matchBitfield) != 0
 				&& operands[i-2]->index+1 == operands[i]->index)
 			{
 				extraMatch |= MatchRegNP1;
 			}
-			
+
 			if(extraMatch != 0)
 			{
 				// Need to tag the register as MatchRegN+1, so take a copy first.
@@ -758,7 +758,7 @@ int Assembler::AddExpression(const std::string& expression, int maxBitWidth, int
         if(exp.maxBitWidth < maxBitWidth) exp.maxBitWidth = maxBitWidth;
         return index;
 	}
-	
+
 	int index = (int) expressionList.size() + 1;
 
 	Expression exp;
@@ -794,17 +794,17 @@ void Assembler::UpdateExpressionList()
 void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const std::vector<std::string> &filenameList) const
 {
     const int appendAssemblerReferenceSize = 12;
-    
+
 	if(!rootListAction.HasData()) return;
 
 	char *prefix = (char*) alloca(segmentIndent+1);
 	memset(prefix, ' ', segmentIndent);
 	prefix[segmentIndent] = '\0';
-	
+
 	fprintf(f, "%s{  // begin jasm block\n", prefix);
 
 	ActionWriteContext context(isDataSegment, appendAssemblerReferenceSize, CommandLine::GetInstance().GetAssemblerVariableName());
-	
+
 	int expressionOffset = 0;
 	for(const Expression &e : expressionList)
 	{
@@ -836,7 +836,7 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 		}
 		context.expressionInfo.push_back(exp);
 	}
-	
+
 	std::vector<uint8_t> bytes;
 	rootListAction.WriteByteCode(bytes, context);
 	bytes.push_back((int) arm64Assembler::ActionType::Return);
@@ -847,7 +847,7 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 	{
 		fprintf(f, "%s#pragma pack(push, 1)\n", prefix);
 		fprintf(f, "%s  struct JasmExpressionData {\n", prefix);
-		
+
 		// These fields are from arm64 Assembler::AppendAssemblyReference.
 		fprintf(f, "%s    const void* _assemblerData;\n", prefix);
 		fprintf(f, "%s    uint32_t _referenceSize;\n", prefix);
@@ -870,7 +870,7 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 		}
 		fprintf(f, "%s  };\n", prefix);
 		fprintf(f, "%s#pragma pack(pop)\n", prefix);
-		
+
 		fprintf(f, "%s  static_assert(sizeof(JasmExpressionData) == %d, \"jasm internal error: Unexpected size for data struct\");\n", prefix, expressionOffset+appendAssemblerReferenceSize);
 	}
 	if(startingLine != -1) fprintf(f, "#line %d\n", startingLine);
@@ -893,14 +893,14 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 
 	int32_t labelData = context.numberOfLabels +
 						0x100 * context.GetNumberOfForwardLabelReferences();
-	
+
 	uint32_t length = (uint32_t) rootListAction.GetMaximumLength();
-	
+
 	if(startingLine != -1) fprintf(f, "#line %d\n", startingLine);
 	if(expressionOffset > 0)
 	{
 		uint32_t dataSize = ((expressionOffset + appendAssemblerReferenceSize) + 7) & -8;
-		
+
 		if(labelData)
 		{
 			fprintf(f,
@@ -920,7 +920,7 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 					length,
 					dataSize);
 		}
-		
+
 		for(const auto &e : context.expressionInfo)
 		{
 			if(e.bitWidth == 0) continue;
@@ -1134,7 +1134,7 @@ Next:
 
 	case Token::Type::Identifier:
 		tokenizer.NextToken();
-			
+
 		// Parse reg32, reg64, etc.
 		{
 			auto it = ParameterizedRegisterMap::instance.find(token.sValue);
@@ -1256,17 +1256,17 @@ Operand* Assembler::ParseOperandProduct(Tokenizer &tokenizer, AutoDeleteVector &
 	Operand *result = ParseOperandUnary(tokenizer, temporaryOperands);
 	if(!result || result->type != Operand::Type::Number) return result;
 	ImmediateOperand *immResult = (ImmediateOperand *)result;
-	
+
 	for(;;)
 	{
 		Token op = tokenizer.PeekToken();
 		if(op.type != Token::Type::Star && op.type != Token::Type::Divide) break;
-		
+
 		tokenizer.NextToken();
-		
+
 		Operand *temp = ParseOperandUnary(tokenizer, temporaryOperands);
 		if(!temp || temp->type != Operand::Type::Number) return nullptr;
-		
+
 		if(!result || result->type != Operand::Type::Number)
 		{
 			throw AssemblerException("Invalid operands for multiply/divide");
@@ -1285,14 +1285,14 @@ Operand* Assembler::ParseOperandSum(Tokenizer &tokenizer, AutoDeleteVector &temp
 	if(!result) return nullptr;
 	if(result->type != Operand::Type::Number
 	   && result->type != Operand::Type::Label) return result;
-	
+
 	for(;;)
 	{
 		Token op = tokenizer.PeekToken();
 		if(op.type != Token::Type::Add && op.type != Token::Type::Subtract) break;
-		
+
 		tokenizer.NextToken();
-		
+
 		Operand *temp = ParseOperandProduct(tokenizer, temporaryOperands);
 		if(!temp) return nullptr;
 		if(result->type == Operand::Type::Label
@@ -1354,7 +1354,7 @@ Operand* Assembler::ParseOperandComparison(Tokenizer &tokenizer, AutoDeleteVecto
 	Operand *result = ParseOperandSum(tokenizer, temporaryOperands);
 	if(!result) return nullptr;
 	if(result->type != Operand::Type::Number) return result;
-	
+
 	for(;;)
 	{
 		Token op = tokenizer.PeekToken();
@@ -1372,7 +1372,7 @@ Operand* Assembler::ParseOperandComparison(Tokenizer &tokenizer, AutoDeleteVecto
 		default:
 			return result;
 		}
-		
+
 		Operand *rhs = ParseOperandSum(tokenizer, temporaryOperands);
 		if(!rhs) return nullptr;
 		if(rhs->type != Operand::Type::Number) throw AssemblerException("Unable to parse comparison");
@@ -1382,11 +1382,11 @@ Operand* Assembler::ParseOperandComparison(Tokenizer &tokenizer, AutoDeleteVecto
 		case Token::Type::Equals:
 			((ImmediateOperand*) result)->value = (*(ImmediateOperand *) result == *(ImmediateOperand *) rhs);
 			break;
-			
+
 		case Token::Type::NotEquals:
 			((ImmediateOperand*) result)->value = (*(ImmediateOperand *) result != *(ImmediateOperand *) rhs);
 			break;
-				
+
 		case Token::Type::LessThan:
 			((ImmediateOperand*) result)->value = (*(ImmediateOperand *) result < *(ImmediateOperand *) rhs);
 			break;
@@ -1402,7 +1402,7 @@ Operand* Assembler::ParseOperandComparison(Tokenizer &tokenizer, AutoDeleteVecto
 		case Token::Type::GreaterThanOrEquals:
 			((ImmediateOperand*) result)->value = (*(ImmediateOperand *) result >= *(ImmediateOperand *) rhs);
 			break;
-			
+
 		default:
 			break;
 		}
@@ -1416,11 +1416,11 @@ Operand* Assembler::ParseOperandLogical(Tokenizer &tokenizer, AutoDeleteVector &
 	Operand *result = ParseOperandComparison(tokenizer, temporaryOperands);
 	if(!result) return nullptr;
 	if(result->type != Operand::Type::Number) return result;
-	
+
 	for(;;)
 	{
 		Token op = tokenizer.PeekToken();
-		
+
 		switch(op.type)
 		{
 		case Token::Type::LogicalOr:
@@ -1431,7 +1431,7 @@ Operand* Assembler::ParseOperandLogical(Tokenizer &tokenizer, AutoDeleteVector &
 		default:
 			return result;
 		}
-		
+
 		Operand *rhs = ParseOperandComparison(tokenizer, temporaryOperands);
 		if(!rhs) return nullptr;
 		if(rhs->type != Operand::Type::Number) throw AssemblerException("Unable to parse logical statement");
@@ -1441,11 +1441,11 @@ Operand* Assembler::ParseOperandLogical(Tokenizer &tokenizer, AutoDeleteVector &
 		case Token::Type::LogicalOr:
 			((ImmediateOperand*) result)->value = (((ImmediateOperand *) result)->AsBool() || ((ImmediateOperand *) rhs)->AsBool());
 			break;
-			
+
 		case Token::Type::LogicalAnd:
 			((ImmediateOperand*) result)->value = (((ImmediateOperand *) result)->AsBool() && ((ImmediateOperand *) rhs)->AsBool());
 			break;
-			
+
 		default:
 			break;
 		}

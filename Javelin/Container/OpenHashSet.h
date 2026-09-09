@@ -15,39 +15,39 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	template<typename Storage> class OpenHashSetIteratePolicy
 	{
 	public:
 		JINLINE static void OnCreate(Storage& s)
 		{
 		}
-		
+
 		template<typename HashType, typename U> class Iterator
 		{
 		public:
 			Iterator(HashType& aHashSet, size_t aIndex) : hashSet(&aHashSet), index(aIndex) { }
-			
+
 			bool operator==(const Iterator& a) const 	{ return hashSet == a.hashSet && index == a.index; }
 			bool operator!=(const Iterator& a) const	{ return hashSet != a.hashSet || index != a.index; }
 			Iterator& operator++()						{ index = hashSet->FindNextUsedIndex(index+1); return *this;	}
-			
+
 			U* operator->() const 						{ return &hashSet->GetValueAtIndex(index); 	}
 			U& operator*() const						{ return hashSet->GetValueAtIndex(index); 	}
-			
+
 			Storage& GetStorage()						{ return hashSet->GetStorage(index);		}
-			
+
 			void Remove()								{ hashSet->RemoveHashIndex(index); --index; }
 			size_t GetIndex() const						{ return index; 							}
-			
+
 			HashType*	hashSet;
 			size_t		index;
-			
+
 			static Iterator CreateBegin(HashType& h)	{ return Iterator(h, h.FindFirstUsedIndex()); 	}
 			static Iterator CreateEnd(HashType& h)		{ return Iterator(h, h.GetCapacity());			}
 		};
 	};
-	
+
 	// There must be a size_t GetHash(T) available.
 	template<typename T,
 			 typename Storage=Optional<T>,
@@ -67,17 +67,17 @@ namespace Javelin
 		OpenHashSet(const OpenHashSet& a);
 		OpenHashSet(OpenHashSet&& a);
 		~OpenHashSet();
-		
+
 		OpenHashSet& operator=(const OpenHashSet& a)	{ this->~OpenHashSet(); new(Placement(this)) OpenHashSet(a); return *this; }
 		OpenHashSet& operator=(OpenHashSet&& a) 		{ this->~OpenHashSet(); new(Placement(this)) OpenHashSet((OpenHashSet&&) a); return *this; }
-		
+
 		bool IsEmpty() 			const 					{ return count == 0; }
 		bool HasData() 			const 					{ return count != 0; }
 		size_t GetCount()	 	const 					{ return count;		 }
 		size_t GetCapacity()	const					{ return capacity;	 }
 
 		void Reset()									{ this->~OpenHashSet(); new(Placement(this)) OpenHashSet; }
-		
+
 		JINLINE Iterator Begin()						{ return Iterator::CreateBegin(*this); 	}
 		JINLINE Iterator End()							{ return Iterator::CreateEnd(*this);	}
 		JINLINE ConstIterator Begin() const				{ return ConstIterator::CreateBegin(*this); }
@@ -91,18 +91,18 @@ namespace Javelin
 		// Returns the object in the hash table for key. Inserts it if necessary.
 		template<typename A>
 		T& Get(const A& key);
-		
+
 		// Returns the object in the has table for the key. The object must exist.
 		template<typename A>
 		T& Get(const A& key) const;
-		
+
 		template<typename A>
 		bool Contains(const A& key) const;
 
 		// Returns true if a new element has been added
 		template<typename A>
 		bool Put(const A& key);
-		
+
 		// This is a special case to help construct hash results in place. This is especially useful for Map
 		// Clang stopped compiling this out-of-line when IteratorPolicy was introduced!
 		template<typename KeyType, typename... ExtraConstructorArguments>
@@ -110,14 +110,14 @@ namespace Javelin
 		{
 			// Why is this done inline? Because of a clang bug not able to bind the name otherwise!
 			if(++count >= threshold) ExpandCapacityAndRehash();
-			
+
 			size_t index = GetHashIndex(key);
 			while(values[index].HasValue())
 			{
 				JASSERT(!Comparator::IsEqual((const T&) values[index], key));
 				index = (index+1) & mask;
 			}
-			
+
 			values[index].Create((KeyType&&) key, (ExtraConstructorArguments&&) v...);
 			IteratePolicy<Storage>::OnCreate(values[index]);
 			return values[index];
@@ -125,11 +125,11 @@ namespace Javelin
 
 		template<typename A>
 		void Remove(const A& key);
-		
+
 		void Remove(const Iterator& it)					{ RemoveHashIndex(it.GetIndex()); }
-		
+
 		void Remove(const Storage& entry);
-		
+
 		template<typename A>
 		bool RemoveIfExists(const A& key);
 
@@ -145,10 +145,10 @@ namespace Javelin
 	protected:
 		template<typename A>
 		JINLINE size_t GetHashIndex(const A& key) const;
-		
+
 		JINLINE void AllocateBuffers();
 		void ExpandCapacityAndRehash();
-		
+
 		JINLINE void VerifyCount() const
 		{
 #if JBUILDCONFIG_DEBUG
@@ -159,16 +159,16 @@ namespace Javelin
 			JASSERT(count == actualCount);
 #endif
 		}
-		
+
 		template<typename A>
 		size_t FindHashIndex(A&& key) const;
-		
+
 		size_t		capacity;
 		size_t		count;
 		size_t		mask;
 		size_t		threshold;
 		Storage*	values;
-		
+
 		void MoveEntryFromOldHash(Storage& entry);
 	};
 
@@ -179,11 +179,11 @@ namespace Javelin
 		size_t OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::GetHashIndex(const A& key) const
 	{
 		size_t h = GetHash(key);
-		
+
 		// Make sure the object we're testing has the same hash key.
 		// If this doesn't match, cast the key to T before calling into OpenHashSet
 		JASSERT((CheckEqualHash<T, A>::IsEqual(h, key)));
-		
+
 		// These are the last steps in the murmur hash
 		size_t hash = h;
 		hash ^= hash >> 16;
@@ -191,10 +191,10 @@ namespace Javelin
 		hash ^= hash >> 13;
 		hash *= 0xc2b2ae35;
 		hash ^= hash >> 16;
-		
+
 		return hash & mask;
 	}
-	
+
 	template<typename T, typename Storage, typename Comparator, typename Alloc, template<typename> class IteratePolicy>
 	OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::OpenHashSet()
 	{
@@ -204,13 +204,13 @@ namespace Javelin
 		threshold = 0;
 		values = nullptr;
 	}
-	
+
 	template<typename T, typename Storage, typename Comparator, typename Alloc, template<typename> class IteratePolicy>
 		OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::OpenHashSet(size_t initialCapacity)
 	{
 		if(initialCapacity < 4) initialCapacity = 4;
 		size_t setSize = (initialCapacity + initialCapacity * 2) >> 1;	// setSize = 1.5 * initialCapacity
-		
+
 		capacity = BitUtility::RoundUpToPowerOf2(setSize);
 		mask = capacity-1;
 		count = 0;
@@ -226,27 +226,27 @@ namespace Javelin
 		mask = a.mask;
 		threshold = a.threshold;
 		AllocateBuffers();
-		
+
 		for(const auto& it : a) Insert(it);
 	}
-	
+
 	template<typename T, typename Storage, typename Comparator, typename Alloc, template<typename> class IteratePolicy>
 		OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::OpenHashSet(OpenHashSet&& a) : IteratePolicy<Storage>((IteratePolicy<Storage>&&)a)
-	
+
 	{
 		capacity = a.capacity;
 		count = a.count;
 		mask = a.mask;
 		threshold = a.threshold;
 		values = a.values;
-		
+
 		a.capacity = 0;
 		a.count = 0;
 		a.mask = 0;
 		a.threshold = 0;
 		a.values = nullptr;
 	}
-	
+
 	template<typename T, typename Storage, typename Comparator, typename Alloc, template<typename> class IteratePolicy>
 		OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::~OpenHashSet()
 	{
@@ -264,7 +264,7 @@ namespace Javelin
 	{
 		// Speculatively rehash if we're near the threshold
 		if(count + 1 >= threshold) ExpandCapacityAndRehash();
-		
+
 		size_t index = GetHashIndex(key);
 		while(true)
 		{
@@ -284,7 +284,7 @@ namespace Javelin
 		T& OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::Get(const A& key) const
 	{
         JASSERT(values != nullptr);
-		
+
 		size_t index = GetHashIndex(key);
 		while(true)
 		{
@@ -298,7 +298,7 @@ namespace Javelin
 		bool OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::Contains(const A& key) const
 	{
 		if(!values) return false;
-		
+
 		size_t index = GetHashIndex(key);
 		while(true)
 		{
@@ -331,19 +331,19 @@ namespace Javelin
 //		T& OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::Insert(KeyType&& key, ExtraConstructorArguments&&... v)
 //	{
 //		if(++count >= threshold) ExpandCapacityAndRehash();
-//		
+//
 //		size_t index = GetHashIndex(key);
 //		while(values[index].HasValue())
 //		{
 //			JASSERT(!Comparator::IsEqual((const T&) values[index], key));
 //			index = (index+1) & mask;
 //		}
-//		
+//
 //		values[index].Create((KeyType&&) key, (ExtraConstructorArguments&&) v...);
 //		IteratePolicy<Storage>::OnCreate(values[index]);
 //		return values[index];
 //	}
-	
+
 	template<typename T, typename Storage, typename Comparator, typename Alloc, template<typename> class IteratePolicy> template<typename A>
 		void OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::Remove(const A& key)
 	{
@@ -356,14 +356,14 @@ namespace Javelin
 		}
 		RemoveHashIndex(index);
 	}
-	
+
 	template<typename T, typename Storage, typename Comparator, typename Alloc, template<typename> class IteratePolicy>
 		void OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::Remove(const Storage& entry)
 	{
 		if(values <= &entry && &entry < values+capacity) RemoveHashIndex(&entry - values);
 		else Remove<T>(entry);
 	}
-	
+
 	template<typename T, typename Storage, typename Comparator, typename Alloc, template<typename> class IteratePolicy> template<typename A>
 		bool OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::RemoveIfExists(const A& key)
 	{
@@ -384,20 +384,20 @@ namespace Javelin
 		void OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::RemoveHashIndex(size_t holeIndex)
 	{
 		JASSERT(holeIndex < capacity);
-		
+
 		size_t offset = 1;
 		size_t scanToEnd = (holeIndex+1) & mask;
 		while(values[scanToEnd].HasValue())
 		{
 			size_t hashIndex = GetHashIndex((const T&) values[scanToEnd]);
-		
+
 			if(((scanToEnd - hashIndex) & mask) >= offset)
 			{
 				values[holeIndex] = (Storage&&) values[scanToEnd];
 				holeIndex = scanToEnd;
 				offset = 0;
 			}
-			
+
 			++offset;
 			scanToEnd = (scanToEnd + 1) & mask;
 		}
@@ -425,7 +425,7 @@ namespace Javelin
 	{
 		OpenHashSet newSet(capacity);
 		newSet.count = count;
-		
+
 		Iterator it = Begin();
 		const Iterator endIt = End();
 		while(it != endIt)
@@ -435,7 +435,7 @@ namespace Javelin
 			newSet.MoveEntryFromOldHash(it.GetStorage());
 			it = next;
 		}
-		
+
 		*this = (OpenHashSet&&) newSet;
 	}
 
@@ -443,9 +443,9 @@ namespace Javelin
 		size_t OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::FindHashIndex(A&& value) const
 	{
 		if(!count) return capacity;
-		
+
 		size_t index = GetHashIndex(value);
-		
+
 		while(true)
 		{
 			if(values[index].IsEmpty()) return capacity;
@@ -453,7 +453,7 @@ namespace Javelin
 			index = (index+1) & mask;
 		}
 	}
-	
+
 	template<typename T, typename Storage, typename Comparator, typename Alloc, template<typename> class IteratePolicy>
 		size_t OpenHashSet<T, Storage, Comparator, Alloc, IteratePolicy>::FindFirstUsedIndex() const
 	{
@@ -473,7 +473,7 @@ namespace Javelin
 		}
 		return capacity;
 	}
-	
+
 //============================================================================
 } // namespace Javelin
 //===========================================================================e

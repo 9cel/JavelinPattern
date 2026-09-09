@@ -70,7 +70,7 @@ namespace Javelin::PatternInternal
 
 		void* InternalFindByteReverse();
 	}
-	
+
 //============================================================================
 }
 

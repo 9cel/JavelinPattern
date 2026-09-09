@@ -10,7 +10,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	class Time
 	{
 	public:
@@ -20,7 +20,7 @@ namespace Javelin
 		Time(TimeInitializer) { time = mach_absolute_time(); }
 
 		bool operator<(const Time& a) const { return time < a.time; }
-		
+
 		Duration<> operator-(const Time& a) const { return Duration<>((time - a.time)*timeBaseConversion); }
 
 		double    AsDouble() const { return time * timeBaseConversion; }
@@ -28,10 +28,10 @@ namespace Javelin
 
 		void		Start()			{ time = -mach_absolute_time(); }
 		Duration<>	Stop()			{ time += mach_absolute_time(); return Duration<>(time * timeBaseConversion); }
-		
+
 	private:
 		uint64_t	time;
-		
+
 		static double timeBaseConversion;
 		static double CalculateTimeBaseConversion();
 	};

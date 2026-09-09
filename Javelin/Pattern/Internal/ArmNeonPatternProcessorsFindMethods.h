@@ -9,7 +9,7 @@
 namespace Javelin::PatternInternal
 {
 //============================================================================
-		
+
 	namespace ArmNeonFindMethods
 	{
 		const void* InternalFindBytePairPath2(const void* pIn, uint32_t v, const void* pEnd);
@@ -20,7 +20,7 @@ namespace Javelin::PatternInternal
 		const void* InternalFindTripletNibbleMask(const void* pIn, const uint8x16_t* nibbleMasks, const void* pEnd);
 		const void* InternalFindTripletNibbleMaskPath(const void* pIn, const uint8x16_t* nibbleMasks, const void* pEnd);
 	}
-	
+
 //============================================================================
 }
 

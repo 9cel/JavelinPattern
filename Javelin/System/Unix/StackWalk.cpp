@@ -42,7 +42,7 @@ void StackWalkInformation::DemangleFunctionNameToBuffer(const char* name)
 String StackWalkInformation::GetDescription() const
 {
 	const size_t MAXIMUM_BUFFER_SIZE = 2048;
-	
+
 	char buffer[MAXIMUM_BUFFER_SIZE];
 	int length = snprintf(buffer, MAXIMUM_BUFFER_SIZE, "%s +0x%zu", GetFunctionName(), GetOffset());
 	return String{buffer, size_t(length)};

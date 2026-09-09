@@ -87,7 +87,7 @@ void Assembler::ParseSegment(Tokenizer &tokenizer, const std::vector<std::string
 			case Token::Type::Semicolon:
 			case Token::Type::Newline:
 				continue;
-				
+
 			case Token::Type::EndOfFile:
 				return;
 
@@ -104,7 +104,7 @@ void Assembler::ParseSegment(Tokenizer &tokenizer, const std::vector<std::string
 		{
 			ex.PopulateLocationIfNecessary(lineNumber, fileIndex);
 			tokenizer.SkipToEndOfLine();
-			
+
 			for(const auto &it : ex) Log::Error("%s", it.GetLogString(filenameList).c_str());
 		}
 	}
@@ -197,18 +197,18 @@ void Assembler::ParseIf(ListAction& listAction, Tokenizer &tokenizer, const std:
 	// .endif
 	AlternateAction *alternateAction = new AlternateAction();
 	listAction.Append(alternateAction);
-	
+
 	const AlternateActionCondition *condition = ParseCondition(tokenizer);
 	if(!condition)
 	{
 		throw AssemblerException("Unable to parse .if condition");
 	}
-	
+
 	ListAction *sublist = new ListAction;
 	bool hasParsedElse = false;
 	int lineNumber;
 	int fileIndex;
-	
+
 	try
 	{
 		for(;;)
@@ -222,10 +222,10 @@ void Assembler::ParseIf(ListAction& listAction, Tokenizer &tokenizer, const std:
 			case Token::Type::Semicolon:
 				tokenizer.NextToken();
 				continue;
-					
+
 			case Token::Type::EndOfFile:
 				throw AssemblerException("Missing .endif directive");
-					
+
 			case Token::Type::Preprocessor:
 				tokenizer.NextToken();
 				if(token.sValue == ".endif")
@@ -262,7 +262,7 @@ void Assembler::ParseIf(ListAction& listAction, Tokenizer &tokenizer, const std:
 				}
 				ParsePreprocessor(*sublist, tokenizer, token, filenameList);
 				continue;
-					
+
 			default:
 				tokenizer.NextToken();
 				ParseLine(*sublist, tokenizer, token);
@@ -295,7 +295,7 @@ const AlternateActionCondition *Assembler::ParseCondition(Tokenizer &tokenizer)
 	{
 		Token token = tokenizer.GetToken();
 		std::string expression = "!(" + token.sValue + ")";
-		
+
 		int expressionIndex = AddExpression(expression, 8, tokenizer.GetCurrentLineNumber(), tokenizer.GetCurrentFileIndex());
 		return new ZeroAlternateActionCondition(expressionIndex);
 	}
@@ -360,7 +360,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 							uint8_t value = ((ImmediateOperand*) operand)->value;
 							listAction.Append(new LiteralAction({(uint8_t*) &value, (uint8_t*) &value + 1}));
 						}
-						
+
 						token = tokenizer.GetToken();
 						if(token.type == Token::Type::EndOfFile
 						   || token.type == Token::Type::Newline) break;
@@ -387,7 +387,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 							uint16_t value = ((ImmediateOperand*) operand)->value;
 							listAction.Append(new LiteralAction({(uint8_t*) &value, (uint8_t*) &value + 2}));
 						}
-						
+
 						token = tokenizer.GetToken();
 						if(token.type == Token::Type::EndOfFile
 						   || token.type == Token::Type::Newline) break;
@@ -431,7 +431,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 							}
 						}
 						else goto SkipToEndOfLine;
-						
+
 						token = tokenizer.GetToken();
 						if(token.type == Token::Type::EndOfFile
 						   || token.type == Token::Type::Newline) break;
@@ -446,7 +446,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 					{
 						Operand *operand = ParseOperand(tokenizer, temporaryOperands);
 						if(!operand ) goto SkipToEndOfLine;
-						
+
 						if(operand->type == Operand::Type::Label)
 						{
 							uint64_t offset = 8;
@@ -500,7 +500,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 						Operand *operand = ParseOperand(tokenizer, temporaryOperands);
 						if(!operand || operand->type != Operand::Type::Immediate) goto SkipToEndOfLine;
 						ImmediateOperand *imm = (ImmediateOperand*) operand;
-						
+
 						if(imm->immediateType == Operand::ImmediateType::Real)
 						{
 							if(imm->IsExpression())
@@ -523,7 +523,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 					}
 					break;
 				}
-				
+
 				// An identifier can start a line if it's:
 				//  a) A label,            e.g. namedLabel:
 				//  b) A data declaration, e.g. value DB xx, xx, xx
@@ -558,11 +558,11 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 						break;
 					}
 				}
-				
+
 				goto SkipToEndOfLine;
 			}
 			break;
-			
+
 		case Token::Type::IntegerValue:
 			{
 				// The only case where an immediate is allowed at the start of a line
@@ -573,7 +573,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 				listAction.Append(new NumericLabelAction(globalLabel, token.GetLabelValue()));
 			}
 			break;
-			
+
 		case Token::Type::Instruction:
 			// Shortcut processing of prefix instructions.
 			if(token.instruction->IsPrefix())
@@ -583,7 +583,7 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 			}
 			ParseInstruction(listAction, tokenizer, token);
 			break;
-			
+
 		case Token::Type::Expression:
 			{
 				// An expression can start the line if it's a label.
@@ -595,14 +595,14 @@ void Assembler::ParseLine(ListAction& listAction, Tokenizer &tokenizer, Token to
 				listAction.Append(new ExpressionLabelAction(expressionIndex));
 			}
 			break;
-				
+
 		case Token::Type::Semicolon:
 		case Token::Type::Newline:
 			return;
-			
+
 		case Token::Type::EndOfFile:
 			return;
-			
+
 		default:
 		SkipToEndOfLine:
 			throw AssemblerException("Unexpected token: %s\n", token.GetDescription().c_str());
@@ -620,9 +620,9 @@ void Assembler::ParseInstruction(ListAction& listAction, Tokenizer &tokenizer, c
 {
 	const Operand *operands[4];
 	int currentOperandIndex = 0;
-	
+
 	AutoDeleteVector temporaryOperands;
-	
+
 	for(;;)
 	{
 		Token::Type tokenType = tokenizer.PeekTokenType();
@@ -633,9 +633,9 @@ void Assembler::ParseInstruction(ListAction& listAction, Tokenizer &tokenizer, c
 			tokenizer.NextToken();
 			break;
 		}
-		
+
 		if(currentOperandIndex != 0)
-		{			
+		{
 			if(tokenType != Token::Type::Comma)
 			{
 				Token token(tokenType);
@@ -651,7 +651,7 @@ void Assembler::ParseInstruction(ListAction& listAction, Tokenizer &tokenizer, c
 		}
 		operands[currentOperandIndex++] = op;
 	}
-	
+
 	instructionToken.instruction->AddToAssembler(instructionToken.sValue, *this, listAction, currentOperandIndex, operands);
 }
 
@@ -687,13 +687,13 @@ Operand* Assembler::ParseAddress(Tokenizer &tokenizer, AutoDeleteVector &tempora
 		memoryOperand->matchBitfield = MatchMem80;
 		break;
 	}
-	
+
 	Token t = tokenizer.GetToken();
 	if(t.type != Token::Type::CloseSquareBracket)
 	{
 		throw AssemblerException("Expected ']', found %s instead", t.GetDescription().c_str());
 	}
-	
+
 	if (result->type == Operand::Type::Label) {
 		result->matchBitfield &= ~MatchRelAll;
 		return result;
@@ -719,13 +719,13 @@ Operand* Assembler::ParseAddress(Tokenizer &tokenizer, AutoDeleteVector &tempora
 	{
 		throw AssemblerException("jasm only supports 64 bit base registers");
 	}
-	
+
 	if(memoryOperand->index
 	   && (memoryOperand->index->matchBitfield & MatchReg64) == 0)
 	{
 		throw AssemblerException("jasm only supports 64 bit index registers");
 	}
-	
+
 	if(memoryOperand->scale &&
 	   !memoryOperand->scale->IsExpression()
 	   && memoryOperand->scale->value != 1
@@ -771,7 +771,7 @@ int Assembler::AddExpression(const std::string& expression, int maxBitWidth, int
         if(exp.maxBitWidth < maxBitWidth) exp.maxBitWidth = maxBitWidth;
         return index;
 	}
-	
+
 	int index = (int) expressionList.size() + 1;
 
 	Expression exp;
@@ -809,15 +809,15 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
     static const int appendAssemblerReferenceSize = 16;
 
     if(!rootListAction.HasData()) return;
-	
+
 	char *prefix = (char*) alloca(segmentIndent+1);
 	memset(prefix, ' ', segmentIndent);
 	prefix[segmentIndent] = '\0';
-	
+
 	fprintf(f, "%s{  // begin jasm block\n", prefix);
 
 	ActionWriteContext context(isDataSegment, appendAssemblerReferenceSize, CommandLine::GetInstance().GetAssemblerVariableName());
-	
+
 	int expressionOffset = 0;
 	for(const Expression &e : expressionList)
 	{
@@ -850,7 +850,7 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 		}
 		context.expressionInfo.push_back(exp);
 	}
-	
+
 	std::vector<uint8_t> bytes;
 	rootListAction.WriteByteCode(bytes, context);
 	bytes.push_back((int) x64Assembler::ActionType::Return);
@@ -886,7 +886,7 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 		}
 		fprintf(f, "%s  };\n", prefix);
 		fprintf(f, "%s#pragma pack(pop)\n", prefix);
-		
+
 		fprintf(f, "%s  static_assert(sizeof(JasmExpressionData) == %d, \"jasm internal error: Unexpected size for data struct\");\n", prefix, expressionOffset+appendAssemblerReferenceSize);
 	}
 	if(startingLine != -1) fprintf(f, "#line %d\n", startingLine);
@@ -903,13 +903,13 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 		}
 	}
 	fprintf(f, "\";\n");
-	
+
 	assert(context.numberOfLabels <= 255);
 	assert(context.GetNumberOfForwardLabelReferences() <= 255);
 
 	int32_t labelData = context.numberOfLabels +
 						0x100 * context.GetNumberOfForwardLabelReferences();
-	
+
 	uint32_t length;
 	if(labelData != 0)
 	{
@@ -923,7 +923,7 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 			if(length != rootListAction.GetMinimumLength()) length = 0;
 		}
 	}
-	
+
 	if(startingLine != -1) fprintf(f, "#line %d\n", startingLine);
 
 	if(expressionOffset > 0)
@@ -949,7 +949,7 @@ void Assembler::Write(FILE *f, int startingLine, int *expectedFileIndex, const s
 					length,
 					dataSize);
 		}
-		
+
 		for(const auto &e : context.expressionInfo)
 		{
 			if(e.bitWidth == 0) continue;
@@ -1065,7 +1065,7 @@ Next:
 			ProcessIntegerValue:
 				DeleteWrapper<ImmediateOperand> *immediateOperand = new DeleteWrapper<ImmediateOperand>(token.iValue);
 				temporaryOperands.push_back(immediateOperand);
-				
+
 				int64_t value = token.iValue;
 				if(value == (int8_t) value)
 				{
@@ -1230,10 +1230,10 @@ Next:
 			{
 				throw AssemblerException("Expected '[', found %s instead", t.GetDescription().c_str());
 			}
-			
+
 			return ParseAddress(tokenizer, temporaryOperands, widthSpecified);
 		}
-			
+
 		// Parse reg32, reg64, etc.
 		{
 			auto it = ParameterizedRegisterMap::instance.find(token.sValue);
@@ -1257,7 +1257,7 @@ Next:
 			labelMatch = MatchRel32;
 			goto Next;
 		}
-		
+
 		// Block to scope labelOperand.
 		{
 		ParseNamedLabel:
@@ -1331,17 +1331,17 @@ Operand* Assembler::ParseOperandProduct(Tokenizer &tokenizer, AutoDeleteVector &
 	Operand *result = ParseOperandUnary(tokenizer, temporaryOperands);
 	if(!result || result->type != Operand::Type::Immediate) return result;
 	ImmediateOperand *immResult = (ImmediateOperand *)result;
-	
+
 	for(;;)
 	{
 		Token op = tokenizer.PeekToken();
 		if(op.type != Token::Type::Star && op.type != Token::Type::Divide) break;
-		
+
 		tokenizer.NextToken();
-		
+
 		Operand *temp = ParseOperandUnary(tokenizer, temporaryOperands);
 		if(!temp || temp->type != Operand::Type::Immediate) return nullptr;
-		
+
 		assert(result && result->type == Operand::Type::Immediate);
 		int64_t a = immResult->value;
 		int64_t b = ((const ImmediateOperand*)temp)->value;
@@ -1358,14 +1358,14 @@ Operand* Assembler::ParseOperandSum(Tokenizer &tokenizer, AutoDeleteVector &temp
 	if(!result) return nullptr;
 	if(result->type != Operand::Type::Immediate
 	   && result->type != Operand::Type::Label) return result;
-	
+
 	for(;;)
 	{
 		Token op = tokenizer.PeekToken();
 		if(op.type != Token::Type::Add && op.type != Token::Type::Subtract) break;
-		
+
 		tokenizer.NextToken();
-		
+
 		Operand *temp = ParseOperandProduct(tokenizer, temporaryOperands);
 		if(!temp) return nullptr;
 		if(result->type == Operand::Type::Label
@@ -1428,7 +1428,7 @@ Operand* Assembler::ParseOperandComparison(Tokenizer &tokenizer, AutoDeleteVecto
 	Operand *result = ParseOperandSum(tokenizer, temporaryOperands);
 	if(!result) return nullptr;
 	if(result->type != Operand::Type::Immediate) return result;
-	
+
 	for(;;)
 	{
 		Token op = tokenizer.PeekToken();
@@ -1446,7 +1446,7 @@ Operand* Assembler::ParseOperandComparison(Tokenizer &tokenizer, AutoDeleteVecto
 		default:
 			return result;
 		}
-		
+
 		Operand *rhs = ParseOperandSum(tokenizer, temporaryOperands);
 		if(!rhs) return nullptr;
 		if(rhs->type != Operand::Type::Immediate) throw AssemblerException("Unable to parse comparison");
@@ -1456,11 +1456,11 @@ Operand* Assembler::ParseOperandComparison(Tokenizer &tokenizer, AutoDeleteVecto
 		case Token::Type::Equals:
 			((ImmediateOperand*) result)->value = (*(ImmediateOperand *) result == *(ImmediateOperand *) rhs);
 			break;
-			
+
 		case Token::Type::NotEquals:
 			((ImmediateOperand*) result)->value = (*(ImmediateOperand *) result != *(ImmediateOperand *) rhs);
 			break;
-				
+
 		case Token::Type::LessThan:
 			((ImmediateOperand*) result)->value = (*(ImmediateOperand *) result < *(ImmediateOperand *) rhs);
 			break;
@@ -1476,7 +1476,7 @@ Operand* Assembler::ParseOperandComparison(Tokenizer &tokenizer, AutoDeleteVecto
 		case Token::Type::GreaterThanOrEquals:
 			((ImmediateOperand*) result)->value = (*(ImmediateOperand *) result >= *(ImmediateOperand *) rhs);
 			break;
-			
+
 		default:
 			break;
 		}
@@ -1490,11 +1490,11 @@ Operand* Assembler::ParseOperandLogical(Tokenizer &tokenizer, AutoDeleteVector &
 	Operand *result = ParseOperandComparison(tokenizer, temporaryOperands);
 	if(!result) return nullptr;
 	if(result->type != Operand::Type::Immediate) return result;
-	
+
 	for(;;)
 	{
 		Token op = tokenizer.PeekToken();
-		
+
 		switch(op.type)
 		{
 		case Token::Type::LogicalOr:
@@ -1505,7 +1505,7 @@ Operand* Assembler::ParseOperandLogical(Tokenizer &tokenizer, AutoDeleteVector &
 		default:
 			return result;
 		}
-		
+
 		Operand *rhs = ParseOperandComparison(tokenizer, temporaryOperands);
 		if(!rhs) return nullptr;
 		if(rhs->type != Operand::Type::Immediate) throw AssemblerException("Unable to parse logical statement");
@@ -1515,11 +1515,11 @@ Operand* Assembler::ParseOperandLogical(Tokenizer &tokenizer, AutoDeleteVector &
 		case Token::Type::LogicalOr:
 			((ImmediateOperand*) result)->value = (((ImmediateOperand *) result)->AsBool() || ((ImmediateOperand *) rhs)->AsBool());
 			break;
-			
+
 		case Token::Type::LogicalAnd:
 			((ImmediateOperand*) result)->value = (((ImmediateOperand *) result)->AsBool() && ((ImmediateOperand *) rhs)->AsBool());
 			break;
-			
+
 		default:
 			break;
 		}
@@ -1531,16 +1531,16 @@ Operand* Assembler::ParseOperandLogical(Tokenizer &tokenizer, AutoDeleteVector &
 Operand* Assembler::ParseAddressProduct(Tokenizer &tokenizer, MemoryOperand &memoryOperand, AutoDeleteVector &temporaryOperands)
 {
 	bool assignedScale = false;
-	
+
 	Operand *result = ParseOperandPrimary(tokenizer, temporaryOperands);
 	for(;;)
 	{
 		Token op = tokenizer.PeekToken();
 		if(op.type != Token::Type::Star
 		   && op.type != Token::Type::Divide) break;
-		
+
 		tokenizer.NextToken();
-		
+
 		Operand *temp = ParseOperandPrimary(tokenizer, temporaryOperands);
 		if(op.type == Token::Type::Star)
 		{
@@ -1610,9 +1610,9 @@ Operand* Assembler::ParseAddressSum(Tokenizer &tokenizer, MemoryOperand &memoryO
 		Token op = tokenizer.PeekToken();
 		if(op.type != Token::Type::Add
 		   && op.type != Token::Type::Subtract) break;
-		
+
 		tokenizer.NextToken();
-		
+
 		Operand *temp = ParseAddressProduct(tokenizer, memoryOperand, temporaryOperands);
 		if(temp->type == Operand::Type::Register && op.type == Token::Type::Add)
 		{
@@ -1638,10 +1638,10 @@ Operand* Assembler::ParseAddressSum(Tokenizer &tokenizer, MemoryOperand &memoryO
 			memoryOperand.displacement = (ImmediateOperand*)temp;
 			UpdateExpressionBitWidth(temp->expressionIndex, 32);
 		}
-		
+
 		int64_t a = (result->type == Operand::Type::Immediate) ? ((ImmediateOperand*)result)->value : 0;
 		int64_t b = (temp->type == Operand::Type::Immediate) ? ((ImmediateOperand*)temp)->value : 0;
-		
+
 		result = result->type == Operand::Type::Immediate ? result :
 					temp->type == Operand::Type::Immediate ? temp : nullptr;
 		if(!result)
@@ -1653,7 +1653,7 @@ Operand* Assembler::ParseAddressSum(Tokenizer &tokenizer, MemoryOperand &memoryO
 		int64_t value = (op.type == Token::Type::Add) ? a + b : a - b;
 		((ImmediateOperand *)result)->value = value;
 	}
-	
+
 	if(result->type == Operand::Type::Immediate)
 	{
 		if(!result->IsExpression() && ((ImmediateOperand*) result)->value != 0)
@@ -1665,7 +1665,7 @@ Operand* Assembler::ParseAddressSum(Tokenizer &tokenizer, MemoryOperand &memoryO
 			memoryOperand.displacement = (ImmediateOperand*)result;
 		}
 	}
-	
+
 	return result;
 }
 

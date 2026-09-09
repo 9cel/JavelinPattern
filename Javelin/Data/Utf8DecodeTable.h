@@ -9,9 +9,9 @@ namespace Javelin
 	namespace Data
 	{
 //============================================================================
-		
+
 		extern const unsigned char UTF8_DECODE_TABLE[256];
-		
+
 //============================================================================
 	} // namespace cata
 } // namespace Javelin

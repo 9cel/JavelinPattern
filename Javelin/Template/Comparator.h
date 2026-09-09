@@ -70,7 +70,7 @@ namespace Javelin
 			return a <= b;
 		}
 	};
-	
+
 //============================================================================
 
 	template<typename CLASS, typename T, typename C=Less> struct MemberAcccessorComparator
@@ -83,7 +83,7 @@ namespace Javelin
 		bool IsOrdered(const CLASS& a, const CLASS& b) 	const	{ return c.IsOrdered(a.*e, b.*e);	}
 		bool IsOrdered(const CLASS& a, const T& b)		const	{ return c.IsOrdered(a.*e, b);		}
 		bool IsOrdered(const T& a, const CLASS& b)		const	{ return c.IsOrdered(a, b.*e);		}
-		
+
 		bool IsEqual(const CLASS& a, const CLASS& b)	const	{ return c.IsEqual(a.*e, b.*e);		}
 		bool IsEqual(const CLASS& a, const T& b)		const	{ return c.IsEqual(a.*e, b);		}
 		bool IsEqual(const T& a, const CLASS& b)		const	{ return c.IsEqual(a, b.*e);		}
@@ -99,7 +99,7 @@ namespace Javelin
 		bool IsOrdered(const CLASS& a, const CLASS& b) 	const	{ return c.IsOrdered((a.*e)(), (b.*e)());	}
 		bool IsOrdered(const CLASS& a, const T& b)		const	{ return c.IsOrdered((a.*e)(), b);			}
 		bool IsOrdered(const T& a, const CLASS& b)		const	{ return c.IsOrdered(a, (b.*e)());			}
-		
+
 		bool IsEqual(const CLASS& a, const CLASS& b)	const	{ return c.IsEqual((a.*e)(), (b.*e)());		}
 		bool IsEqual(const CLASS& a, const T& b)		const	{ return c.IsEqual((a.*e)(), b);			}
 		bool IsEqual(const T& a, const CLASS& b)		const	{ return c.IsEqual(a, (b.*e)());			}
@@ -108,13 +108,13 @@ namespace Javelin
 	template<typename CLASS, typename T, T CLASS::*M, typename C=Less> struct MemberComparator
 	{
 		const C c;
-		
+
 		MemberComparator(const C& aC = C()) : c(aC)	{ }
-		
+
 		bool IsOrdered(const CLASS& a, const CLASS& b) 	const	{ return c.IsOrdered(a.*M, b.*M);	}
 		bool IsOrdered(const CLASS& a, const T& b)		const	{ return c.IsOrdered(a.*M, b);		}
 		bool IsOrdered(const T& a, const CLASS& b)		const	{ return c.IsOrdered(a, b.*M);		}
-		
+
 		bool IsEqual(const CLASS& a, const CLASS& b)	const	{ return c.IsEqual(a.*M, b.*M);		}
 		bool IsEqual(const CLASS& a, const T& b)		const	{ return c.IsEqual(a.*M, b);		}
 		bool IsEqual(const T& a, const CLASS& b)		const	{ return c.IsEqual(a, b.*M);		}
@@ -125,12 +125,12 @@ namespace Javelin
 	template<typename FirstComparator, typename SecondComparator> struct ChainComparator
 	{
 		template<typename A, typename B>
-			bool IsOrdered(A&& a, B&& b)	const	
-		{ 
+			bool IsOrdered(A&& a, B&& b)	const
+		{
 			if(FirstComparator::IsEqual(a, b)) return SecondComparator::IsOrdered(a, b);
 			else return FirstComparator::IsOrdered(a, b);
 		}
-		
+
 		template<typename A, typename B>
 			bool IsEqual(A&& a, B&& b) const		{ return FirstComparator::IsEqual(a, b) && SecondComparator::IsEqual(a, b);	}
 	};

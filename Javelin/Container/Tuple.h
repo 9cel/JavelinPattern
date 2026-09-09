@@ -13,22 +13,22 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	class IReader;
 	class IWriter;
-	
+
 //============================================================================
 
 	namespace Private
 	{
 		template<int n, typename T> struct TupleTypeHelper	{ typedef typename TupleTypeHelper<n-1, typename T::Inherited>::Type Type; };
 		template<typename T> struct TupleTypeHelper<0, T>	{ typedef typename T::ValueType Type; };
-		
+
 		template<int n, typename RETURN, typename T> struct TupleValueHelper
 		{
 			JINLINE static RETURN Get(T* a) { return TupleValueHelper<n-1, RETURN, typename T::Inherited>::Get(a); }
 		};
-		
+
 		template<typename RETURN, typename T> struct TupleValueHelper<0, RETURN, T>
 		{
 			JINLINE static RETURN Get(T* a) { return a->GetValue(); }
@@ -46,25 +46,25 @@ namespace Javelin
 			return (obj->*function)( p.template Get<S>()... );
 		}
 	}
-	
+
 //============================================================================
 
 	template<typename... T> class Tuple;
-	
+
 	template<> class Tuple<>
 	{
 	public:
 		JINLINE Tuple() = default;
 		JINLINE Tuple(IReader&) { }
-		
+
 		JINLINE Tuple operator+(const Tuple& b) const 									{ return {}; }
 		JINLINE Tuple operator-(const Tuple& b) const 									{ return {}; }
 		JINLINE Tuple operator*(const Tuple& b) const 									{ return {}; }
 		JINLINE Tuple operator/(const Tuple& b) const 									{ return {}; }
-		
+
 		template<typename A> JINLINE Tuple operator*(const A& k) const 					{ return {}; }
 		template<typename A> JINLINE friend Tuple operator*(const A& k, const Tuple& b) { return {}; }
-		
+
 		JINLINE friend size_t GetHash(const Tuple&) 			{ return 0; }
 		JINLINE static size_t GetNumberOfElements()				{ return 0; }
 		JINLINE void SetAll()									{ }
@@ -82,25 +82,25 @@ namespace Javelin
 
 		template<typename FUNCTION>
 		JINLINE auto Call(FUNCTION&& function) const -> decltype(function())	{ return function(); }
-		
+
 		const void* GetData() const { return this; }
-		
+
 	protected:
 		template<typename T> static constexpr bool HasType() 	{ return false; }
 	};
-	
+
 	template<typename T, typename... U> class Tuple<T, U...> : public Tuple<U...>
 	{
 	public:
 		typedef T			ValueType;
 		typedef Tuple<U...> Inherited;
-		
+
 	protected:
 		template<typename T2> static constexpr bool HasType() 	{ return Helper<T2>::HasType(); }
-		
+
 	private:
 		JINLINE Tuple(typename TypeData<T>::ParameterType aA, const Inherited& u) : Inherited(u), a(aA) { }
-		
+
 		template<typename T2, typename DUMMY=void> struct Helper
 		{
 			static const T2& Get(const Tuple& t)				{ return t.Inherited::template Get<T2>();	}
@@ -153,15 +153,15 @@ namespace Javelin
 
 		template<typename A> JINLINE Tuple operator*(const A& k) const						{ return {a*k, *(const Inherited*) this * k};	}
 		template<typename A> JINLINE friend Tuple operator*(const A& k, const Tuple& b)		{ return {k*b.a, k * (const Inherited&) b}; 	}
-		
+
 		JINLINE static size_t GetNumberOfBytes()  											{ return sizeof(Tuple); 	}
 		JINLINE static size_t GetNumberOfElements()											{ return 1+sizeof...(U); 	}
-		
+
 		JINLINE friend size_t GetHash(const Tuple& t) 										{ return GetHash(t.a) ^ GetHash((const Inherited&) t); }
-		
+
 		JINLINE T& GetValue()				{ return a; }
 		JINLINE const T& GetValue() const	{ return a; }
-	
+
 		template<typename FUNCTION>
 		JINLINE auto Call(FUNCTION&& function) const
 			-> decltype(Private::CallFunction(function, *this, typename CreateSequence<1+sizeof...(U)>::Type()))
@@ -177,14 +177,14 @@ namespace Javelin
 			}
 
 		friend IWriter& operator<<(IWriter& output, const Tuple& t)	{ output << (const Inherited&) t << t.a; return output; }
-		
+
 		JINLINE bool operator==(const Tuple& other) const		{ return a == other.a && Inherited::operator==(other); }
 		JINLINE bool operator!=(const Tuple& other) const		{ return a != other.a || Inherited::operator!=(other); }
 		JINLINE bool operator<(const Tuple& other) const		{ if(a != other.a) return a < other.a; else return Inherited::operator<(other); }
 		JINLINE bool operator<=(const Tuple& other) const		{ if(a != other.a) return a < other.a; else return Inherited::operator<=(other); }
 		JINLINE bool operator>(const Tuple& other) const		{ if(a != other.a) return a > other.a; else return Inherited::operator>(other); }
 		JINLINE bool operator>=(const Tuple& other) const		{ if(a != other.a) return a > other.a; else return Inherited::operator>=(other); }
-		
+
 	private:
 		T	a;
 	};
@@ -192,11 +192,11 @@ namespace Javelin
 //============================================================================
 
 	template<typename... T> String ToStringHelper(const Tuple<T...>&);
-	
+
 	template<> JINLINE String ToStringHelper(const Tuple<>& t) { return String::EMPTY_STRING; }
 	template<typename T> String ToStringHelper(const Tuple<T>& t) { return ToString(t.GetValue()); }
 	template<typename T1, typename T2, typename... TS> String ToStringHelper(const Tuple<T1, T2, TS...>& t) { return String::Create("%A, %A", &ToString(t.GetValue()), &ToStringHelper((const Tuple<T2, TS...>&)t)); }
-	
+
 	template<typename... T> String ToString(const Tuple<T...>& t) { return String::Create("(%A)", &ToStringHelper(t)); }
 
 //============================================================================

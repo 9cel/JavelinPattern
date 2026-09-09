@@ -74,7 +74,7 @@ size_t Private::BitTableBase::CountTrailingZeros(const unsigned* data, size_t nu
 			result += 32;
 			continue;
 		}
-		
+
 		if((value & 0xffff) == 0)
 		{
 			value >>= 16;
@@ -100,10 +100,10 @@ Optional<Interval<size_t>> Private::BitTableBase::GetContiguousRange(const unsig
 {
 	size_t minimum = CountTrailingZeros(data, numberOfWords);
 	if(minimum == numberOfWords*32) return {};
-	
+
 	size_t currentWord = minimum / 32;;
 	int testBit = minimum & 31;
-	
+
 	unsigned expectedRemainder = (unsigned) -1 << (minimum & 31);
 	if(data[currentWord] == expectedRemainder)
 	{
@@ -169,7 +169,7 @@ BitTable::BitTable(BitTable&& a)
 	numberOfBits = a.numberOfBits;
 	capacityInWords = a.capacityInWords;
 	data = a.data;
-	
+
 	a.numberOfBits = 0;
 	a.capacityInWords = 0;
 	a.data = nullptr;
@@ -185,30 +185,30 @@ BitTable::~BitTable()
 void BitTable::SetCount(size_t newNumberOfBits)
 {
 	if(newNumberOfBits == numberOfBits) return;
-	
+
 	if(newNumberOfBits < numberOfBits)
 	{
 		size_t oldNumberOfWords = GetNumberOfWords(numberOfBits);
 		size_t newNumberOfWords = GetNumberOfWords(newNumberOfBits);
-		
+
 		// Zero out the excess
 		if(newNumberOfWords > 0)
 		{
 			// Clear the remainder of the bits in the current word
 			int mask = unsigned(-1) << (newNumberOfBits & 31);
 			data[newNumberOfWords] &= ~mask;
-			
+
 			// And clear the remainder of the words.
 			for(size_t i : Range(oldNumberOfWords, newNumberOfWords)) data[i] = 0;
 		}
-		
+
 		numberOfBits = newNumberOfBits;
 	}
 	else
 	{
 		// newNumberOfBits > numberOfBits
 		size_t newNumberOfWords = GetNumberOfWords(newNumberOfBits);
-		
+
 		if(newNumberOfWords > capacityInWords)
 		{
 			// Reallocation time.
@@ -219,7 +219,7 @@ void BitTable::SetCount(size_t newNumberOfBits)
 			data = newData;
 			capacityInWords = newNumberOfWords;
 		}
-		
+
 		numberOfBits = newNumberOfBits;
 	}
 }

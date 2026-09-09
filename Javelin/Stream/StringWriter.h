@@ -6,7 +6,7 @@
 
 //============================================================================
 
-namespace Javelin 
+namespace Javelin
 {
 //============================================================================
 
@@ -21,7 +21,7 @@ namespace Javelin
 
 		// Getting the string will Reset the written stream!
 		JEXPORT String JCALL GetString();
-		
+
 		JINLINE size_t JCALL GetCount() const { return stringData.GetCount(); }
 
 		// From IWriter

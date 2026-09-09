@@ -13,7 +13,7 @@ struct RecursiveMutexAttributes
 	pthread_mutexattr_t attr;
 
 	RecursiveMutexAttributes()
-	{ 
+	{
 		pthread_mutexattr_init(&attr);
 		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	}

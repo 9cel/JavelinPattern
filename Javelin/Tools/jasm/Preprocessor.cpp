@@ -66,7 +66,7 @@ bool Preprocessor::ProcessLine(SourceFileSegments& result,
 	{
 		segment = CodeSegment::Segment::Data;
 	}
-	
+
 	else
 	{
 		if(parameters)
@@ -111,12 +111,12 @@ void Preprocessor::ProcessLineTokens(SourceFileSegments& result,
 {
 	int lineNumber = source.GetCurrentLineNumber();
 	bool isPreprocessor = source.GetCurrentLineIsPreprocessor();
-	
+
 	for(;;)
 	{
 		std::string token = TransferWhitespaceAndGetNextToken(&line, source);
 		if(token.length() == 0) break;
-		
+
 		if(parameters)
 		{
 			if(const auto it = parameters->find(token);
@@ -137,7 +137,7 @@ void Preprocessor::ProcessLineTokens(SourceFileSegments& result,
 		}
 		line.append(token);
 	}
-	
+
 	AssemblerType type(line);
 	if(type.IsValid())
 	{
@@ -174,14 +174,14 @@ void Preprocessor::ProcessDefine(CodeSegmentSource& source)
 void Preprocessor::ProcessMacroDefinition(CodeSegmentSource& source)
 {
 	std::string macroName = ReadToken(source);
-	
+
 	Macro macro;
 	bool first = true;
 	for(;;)
 	{
 		std::string token = ReadToken(source);
 		if(token.length() == 0) break;
-		
+
 		if(first) first = false;
 		else
 		{
@@ -285,7 +285,7 @@ std::string Preprocessor::ReadToken(CodeSegmentSource& source)
 	{
 		c = source.PeekByte();
 		if(c == EOF || !Character::IsWordCharacter(c)) return returnValue;
-		
+
 		returnValue.push_back(c);
 		source.SkipByte();
 	}
@@ -335,7 +335,7 @@ std::string Preprocessor::TransferWhitespaceAndGetNextToken(std::string *line,
 	{
 		c = source.PeekByte();
 		if(c == EOF || !Character::IsWordCharacter(c)) return returnValue;
-		
+
 		returnValue.push_back(c);
 		source.SkipByte();
 	}

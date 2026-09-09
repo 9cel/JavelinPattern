@@ -10,7 +10,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	class TreeType_Binary : public TreeType_SimpleBinary
 	{
 	public:
@@ -19,17 +19,17 @@ namespace Javelin
 		public:
 			NodeBase*	parent;
 
-			void	SetParent(NodeBase* p)		{ parent = p; }			
+			void	SetParent(NodeBase* p)		{ parent = p; }
 
 			JEXPORT static NodeBase* JCALL GetLeftMostNode(const NodeBase* node);
 			JEXPORT static NodeBase* JCALL GetRightMostNode(const NodeBase* node);
-			
+
 			JEXPORT static NodeBase* JCALL GetIteratorNext(const NodeBase* node);
 			JEXPORT static NodeBase* JCALL GetIteratorPrevious(const NodeBase* node);
 		};
 
 	};
-	
+
 //============================================================================
 } // namespace Javelin
 //===========================================================================e

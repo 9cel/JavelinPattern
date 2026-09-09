@@ -63,7 +63,7 @@ void PatternProcessorBase::ExpandedJumpTables::Set(const PatternData& patternDat
 		jumpTableForPcList[pc] = p;
 		p += 256;
 	}
-	
+
 	// Populate the data
 	for(size_t pc = 0; pc < numberOfInstructions; ++pc)
 	{

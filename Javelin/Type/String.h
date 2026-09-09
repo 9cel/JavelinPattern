@@ -12,7 +12,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	template<typename T> struct AlternateEndian;
 	template<typename T> struct BigEndian;
 	template<typename T> struct LittleEndian;
@@ -47,12 +47,12 @@ namespace Javelin
 		static StringData* CreateHexStringFromBytes(const void* data, size_t numberOfBytes);
 		static StringData* CreateWithSize(size_t numberOfBytes);
 		static StringData* CreateFromReader(IReader& input, size_t length);
-		
+
 		friend IWriter& operator<<(IWriter& output, const StringData& data);
 
 		size_t		GetCount()			const		{ return length; 		}
 		size_t		GetNumberOfBytes()	const		{ return length; 		}
-		
+
 		bool		HasData()			const		{ return length != 0;	}
 		const char*	GetData()			const		{ return data; 			}
 		bool		IsEmpty()			const		{ return length == 0;	}
@@ -67,36 +67,36 @@ namespace Javelin
 		void		AppendNoExpand(char c)								{ JASSERT(length < capacity); data[length++] = c; }
 		void		SetTerminatingNull();
 		void 		SetTerminatingNullNoExpand()						{ JASSERT(length < capacity); data[length] = '\0'; }
-		
+
 		bool 		operator<(const StringData& a) const;
 		bool		operator==(const StringData& a) const;
 		int			Compare(const char* s) const;
-		
+
 		void operator=(const StringData&) = delete;
-		
+
 		static void* operator new(size_t size)								{ return ::operator new(size); }
 		static void operator delete(void* p)								{ ::operator delete(p); }
-		
+
 	private:
 		char*		data;
 		size_t		length;
 		size_t		capacity;
 
 		char* GetInlineDataPointer() 										{ return (char*) &capacity; }
-		
+
 		struct InlineDataInitializer
 		{
 			size_t	length;
 		};
 		StringData(InlineDataInitializer a);
-		
+
 		static void* JCALL operator new(size_t size, size_t extraBytes);
 		static void JCALL operator delete(void *p, size_t extraBytes)		{ ::operator delete(p); }
 		static size_t GetNewAllocationSize(size_t size);
 	};
-	
+
 //============================================================================
-	
+
 	class String : public SmartPointer<StringData, SmartPointerOwnershipPolicy_SingleAssignSmartObjectPointerAlwaysValid>
 	{
 	private:
@@ -105,15 +105,15 @@ namespace Javelin
 #else
 		typedef SmartPointer<StringData, SmartPointerOwnershipPolicy_SingleAssignSmartObjectPointerAlwaysValid> Inherited;
 #endif
-	
+
 		class TemporaryString
 		{
 		public:
 			constexpr TemporaryString(const char* aData, size_t aCount)	: stringData((StringData*) &counter), counter(1), data(aData), count(aCount) { }
 			~TemporaryString() 				{ JASSERT(counter == 1); }
-			
+
 			operator String&() const 		{ return *(String*) this; }
-			
+
 		private:
 			StringData*	stringData;
 			int			counter;
@@ -132,7 +132,7 @@ namespace Javelin
 		JEXPORT String(const Character* string, size_t numberOfCharacters);
 		JEXPORT String(IReader& input);
 		JEXPORT String(IReader& input, size_t length);
-		
+
 		JEXPORT static String CreateHexStringFromBytes(const void* data, size_t numberOfBytes);
 		JEXPORT static String CreateFromAscii(const char* string);
 		JEXPORT static String CreateFromAscii(const char* string, size_t numberOfBytes);
@@ -146,7 +146,7 @@ namespace Javelin
 		JEXPORT static String CreateFromUtf16(const unsigned short* string, size_t numberOfShorts);
 
 		JEXPORT static String JCALL CreateWithLength(char* &buffer, size_t length);
-		
+
 		static const TemporaryString MakeReferenceTo(const char* data) 					{ return TemporaryString(data, strlen(data)); }
 		static const TemporaryString MakeReferenceTo(const char* data, size_t length) 	{ JASSERT(data[length] == '\0'); return TemporaryString(data, length); }
 
@@ -158,9 +158,9 @@ namespace Javelin
 		// These are overridden so that we don't get warnings about taking addresses of temporary object when we want to PrintF("%A", &temporaryResult());
 		JINLINE String* operator&() 			{ return this; }
 		JINLINE const String* operator&() const { return this; }
-		
+
 		JEXPORT void JCALL Reset();
-		
+
 		JINLINE bool HasData() const										{ return GetPointer()->HasData();	}
 		JINLINE bool IsEmpty() const										{ return GetPointer()->IsEmpty();	}
 
@@ -174,16 +174,16 @@ namespace Javelin
 
 		// For iterating char data, eg. for(const char c : string.RawBytes()
 		JINLINE const StringData& RawBytes() const							{ return *GetPointer(); }
-		
+
 		JEXPORT bool JCALL Contains(Character c) const;
 		JEXPORT bool JCALL Contains(const String& s) const;
-		
+
 		JEXPORT bool operator==(const String& a) const;
 		JEXPORT bool operator< (const String& a) const;
 		JEXPORT bool operator==(const char* a) const;
 		JEXPORT bool operator< (const char* a) const;
 		JEXPORT bool operator> (const char* a) const;
-		
+
 		JINLINE bool operator!=(const String& a) const						{ return !(*this == a); }
 		JINLINE bool operator> (const String& a) const						{ return  (a < *this); }
 		JINLINE bool operator<=(const String& a) const						{ return !(a < *this); }
@@ -195,36 +195,36 @@ namespace Javelin
 
 		// 7-bit test
 		JEXPORT bool  JCALL	IsAscii() const;
-		
+
 		JEXPORT bool  JCALL IsInteger() const;
 		JEXPORT int   JCALL AsInteger() const;
 		JEXPORT int   JCALL AsIntegerFromHex() const;
 		JEXPORT bool  JCALL IsFloat() const;
 		JEXPORT float JCALL AsFloat() const;
 		JEXPORT static unsigned JCALL AsHex(const char* p, size_t length);
-		
+
 		JEXPORT bool JCALL BeginsWith(char c) const;
 		JEXPORT bool JCALL BeginsWith(const String& a) const;
 		JEXPORT bool JCALL EndsWith(const String& a) const;
-		
+
 		JEXPORT const char* JCALL AsUtf8String() const						{ return GetData(); }
 
 		JEXPORT static String Concatenate(const String &a, const String &b);
-		
+
 		// left or right can be null, in which case the result is not written
 		JEXPORT bool Split(const String& splitString, String* left, String* right) const;
 		JEXPORT bool Split(char splitChar, String* left, String* right) const;
 		JEXPORT bool SplitLast(char splitChar, String* left, String* right) const;
-		
+
 		JEXPORT Table<String> Split(char splitChar) const;
-		
+
 		JEXPORT bool JCALL IsLower() const;
 		JEXPORT friend String JCALL ToLower(const String& string);
         JEXPORT friend String JCALL ToUpper(const String& string);
 
 		JEXPORT String SubString(int startCharacterIndex) const;
 		JEXPORT String SubString(int startCharacterIndex, int endCharacterIndex) const;
-		
+
 		JEXPORT String CreateJsonString() const;
 		JEXPORT String CreateYamlString() const;
 
@@ -234,25 +234,25 @@ namespace Javelin
 			SPACE_TO_PLUS,
 			SPACE_TO_PERCENT,
 		};
-		
+
 		JEXPORT friend String UrlEncode(const String& s, UrlEncode urlEncode);
 		JEXPORT friend String UrlDecode(const String& s, bool convertPlusses);
 		JEXPORT friend String UrlDecode(const String& s)					{ return UrlDecode(s, true); }
 
 		JEXPORT size_t JCALL GetHash() const;
 		JINLINE friend size_t GetHash(const String& s)						{ return s.GetHash(); }
-		
+
 		// result MUST be able to hold GetNumberOfCharacters() characters. No terminating null provided.
 		JEXPORT void JCALL ToCharacters(Character* result) const;
-		
+
 		// The default SmartPointer will write an object reference number.
 		// We want strings to be written raw without references
 		        friend IWriter& operator<<(IWriter& output, const String& a)	{ return output << *a.GetPointer(); }
 		JEXPORT friend IReader& operator>>(IReader& input, String& a);
-		
+
 		JEXPORT friend size_t JCALL Levenshtein(const String& a, const String& b);
 		JEXPORT friend size_t JCALL DamerauLevenshtein(const String& a, const String& b);
-		
+
 		JEXPORT static const String EMPTY_STRING;
 		JEXPORT static const char LOWER_HEX_CHARACTERS[];
 		JEXPORT static const char UPPER_HEX_CHARACTERS[];
@@ -262,14 +262,14 @@ namespace Javelin
 	};
 
 //============================================================================
-	
+
 // This definition of JS has the following properties:
 //	No memory allocations required
 //  Release builds collapse the entire function, with no global guards for static variable accesses
 //  The StringData is correctly defined in read-write memory so that reference count increments/decrements are valid
 //  The string contents is defined right next to the structure so that cache misses are minimized.
 //	Note that this also places the strings in read-write memory. If this is a concern, the alternative can be used below
-	
+
 	namespace Private
 	{
 		template<int N> struct RawStringInline
@@ -313,7 +313,7 @@ namespace Javelin
 	//		static const Javelin::Private::RawStringData* stringProxy = &rawData; 				\
 	//		return *reinterpret_cast<const Javelin::String*>(&stringProxy); 					\
 	//	})()
-	
+
 //============================================================================
 
 	String ToString(bool b);

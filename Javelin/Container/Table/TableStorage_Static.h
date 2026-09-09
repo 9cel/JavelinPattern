@@ -15,7 +15,7 @@ namespace Javelin
 	template<size_t N> class TableStorage_Static
 	{
 	public:
-		template<typename T, typename DataIntegrityPolicy = DataIntegrityPolicy_Automatic<T> > 
+		template<typename T, typename DataIntegrityPolicy = DataIntegrityPolicy_Automatic<T> >
 		class Implementation
 		{
 		public:
@@ -25,7 +25,7 @@ namespace Javelin
 			JINLINE	void		Reset() 							{ DataIntegrityPolicy::Destroy(Begin(), count); count = 0; }
 
 			JINLINE	T&			Append()							{ JASSERT(count < N); T* p = &Begin()[count++]; DataIntegrityPolicy::Create(p); return *p; }
-			
+
 			template<typename U>
 			JINLINE	void		Append(U &&a)						{ JASSERT(count < N); DataIntegrityPolicy::Create(&Begin()[count++], (U&&) a);	}
 
@@ -53,7 +53,7 @@ namespace Javelin
 
 			JINLINE	T*			GetData()							{ return reinterpret_cast<T*>(data); 		}
 			JINLINE	const T*	GetData() const						{ return reinterpret_cast<const T*>(data); 	}
-	
+
 			JINLINE	T*			Begin()								{ return reinterpret_cast<T*>(data); 		}
 			JINLINE	const T*	Begin()	const						{ return reinterpret_cast<const T*>(data); 	}
 
@@ -62,7 +62,7 @@ namespace Javelin
 
 			JINLINE	T&			operator[](size_t i)				{ JASSERT(i < GetCount()); return reinterpret_cast<T*>(data)[i]; }
 			JINLINE	const T&	operator[](size_t i)	const		{ JASSERT(i < GetCount()); return reinterpret_cast<const T*>(data)[i]; }
-			
+
 			typedef T						ElementType;
 			typedef TableIterator<T>		Iterator;
 			typedef TableIterator<const T>	ConstIterator;
@@ -70,7 +70,7 @@ namespace Javelin
 		protected:
 			Implementation()										{ count = 0;	}
 			~Implementation()										{ DataIntegrityPolicy::Destroy(Begin(), count); }
-			
+
 		private:
 			char	data[sizeof(T)*N];
 			size_t	count;

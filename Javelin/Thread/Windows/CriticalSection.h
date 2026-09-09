@@ -18,7 +18,7 @@ namespace Javelin
 		void JCALL BeginLock()	const	{ EnterCriticalSection(&cs);			}
 		bool JCALL TryLock()	const	{ return TryEnterCriticalSection(&cs); 	}
 		void JCALL EndLock()	const	{ LeaveCriticalSection(&cs);			}
-		
+
 	private:
 		CRITICAL_SECTION cs;
 	};

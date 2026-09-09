@@ -28,16 +28,16 @@ class BitFieldGlushkovNfaPatternProcessor final : public PatternProcessor
 public:
 	BitFieldGlushkovNfaPatternProcessor(const void* data, size_t length);
 	~BitFieldGlushkovNfaPatternProcessor();
-	
+
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const;
 	virtual Interval<const void*> LocatePartialMatch(const void* data, size_t length, size_t offset) const;
 	virtual const void* PopulateCaptures(const void* data, size_t length, size_t offset, const char **captures) const;
-	
+
 	static bool CanUse(const void* data, size_t length);
-	
+
 private:
 	uint32_t	fullMatchStartingState;
 	uint32_t	partialMatchStartingState;
@@ -48,18 +48,18 @@ private:
 
 	ReverseProcessor*	reverseProcessor	= nullptr;
 	PatternProcessor*	forwardProcessor	= nullptr;
-	
+
 	struct State
 	{
 		uint32_t pc;
 		uint32_t nextPc;
-		
+
 		bool operator==(const State& a) const 	{ return pc == a.pc && nextPc == a.nextPc; }
 		bool operator<(const State& a) const 	{ return pc < a.pc || (pc == a.pc && nextPc < a.nextPc); }
-		
+
 		friend size_t GetHash(const State& a)  	{ return GetHash((uint64_t) a.nextPc << 32 | a.pc); }
 	};
-	
+
 	template<size_t N> struct UpdateStateHelper
 	{
 		static uint32_t UpdateState(uint32_t c, uint32_t oldState, const void* data);
@@ -70,16 +70,16 @@ private:
 		static void PrepareData(DataBlock& dataBlock, const Table<uint32_t>& stateMaskList, uint32_t characterMask[257]);
 		template<bool IS_ANCHORED> static const void* MatchFunction(uint32_t startingState, uint32_t matchStateMask, const void* data, const void* stopSearch, const void* startSearch);
 	};
-	
+
 	static const int END_OF_INPUT = 256;
-	
+
 	void Set(const void* data, size_t length);
-	
+
 	static const int MAXIMUM_NUMBER_OF_BITS = 32;
 	static void DetermineStateList(Table<State>& stateList, const ByteCodeHeader* header);
-	
+
 	typedef Map<State, uint32_t> StateToMaskMap;
-	
+
 	static void BuildStateToMaskMap(StateToMaskMap& stateToMaskMap, const Table<State>& stateInstructionList);
 
 	// The processing determines the state bits *between* instructions.
@@ -93,7 +93,7 @@ void BitFieldGlushkovNfaPatternProcessor::ProcessHelper<LOOKUP_TYPE, N>::Prepare
 	dataBlock.SetCount(sizeof(LOOKUP_TYPE)*256*N + 256*sizeof(LOOKUP_TYPE));
 	LOOKUP_TYPE (*p)[N][256] = (LOOKUP_TYPE (*)[N][256]) dataBlock.GetData();
 	LOOKUP_TYPE* pCharacterMask = (LOOKUP_TYPE*) (p+1);
-	
+
 	for(size_t i = 0; i < N; ++i)
 	{
 		uint32_t masks[8];
@@ -101,7 +101,7 @@ void BitFieldGlushkovNfaPatternProcessor::ProcessHelper<LOOKUP_TYPE, N>::Prepare
 		{
 			masks[j] = i*8 + j < stateMaskList.GetCount() ? stateMaskList[i*8+j] : 0;
 		}
-		
+
 		for(int j = 0; j < 256; ++j)
 		{
 			uint32_t value = 0;
@@ -170,7 +170,7 @@ const void* BitFieldGlushkovNfaPatternProcessor::ProcessHelper<LOOKUP_TYPE, N>::
 	uint32_t state = startingState;
 	const uint8_t* p = (const uint8_t*) startSearch;
 	const uint8_t* result = nullptr;
-	
+
 	while(p < stopSearch)
 	{
 		if(!IS_ANCHORED)
@@ -194,7 +194,7 @@ const void* BitFieldGlushkovNfaPatternProcessor::ProcessHelper<LOOKUP_TYPE, N>::
 BitFieldGlushkovNfaPatternProcessor::BitFieldGlushkovNfaPatternProcessor(const void* data, size_t length)
 {
 	forwardProcessor = PatternProcessor::CreateThompsonNfaProcessor(data, length);
-	reverseProcessor = ReverseProcessor::Create(data, length, false);	
+	reverseProcessor = ReverseProcessor::Create(data, length, false);
 	Set(data, length);
 }
 
@@ -216,14 +216,14 @@ void BitFieldGlushkovNfaPatternProcessor::Set(const void* data, size_t length)
 
 	StateToMaskMap stateToMaskMap(stateList.GetCount());
 	BuildStateToMaskMap(stateToMaskMap, stateList);
-	
+
 	Table<bool> progressChecks;
 	progressChecks.SetCount(header->numberOfProgressChecks);
 	progressChecks.SetAll(false);
-	
+
 	uint32_t characterMask[257];
 	memset(characterMask, 0, sizeof(characterMask));
-	
+
 	Table<uint32_t> stateMask;
 	stateMask.SetCount(stateList.GetCount());
 	stateMask.SetAll(0);
@@ -236,13 +236,13 @@ void BitFieldGlushkovNfaPatternProcessor::Set(const void* data, size_t length)
 			uint32_t state = 0;
 			progressChecks.SetAll(false);
 			ProcessNext(state, progressChecks, patternData, stateList[i].nextPc, i, stateToMaskMap, c);
-			
+
 			// states is a bitmask of states reachable by character c from state i
 			characterMask[c] |= state;
 			stateMask[i] |= state;
 		}
 	}
-	
+
 	fullMatchStartingState = 1;
 	partialMatchStartingState = 1;
 	if(header->partialMatchStartingInstruction != header->fullMatchStartingInstruction)
@@ -256,14 +256,14 @@ void BitFieldGlushkovNfaPatternProcessor::Set(const void* data, size_t length)
 		anchoredProcessFunction = &ProcessHelper<T, N>::MatchFunction<true>;	\
 		unanchoredProcessFunction = &ProcessHelper<T, N>::MatchFunction<false>;	\
 		break
-	
+
 	switch((stateList.GetCount()+7)/8)
 	{
 	HANDLE_CASE(1, uint8_t);
 	HANDLE_CASE(2, uint16_t);
 	HANDLE_CASE(3, uint32_t);
 	HANDLE_CASE(4, uint32_t);
-		
+
 	default:
 		JERROR("Unhandled list size!");
 	}
@@ -280,7 +280,7 @@ Loop:
 		JASSERT(stateToMaskMap.Contains(State{pc, pc+1}));
 		stateBits |= stateToMaskMap[State{pc, pc+1}];
 		break;
-			
+
 	case InstructionType::Byte:
 		if(instruction.data == c)
 		{
@@ -288,7 +288,7 @@ Loop:
 			stateBits |= stateToMaskMap[State{pc, pc+1}];
 		}
 		break;
-			
+
 	case InstructionType::ByteEitherOf2:
 		if((instruction.data & 0xff) == c ||
 		   ((instruction.data >> 8) & 0xff) == c)
@@ -297,7 +297,7 @@ Loop:
 			stateBits |= stateToMaskMap[State{pc, pc+1}];
 		}
 		break;
-		
+
 	case InstructionType::ByteEitherOf3:
 		if((instruction.data & 0xff) == c ||
 		   ((instruction.data >> 8) & 0xff) == c ||
@@ -307,7 +307,7 @@ Loop:
 			stateBits |= stateToMaskMap[State{pc, pc+1}];
 		}
 		break;
-		
+
 	case InstructionType::ByteRange:
 		{
 			unsigned char low = instruction.data & 0xff;
@@ -332,7 +332,7 @@ Loop:
 			}
 		}
 		break;
-			
+
 	case InstructionType::ByteNot:
 		if(c != END_OF_INPUT && c != instruction.data)
 		{
@@ -340,7 +340,7 @@ Loop:
 			stateBits |= stateToMaskMap[State{pc, pc+1}];
 		}
 		break;
-			
+
 	case InstructionType::ByteNotEitherOf2:
 		if((instruction.data & 0xff) != c &&
 		   ((instruction.data >> 8) & 0xff) != c)
@@ -349,7 +349,7 @@ Loop:
 			stateBits |= stateToMaskMap[State{pc, pc+1}];
 		}
 		break;
-			
+
 	case InstructionType::ByteNotEitherOf3:
 		if((instruction.data & 0xff) != c &&
 		   ((instruction.data >> 8) & 0xff) != c &&
@@ -359,7 +359,7 @@ Loop:
 			stateBits |= stateToMaskMap[State{pc, pc+1}];
 		}
 		break;
-			
+
 	case InstructionType::ByteNotRange:
 		if(c != END_OF_INPUT)
 		{
@@ -372,7 +372,7 @@ Loop:
 			}
 		}
 		break;
-			
+
 	case InstructionType::ByteJumpTable:
 		if(c != END_OF_INPUT)
 		{
@@ -398,7 +398,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::ByteJumpRange:
 		{
 			const ByteCodeJumpRangeData* data = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
@@ -410,7 +410,7 @@ Loop:
 			}
 		}
 		break;
-			
+
 	case InstructionType::DispatchMask:
 		{
 			const ByteCodeJumpMaskData* data = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
@@ -426,7 +426,7 @@ Loop:
 			if(pc == TypeData<uint32_t>::Maximum()) break;
 			goto Loop;
 		}
-			
+
 	case InstructionType::DispatchRange:
 		{
 			const ByteCodeJumpRangeData* data = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
@@ -435,10 +435,10 @@ Loop:
 			goto Loop;
 		}
 		break;
-			
+
 	case InstructionType::Fail:
 		break;
-		
+
 	case InstructionType::FindByte:
 		{
 			uint32_t targetPc = (instruction.data & 0xff) == c ? instruction.data >> 8 : pc;
@@ -446,21 +446,21 @@ Loop:
 			stateBits |= stateToMaskMap[State{pc, targetPc}];
 		}
 		break;
-		
+
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
-		
+
 	case InstructionType::Match:
 		matchStateMask |= 1 << stateIndex;
 		break;
-			
+
 	case InstructionType::ProgressCheck:
 		if(progressChecks[instruction.data]) break;
 		progressChecks[instruction.data] = true;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::SaveNoRecurse:
 	case InstructionType::Save:
 		++pc;
@@ -477,7 +477,7 @@ Loop:
 			pc = splitData->targetList[numberOfTargets-1];
 			goto Loop;
 		}
-		
+
 	case InstructionType::SplitMatch:
 		{
 			const uint32_t* splitData = patternData.GetData<uint32_t>(instruction.data);
@@ -485,7 +485,7 @@ Loop:
 			pc = splitData[1];
 			goto Loop;
 		}
-		
+
 	case InstructionType::SplitNextN:
 	case InstructionType::SplitNextMatchN:
 	case InstructionType::SplitNNext:
@@ -493,7 +493,7 @@ Loop:
 		ProcessNext(stateBits, progressChecks, patternData, instruction.data, stateIndex, stateToMaskMap, c);
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertStartOfInput:
 	case InstructionType::AssertEndOfInput:
 	case InstructionType::AssertStartOfLine:
@@ -536,7 +536,7 @@ void BitFieldGlushkovNfaPatternProcessor::DetermineStateList(Table<State>& state
 {
 	PatternData patternData(header->GetForwardProgram());
 	uint32_t numberOfInstructions = header->numberOfInstructions;
-	
+
 	stateList.Append(State{static_cast<uint32_t>(-1),header->fullMatchStartingInstruction});
 	if(header->partialMatchStartingInstruction != header->fullMatchStartingInstruction)
 	{
@@ -560,12 +560,12 @@ void BitFieldGlushkovNfaPatternProcessor::DetermineStateList(Table<State>& state
 		case InstructionType::ByteNotRange:
 			stateList.Append(State{i, i+1});
 			break;
-				
+
 		case InstructionType::FindByte:
 			stateList.Append(State{i, i});
 			stateList.Append(State{i, uint32_t(instruction.data>>8)});
 			break;
-			
+
 		case InstructionType::ByteJumpTable:
 			{
 				const ByteCodeJumpTableData* data = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
@@ -579,7 +579,7 @@ void BitFieldGlushkovNfaPatternProcessor::DetermineStateList(Table<State>& state
 				}
 			}
 			break;
-				
+
 		case InstructionType::ByteJumpMask:
 			{
 				const ByteCodeJumpMaskData* data = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
@@ -593,7 +593,7 @@ void BitFieldGlushkovNfaPatternProcessor::DetermineStateList(Table<State>& state
 				}
 			}
 			break;
-				
+
 		case InstructionType::ByteJumpRange:
 			{
 				const ByteCodeJumpRangeData* data = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
@@ -635,7 +635,7 @@ void BitFieldGlushkovNfaPatternProcessor::DetermineStateList(Table<State>& state
 			// Cannot be handled by this processor (yet?)
 			stateList.SetCount(0);
 			return;
-				
+
 		case InstructionType::AssertRecurseValue:
 		case InstructionType::BackReference:
 		case InstructionType::Call:

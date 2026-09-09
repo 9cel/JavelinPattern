@@ -52,7 +52,7 @@ namespace Javelin::Assembler::riscv::Encoders
         const ImmediateOperand *funct7 = (const ImmediateOperand*) operands[5];
 
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rd && !rd->IsExpression()) opcode |= rd->index << 7;
         if(rs1 && !rs1->IsExpression()) opcode |= rs1->index << 15;
         if(rs2 && !rs2->IsExpression()) opcode |= rs2->index << 20;
@@ -97,17 +97,17 @@ namespace Javelin::Assembler::riscv::Encoders
         assert(operands[0] == nullptr || operands[0]->type == Operand::Type::Register);
         assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
         assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Number);
-        
+
         const RegisterOperand *rd = (const RegisterOperand*) operands[0];
         const RegisterOperand *rs1 = (const RegisterOperand*) operands[1];
         const ImmediateOperand *i = (const ImmediateOperand*) operands[2];
-        
+
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rd && !rd->IsExpression()) opcode |= rd->index << 7;
         if(rs1 && !rs1->IsExpression()) opcode |= rs1->index << 15;
         if(i && !i->IsExpression()) opcode |= uint32_t(i->value) << 20;
-        
+
         listAction.AppendOpcode(opcode);
 
         if(rd && rd->IsExpression())
@@ -133,13 +133,13 @@ namespace Javelin::Assembler::riscv::Encoders
         assert(operands[0] == nullptr || operands[0]->type == Operand::Type::Register);
         assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
         assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Number);
-        
+
         const RegisterOperand *rs1 = (const RegisterOperand*) operands[0];
         const RegisterOperand *rs2 = (const RegisterOperand*) operands[1];
         const ImmediateOperand *i = (const ImmediateOperand*) operands[2];
-        
+
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rs1 && !rs1->IsExpression()) opcode |= rs1->index << 15;
         if(rs2 && !rs2->IsExpression()) opcode |= rs2->index << 20;
         if(i && !i->IsExpression())
@@ -147,7 +147,7 @@ namespace Javelin::Assembler::riscv::Encoders
             opcode |= (i->value & 0x1f) << 7;
             opcode |= ((i->value & 0xfe0) >> 5) << 25;
         }
-        
+
         listAction.AppendOpcode(opcode);
 
         if(rs1 && rs1->IsExpression())
@@ -175,20 +175,20 @@ namespace Javelin::Assembler::riscv::Encoders
         assert(operands[1] != nullptr);
         assert(operands[1]->type == Operand::Type::Label
                || operands[1]->type == Operand::Type::Number);
-        
+
         const RegisterOperand *rd = (const RegisterOperand*) operands[0];
-        
+
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rd && !rd->IsExpression()) opcode |= rd->index << 7;
-        
+
         switch(operands[1]->type) {
         case Operand::Type::Label:
             {
                 const LabelOperand *label = (const LabelOperand*) operands[1];
-                
+
                 int32_t displacement = int32_t(label->displacement ? label->displacement->value : 0);
-                
+
                 assert((displacement & 1) == 0);
                 assert(BitUtility::IsValidSignedImmediate(displacement, 20));
 
@@ -211,12 +211,12 @@ namespace Javelin::Assembler::riscv::Encoders
                 rel.imm11 = displacement >> 11;
                 rel.imm19_12 = displacement >> 12;
                 rel.imm20 = displacement >> 20;
-                
+
                 opcode |= rel.v;
-                
+
                 listAction.AppendOpcode(opcode);
                 listAction.Append(label->CreatePatchAction(RelEncoding::JDelta, 4));
-                
+
                 if(label->displacement && label->displacement->IsExpression())
                 {
                     assert(!"Not implemented yet");
@@ -235,7 +235,7 @@ namespace Javelin::Assembler::riscv::Encoders
             assert(!"Internal error");
             break;
         }
-        
+
         if(rd && rd->IsExpression())
         {
             listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 4, 5, 7, 0, rd->expressionIndex, assembler));
@@ -253,22 +253,22 @@ namespace Javelin::Assembler::riscv::Encoders
         assert(operands[2] != nullptr);
         assert(operands[2]->type == Operand::Type::Label
                || operands[2]->type == Operand::Type::Number);
-        
+
         const RegisterOperand *rs1 = (const RegisterOperand*) operands[0];
         const RegisterOperand *rs2 = (const RegisterOperand*) operands[1];
-        
+
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rs1 && !rs1->IsExpression()) opcode |= rs1->index << 15;
         if(rs2 && !rs2->IsExpression()) opcode |= rs2->index << 20;
-        
+
         switch(operands[2]->type) {
         case Operand::Type::Label:
             {
                 const LabelOperand *label = (const LabelOperand*) operands[2];
-                
+
                 int32_t displacement = int32_t(label->displacement ? label->displacement->value : 0);
-                
+
                 assert((displacement & 1) == 0);
                 assert(BitUtility::IsValidSignedImmediate(displacement, 12));
 
@@ -293,18 +293,18 @@ namespace Javelin::Assembler::riscv::Encoders
                 rel.imm10_5 = displacement >> 5;
                 rel.imm11 = displacement >> 11;
                 rel.imm12 = displacement >> 12;
-                
+
                 opcode |= rel.v;
-                
+
                 listAction.AppendOpcode(opcode);
                 listAction.Append(label->CreatePatchAction(RelEncoding::BDelta, 4));
-                
+
                 if(label->displacement && label->displacement->IsExpression())
                 {
                     assert(!"Not implemented yet");
                 }
                 break;
-            }                
+            }
         case Operand::Type::Number:
             assert(!"TODO");
             break;
@@ -312,7 +312,7 @@ namespace Javelin::Assembler::riscv::Encoders
 			assert(!"Internal error");
 			break;
         }
-        
+
         if(rs1 && rs1->IsExpression())
         {
             listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 4, 5, 15, 0, rs1->expressionIndex, assembler));
@@ -331,17 +331,17 @@ namespace Javelin::Assembler::riscv::Encoders
     {
         assert(operands[0] == nullptr || operands[0]->type == Operand::Type::Register);
         assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Number);
-        
+
         const RegisterOperand *rd = (const RegisterOperand*) operands[0];
         const ImmediateOperand *i = (const ImmediateOperand*) operands[1];
-        
+
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rd && !rd->IsExpression()) opcode |= rd->index << 7;
         if(i && !i->IsExpression()) {
             opcode |= (i->value & 0xfffff) << 12;
         }
-        
+
         listAction.AppendOpcode(opcode);
 
         if(rd && rd->IsExpression())
@@ -386,7 +386,7 @@ namespace Javelin::Assembler::riscv::Encoders
         assert(rs1 == nullptr || i == nullptr);
 
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rd && !rd->IsExpression()) opcode |= rd->index << 7;
         if(csr && !csr->IsExpression()) opcode |= uint32_t(csr->value) << 20;
         if(rs1 && !rs1->IsExpression()) opcode |= rs1->index << 15;
@@ -421,15 +421,15 @@ namespace Javelin::Assembler::riscv::Encoders
     {
         assert(operands[0] == nullptr || operands[0]->type == Operand::Type::Register);
         assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
-        
+
         const RegisterOperand *rdrs1 = (const RegisterOperand*) operands[0];
         const RegisterOperand *rs2 = (const RegisterOperand*) operands[1];
-        
+
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rdrs1 && !rdrs1->IsExpression()) opcode |= rdrs1->index << 7;
         if(rs2 && !rs2->IsExpression()) opcode |= rs2->index << 2;
-        
+
         listAction.AppendCOpcode(opcode);
 
         if(rdrs1 && rdrs1->IsExpression())
@@ -458,7 +458,7 @@ namespace Javelin::Assembler::riscv::Encoders
         const ImmediateOperand *i = (const ImmediateOperand*) operands[1];
 
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rdrs1 && !rdrs1->IsExpression()) opcode |= rdrs1->index << 7;
         if(i && !i->IsExpression()) opcode |= (uint32_t(i->value) << 2) & 0x107c;
 
@@ -483,16 +483,16 @@ namespace Javelin::Assembler::riscv::Encoders
         assert(operands[0] != nullptr);
         assert(operands[0]->type == Operand::Type::Label
                || operands[0]->type == Operand::Type::Number);
-        
+
         uint32_t opcode = encodingVariant.opcode;
-        
+
         switch(operands[0]->type) {
         case Operand::Type::Label:
             {
                 const LabelOperand *label = (const LabelOperand*) operands[0];
-                
+
                 int32_t displacement = int32_t(label->displacement ? label->displacement->value : 0);
-                
+
                 assert((displacement & 1) == 0);
                 assert(BitUtility::IsValidSignedImmediate(displacement, 11));
 
@@ -524,12 +524,12 @@ namespace Javelin::Assembler::riscv::Encoders
                 rel.imm9_8 = displacement >> 8;
                 rel.imm10 = displacement >> 10;
                 rel.imm11 = displacement >> 11;
-                
+
                 opcode |= rel.v;
-                
+
                 listAction.AppendCOpcode(opcode);
                 listAction.Append(label->CreatePatchAction(RelEncoding::CJDelta, 2));
-                
+
                 if(label->displacement && label->displacement->IsExpression())
                 {
                     assert(!"Not implemented yet");
@@ -566,10 +566,10 @@ namespace Javelin::Assembler::riscv::Encoders
         assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Number);
 
         uint32_t opcode = encodingVariant.opcode;
-        
+
         const RegisterOperand *rs1 = (const RegisterOperand*) operands[0];
         const ImmediateOperand *i = (const ImmediateOperand*) operands[2];
-        
+
         if(rs1 && !rs1->IsExpression()) opcode |= (rs1->index & 7) << 7;
         if(i && !i->IsExpression()) opcode |= (uint32_t(i->value) << 2) & 0x107c;
 
@@ -579,9 +579,9 @@ namespace Javelin::Assembler::riscv::Encoders
             case Operand::Type::Label:
                 {
                     const LabelOperand *label = (const LabelOperand*) operands[1];
-                    
+
                     int32_t displacement = int32_t(label->displacement ? label->displacement->value : 0);
-                    
+
                     assert((displacement & 1) == 0);
                     assert(BitUtility::IsValidSignedImmediate(displacement, 8));
 
@@ -608,12 +608,12 @@ namespace Javelin::Assembler::riscv::Encoders
                     rel.imm5 = displacement >> 5;
                     rel.imm7_6 = displacement >> 6;
                     rel.imm8 = displacement >> 8;
-                    
+
                     opcode |= rel.v;
-                    
+
                     listAction.AppendCOpcode(opcode);
                     listAction.Append(label->CreatePatchAction(RelEncoding::CBDelta, 2));
-                    
+
                     if(label->displacement && label->displacement->IsExpression())
                     {
                         assert(!"Not implemented yet");
@@ -633,7 +633,7 @@ namespace Javelin::Assembler::riscv::Encoders
                 break;
             }
         }
-        
+
         if(rs1 && rs1->IsExpression())
         {
             listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Masked, 2, 3, 7, 0, rs1->expressionIndex, assembler));
@@ -652,15 +652,15 @@ namespace Javelin::Assembler::riscv::Encoders
     {
         assert(operands[0] == nullptr || operands[0]->type == Operand::Type::Register);
         assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
-        
+
         const RegisterOperand *rdrs1 = (const RegisterOperand*) operands[0];
         const RegisterOperand *rs2 = (const RegisterOperand*) operands[1];
-        
+
         uint32_t opcode = encodingVariant.opcode;
-        
+
         if(rdrs1 && !rdrs1->IsExpression()) opcode |= (rdrs1->index & 7) << 7;
         if(rs2 && !rs2->IsExpression()) opcode |= (rs2->index & 7) << 2;
-        
+
         listAction.AppendCOpcode(opcode);
 
         if(rdrs1 && rdrs1->IsExpression())

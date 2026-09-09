@@ -175,9 +175,9 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
 		#include "MatchTags.h"
 		#undef TAG
 	};
-	
+
 	AlternateAction *alternateAction = nullptr;
-	
+
 	int numberOfExpressions = 0;
 	int expressionIndex = -1;
 	bool hasMultipleMemoryWidths = false;
@@ -213,7 +213,7 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
 			throw AssemblerException("Ambiguous memory width for %s instruction", opcodeName.c_str());
 		}
 	}
-	
+
 	for(int i = 0; i < encodingVariantLength; ++i)
 	{
 		const EncodingVariant *encoding = &encodingVariants[i];
@@ -230,29 +230,29 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
 						   operands);
 				return;
 			}
-			
+
 			ListAction* subList = new ListAction();
-			
+
 			(*encoder)(assembler,
 					   *subList,
 					   *this,
 					   *encoding,
 					   operandLength,
 					   operands);
-			
+
 			if(!subList->HasData())
 			{
 				delete subList;
 				continue;
 			}
-			
+
 			const AlternateActionCondition *condition;
 			if(numberOfExpressions == 1)
 			{
 				uint64_t operandMatchMask = encoding->operandMatchMasks[expressionIndex] & operands[expressionIndex]->matchBitfield;
 				uint64_t operandMatchBitIndex = __builtin_ctzll(operandMatchMask);
 				condition = (*kActionConditions[operandMatchBitIndex])(operands[expressionIndex]);
-                
+
 				if(operands[expressionIndex]->IsExpression())
 				{
 					int operandExpressionSize = kExpressionSize[operandMatchBitIndex];
@@ -308,7 +308,7 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
 			delete alternateAction;
 			return;
 		}
-		
+
 		listAction.Append(alternateAction);
 		return;
 	}

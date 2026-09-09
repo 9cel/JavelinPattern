@@ -22,7 +22,7 @@ namespace Javelin::Assembler::arm64
 									const Instruction &instruction,
 									const EncodingVariant &encodingVariant,
 									const Operand *const *operands);
-	
+
 	class Encoder
 	{
 	public:
@@ -32,11 +32,11 @@ namespace Javelin::Assembler::arm64
 			#include "EncoderTags.h"
 			#undef TAG
 		};
-		
+
 		constexpr Encoder(Value aValue) : value(aValue) { }
-		
+
 		InstructionEncoder* GetFunction() const;
-		
+
 	private:
 		Value value;
 	};

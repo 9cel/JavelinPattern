@@ -11,9 +11,9 @@
 namespace Javelin::Assembler
 {
 //============================================================================
-	
+
 	class CodeSegmentSource;
-	
+
 	/**
 	 * This class is responsible for handling defines and macros.
 	 * syntax:
@@ -32,17 +32,17 @@ namespace Javelin::Assembler
 	private:
 		typedef std::unordered_map<std::string, std::string> MacroParameters;
 		typedef std::vector<std::string> MacroParameterNames;
-		
+
 		struct Macro
 		{
 			SourceFileSegments code;
 			MacroParameterNames parameterNames;
 		};
-		
+
 		CodeSegment::Segment segment = CodeSegment::Segment::Code;
 		std::unordered_map<std::string, CodeLine> defines;
 		std::unordered_map<std::string, Macro> macros;
-		
+
 		void ProcessCodeSegment(SourceFileSegments& result, const CodeSegment& input, const MacroParameters *parameters = nullptr);
 		bool ProcessLine(SourceFileSegments& result, CodeSegmentSource& source, const MacroParameters *parameters);
 		void ProcessDefine(CodeSegmentSource& source);

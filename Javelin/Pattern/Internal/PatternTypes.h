@@ -10,9 +10,9 @@
 namespace Javelin
 {
 //==========================================================================
-	
+
 	class ICharacterWriter;
-	
+
 	namespace PatternInternal
 	{
 //==========================================================================
@@ -55,10 +55,10 @@ namespace Javelin
 
 			Recurse,
 			RecurseRelative,
-			
+
 			Accept,
 			Fail,
-			
+
 			CounterStart,
 			CounterEnd,
 			CounterEndMinimal,
@@ -86,10 +86,10 @@ namespace Javelin
 			using Interval::Interval;
 			CharacterRange() = default;
 			CharacterRange(const Interval& a) : Interval(a) { }
-			
+
 			void TrimRelevancyInterval(CharacterRange& range) const;
 		};
-		
+
 		struct CaseConversionData
 		{
 			CharacterRange	range;
@@ -100,10 +100,10 @@ namespace Javelin
 			static const int MERGE_ALL			= 0x80000002;
 			static const int MERGE_FIXED		= 0x80000000;
 			static const int MERGE_FIXED_MASK	= 0xC0000000;
-			
+
 			bool operator<(const CaseConversionData& other) const { return range.min < other.range.min || (range.min == other.range.min && delta < other.delta); }
 			bool operator==(const CaseConversionData& other) const { return range.min == other.range.min; }
-			
+
 			static const CaseConversionData DATA[];
 			static const uint32_t COUNT;
 		};
@@ -119,7 +119,7 @@ namespace Javelin
 			void Add(Character min, Character max)	 	{ Add(CharacterRange{min,max});	}
 			void Sort();
 			void Dump(ICharacterWriter& output);
-			
+
 			CharacterRangeList CreateAsciiRange() const;
 			CharacterRangeList CreateComplement() const;
 			CharacterRangeList CreateCaseInsensitive() const;
@@ -130,7 +130,7 @@ namespace Javelin
 			void Append(Character min, Character max) 	{ Table::Append(CharacterRange{min,max});	}
 
 			void TrimRelevancyInterval(CharacterRange& range) const;
-			
+
 			static const CharacterRangeList WORD_CHARACTERS;
 			static const CharacterRangeList NOT_WORD_CHARACTERS;
 			static const CharacterRangeList WHITESPACE_CHARACTERS;
@@ -155,14 +155,14 @@ namespace Javelin
 					uint16_t		optionMask;
 				};
 			};
-			
+
 			Table<char>				stringData;
 			CharacterRangeList		rangeList;
 
 			Token() { type = TokenType::End; }
-			
+
 			String GetString() const;
-			
+
 			void operator=(Token &&a);
 		};
 

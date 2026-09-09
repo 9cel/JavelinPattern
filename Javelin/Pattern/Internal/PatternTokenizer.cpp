@@ -42,32 +42,32 @@ Character Tokenizer::GetEscapedCharacter()
 	case 'P':
 		// Unicode properties are not implemented.
 		JPATTERN_ERROR(UnknownEscape, pUC-1);
-			
+
 	case 'e':
 		return Character('\e');
-		
+
 	case 'f':
 		return Character('\f');
-			
+
 	case 'v':
 		return Character('\v');
-			
+
 	case 'n':
 		return Character('\n');
-		
+
 	case 'r':
 		return Character('\r');
-		
+
 	case 't':
 		return Character('\t');
-		
+
 	case 'c':
 		JPATTERN_VERIFY(p < end, UnexpectedEndOfPattern, nullptr);
 		c = *pUC;
 		JPATTERN_VERIFY(32 <= c && c <= 126, UnexpectedControlCharacter, pUC);
 		++pUC;
 		return Character::ToUpper(c) ^ 0x40;
-		
+
 	case 'u':
 		if(*pUC == '{') goto BraceHexCode;
 		else
@@ -82,7 +82,7 @@ Character Tokenizer::GetEscapedCharacter()
 			}
 			return Character(v);
 		}
-			
+
 	case 'x':
 		if(*pUC == '{') goto BraceHexCode;
 		else
@@ -97,7 +97,7 @@ Character Tokenizer::GetEscapedCharacter()
 			}
 			return Character(v);
 		}
-			
+
 	BraceHexCode:
 		{
 			++pUC;
@@ -112,7 +112,7 @@ Character Tokenizer::GetEscapedCharacter()
 			++pUC;
 			return Character(v);
 		}
-			
+
 	default:
 		return Character(c);
 	}
@@ -133,7 +133,7 @@ Character Tokenizer::GetCharacter()
 		c = *pUC++;
 		if(c != '\\') return c;
 	}
-	
+
 	return GetEscapedCharacter();
 }
 
@@ -255,10 +255,10 @@ void Tokenizer::ProcessTokens()
 						return;
 					}
 					JPATTERN_ERROR(UnableToParseGroupType, pUC);
-					
+
 				case '?':
 					ConsumeCharacter();
-						
+
 					if(PeekCharacter() == '#')
 					{
 						ConsumeCharacter();
@@ -280,7 +280,7 @@ void Tokenizer::ProcessTokens()
 								ConsumeCharacter();
 								currentToken.type = TokenType::ClusterStart;
 								return;
-									
+
 							case '=':
 								ConsumeCharacter();
 								currentToken.type = TokenType::PositiveLookAhead;
@@ -290,7 +290,7 @@ void Tokenizer::ProcessTokens()
 								ConsumeCharacter();
 								currentToken.type = TokenType::NegativeLookAhead;
 								return;
-									
+
 							case '<':
 								ConsumeCharacter();
 								switch(PeekCharacter())
@@ -299,74 +299,74 @@ void Tokenizer::ProcessTokens()
 									ConsumeCharacter();
 									currentToken.type = TokenType::PositiveLookBehind;
 									return;
-									
+
 								case '!':
 									ConsumeCharacter();
 									currentToken.type = TokenType::NegativeLookBehind;
 									return;
-									
+
 								default:
 									JPATTERN_ERROR(UnexpectedLookBehindType, pUC);
 								}
 								break;
-								
+
 							case 'i':
 								if(turnOn) currentToken.optionSet |= Pattern::IGNORE_CASE;
 								currentToken.optionMask |= Pattern::IGNORE_CASE;
 								ConsumeCharacter();
 								break;
-									
+
 							case 'm':
 								if(turnOn) currentToken.optionSet |= Pattern::MULTILINE;
 								currentToken.optionMask |= Pattern::MULTILINE;
 								ConsumeCharacter();
 								break;
-								
+
 							case 's':
 								if(turnOn) currentToken.optionSet |= Pattern::DOTALL;
 								currentToken.optionMask |= Pattern::DOTALL;
 								ConsumeCharacter();
 								break;
-									
+
 							case 'u':
 								if(turnOn) currentToken.optionSet |= Pattern::UNICODE_CASE;
 								currentToken.optionMask |= Pattern::UNICODE_CASE;
 								ConsumeCharacter();
 								break;
-								
+
 							case 'U':
 								if(turnOn) currentToken.optionSet |= Pattern::UNGREEDY;
 								currentToken.optionMask |= Pattern::UNGREEDY;
 								ConsumeCharacter();
 								break;
-								
+
 							case '-':
 								turnOn = false;
 								signSpecified = true;
 								ConsumeCharacter();
 								break;
-								
+
 							case '+':
 								turnOn = true;
 								signSpecified = true;
 								ConsumeCharacter();
 								break;
-									
+
 							case '(':
 								JPATTERN_VERIFY(currentToken.optionSet == 0 && currentToken.optionMask == 0 && signSpecified == false, UnexpectedGroupOptions, pUC);
 								currentToken.type = TokenType::Conditional;
 								return;
-									
+
 							case '>':
 								ConsumeCharacter();
 								currentToken.type = TokenType::AtomicGroup;
 								return;
-									
+
 							case ')':
 								ConsumeCharacter();
 								currentToken.type = TokenType::OptionChange;
 								return;
-							
+
 							case 'R':
 								JPATTERN_VERIFY(currentToken.optionSet == 0 && currentToken.optionMask == 0 && signSpecified == false, UnexpectedGroupOptions, pUC);
 								ConsumeCharacter();
@@ -374,7 +374,7 @@ void Tokenizer::ProcessTokens()
 								currentToken.i = 0;
 								JPATTERN_VERIFY(GetCharacter() == ')', ExpectedCloseGroup, pUC);
 								return;
-									
+
 							case '0':
 							case '1':
 							case '2':
@@ -390,12 +390,12 @@ void Tokenizer::ProcessTokens()
 								currentToken.type = TokenType::Recurse;
 								currentToken.i = PeekCharacter() - '0';
 								ConsumeCharacter();
-								
+
 								while(1)
 								{
 									char c = PeekCharacter();
 									if(c < '0' || c > '9') break;
-									
+
 									currentToken.i = currentToken.i * 10 + (c - '0');
 									ConsumeCharacter();
 								}
@@ -521,9 +521,9 @@ void Tokenizer::ProcessTokens()
 					else
 					{
 						CharacterRange interval;
-						
+
 						JVERIFY(PeekCharacter() != '\0');
-						
+
 						if(pUC[0] == '\\')
 						{
 							++pUC;
@@ -533,7 +533,7 @@ void Tokenizer::ProcessTokens()
 								++pUC;
 								currentToken.rangeList.Add('0', '9');
 								continue;
-									
+
 							case 's':
 								++pUC;
 								for(const CharacterRange& range : CharacterRangeList::WHITESPACE_CHARACTERS)
@@ -541,7 +541,7 @@ void Tokenizer::ProcessTokens()
 									currentToken.rangeList.Add(range);
 								}
 								continue;
-									
+
 							case 'w':
 								++pUC;
 								for(const CharacterRange& range : CharacterRangeList::WORD_CHARACTERS)
@@ -549,13 +549,13 @@ void Tokenizer::ProcessTokens()
 									currentToken.rangeList.Add(range);
 								}
 								continue;
-									
+
 							case 'D':
 								++pUC;
 								currentToken.rangeList.Add(0, '0'-1);
 								currentToken.rangeList.Add('9'+1, Character::Maximum());
 								continue;
-								
+
 							case 'S':
 								++pUC;
 								for(const CharacterRange& range : CharacterRangeList::WHITESPACE_CHARACTERS.CreateComplement())
@@ -563,7 +563,7 @@ void Tokenizer::ProcessTokens()
 									currentToken.rangeList.Add(range);
 								}
 								continue;
-								
+
 							case 'W':
 								++pUC;
 								for(const CharacterRange& range : CharacterRangeList::WORD_CHARACTERS.CreateComplement())
@@ -571,7 +571,7 @@ void Tokenizer::ProcessTokens()
 									currentToken.rangeList.Add(range);
 								}
 								continue;
-								
+
 							default:
 								interval.min = GetEscapedCharacter();
 								break;
@@ -590,7 +590,7 @@ void Tokenizer::ProcessTokens()
 						currentToken.rangeList.Add(interval);
 					}
 				}
-					
+
 				if(currentToken.rangeList.GetCount() == 1)
 				{
 					if(currentToken.type == TokenType::Range
@@ -654,13 +654,13 @@ void Tokenizer::ProcessTokens()
 					ConsumeCharacter();
 					currentToken.type = TokenType::StartOfInput;
 					return;
-						
+
 				case 'a':
 					ConsumeCharacter();
 					currentToken.type = TokenType::Character;
 					currentToken.c = '\a';
 					return;
-					
+
 				case 'b':
 					ConsumeCharacter();
 					currentToken.type = TokenType::WordBoundary;
@@ -670,7 +670,7 @@ void Tokenizer::ProcessTokens()
 					ConsumeCharacter();
 					currentToken.type = TokenType::NotWordBoundary;
 					return;
-						
+
 				case 'C':
 					ConsumeCharacter();
 					currentToken.type = TokenType::AnyByte;
@@ -700,7 +700,7 @@ void Tokenizer::ProcessTokens()
 						}
 					}
 					return;
-						
+
 				case 'D':
 					ConsumeCharacter();
 					currentToken.type = TokenType::NotRange;
@@ -713,18 +713,18 @@ void Tokenizer::ProcessTokens()
 					currentToken.type = TokenType::Character;
 					currentToken.c = '\e';
 					return;
-					
+
 				case 'f':
 					ConsumeCharacter();
 					currentToken.type = TokenType::Character;
 					currentToken.c = '\f';
 					return;
-					
+
 				case 'G':
 					ConsumeCharacter();
 					currentToken.type = TokenType::StartOfSearch;
 					return;
-					
+
 				case 'h':
 					ConsumeCharacter();
 					currentToken.type = TokenType::Range;
@@ -732,12 +732,12 @@ void Tokenizer::ProcessTokens()
 					currentToken.rangeList.Append('\t');
 					currentToken.rangeList.Append(' ');
 					return;
-						
+
 				case 'K':
 					ConsumeCharacter();
 					currentToken.type = TokenType::ResetCapture;
 					return;
-					
+
 				case 'n':
 					ConsumeCharacter();
 					currentToken.type = TokenType::Character;
@@ -748,7 +748,7 @@ void Tokenizer::ProcessTokens()
 					ConsumeCharacter();
 					phase = Phase::Literal;
 					goto Loop;
-						
+
 				case 'r':
 					ConsumeCharacter();
 					currentToken.type = TokenType::Character;
@@ -766,7 +766,7 @@ void Tokenizer::ProcessTokens()
 					currentToken.type = TokenType::Character;
 					currentToken.c = '\v';
 					return;
-					
+
 				case 'w':
 					ConsumeCharacter();
 					currentToken.type = TokenType::WordCharacter;
@@ -791,7 +791,7 @@ void Tokenizer::ProcessTokens()
 					ConsumeCharacter();
 					currentToken.type = TokenType::EndOfInput;
 					return;
-					
+
 				case '0':
 				case '1':
 				case '2':
@@ -806,16 +806,16 @@ void Tokenizer::ProcessTokens()
 					currentToken.type = TokenType::BackReference;
 					currentToken.i = PeekCharacter() - '0';
 					ConsumeCharacter();
-					
+
 					while(1)
 					{
 						char c = PeekCharacter();
 						if(c < '0' || c > '9') break;
-						
+
 						currentToken.i = currentToken.i * 10 + (c - '0');
 						ConsumeCharacter();
 					}
-						
+
 					if(currentToken.i == 0)
 					{
 						currentToken.type = TokenType::Character;
@@ -878,7 +878,7 @@ void Tokenizer::ProcessTokens()
 				else currentToken.type = TokenType::CounterEnd;
 				phase = Phase::General;
 				return;
-					
+
 			case '0':
 			case '1':
 			case '2':
@@ -892,12 +892,12 @@ void Tokenizer::ProcessTokens()
 				currentToken.type = TokenType::CounterValue;
 				currentToken.i = PeekCharacter() - '0';
 				ConsumeCharacter();
-				
+
 				while(1)
 				{
 					char c = PeekCharacter();
 					if(c < '0' || c > '9') break;
-					
+
 					currentToken.i = currentToken.i * 10 + (c - '0');
 					ConsumeCharacter();
 				}
@@ -907,14 +907,14 @@ void Tokenizer::ProcessTokens()
 				JPATTERN_ERROR(UnableToParseRepetition, pUC);
 			}
 			break;
-				
+
 		case Phase::Literal:
 			switch(PeekCharacter())
 			{
 			case '\0':
 				currentToken.type = TokenType::End;
 				return;
-					
+
 			case '\\':
 				ConsumeCharacter();
 				if(PeekCharacter() == 'E')
@@ -926,7 +926,7 @@ void Tokenizer::ProcessTokens()
 				currentToken.type = TokenType::Character;
 				currentToken.c = '\\';
 				return;
-					
+
 			default:
 				currentToken.type = TokenType::Character;
 				currentToken.c = *pUC++;

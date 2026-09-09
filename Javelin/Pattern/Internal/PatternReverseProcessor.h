@@ -12,7 +12,7 @@ namespace Javelin::PatternInternal
 
 		struct ByteCodeSearchData;
 		class InstructionListBuilder;
-		
+
 		class ReverseProcessor : public PatternProcessorBase
 		{
 		public:
@@ -40,7 +40,7 @@ namespace Javelin::PatternInternal
 			static bool CanUseBitFieldGlushkovNfaReverseProcessor(const void* data, size_t length);
 
 			static ReverseProcessor* Create(const void* data, size_t length, bool allowCaptures);
-			
+
 			static const void* FindByteReverse(const void* p, uint64_t v, const void* pEnd);
 		};
 

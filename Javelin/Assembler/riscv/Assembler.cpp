@@ -70,7 +70,7 @@ void* SegmentAssembler::AppendInstructionData(uint32_t blockByteCodeSize,
 	reference->forwardLabelReferenceOffset = allLabelData.numberOfForwardLabelReferences;
 
 	ProcessLabelData(labelData);
-	
+
 	return reference;
 }
 
@@ -78,7 +78,7 @@ void SegmentAssembler::ProcessLabelData(uint32_t labelData)
 {
 	int numberOfLabels = labelData & 0xff;
 	int numberOfForwardLabelReferences = labelData >> 8;
-	
+
 	allLabelData.numberOfLabels += numberOfLabels;
 	allLabelData.numberOfForwardLabelReferences += numberOfForwardLabelReferences;
 }
@@ -93,12 +93,12 @@ void* SegmentAssembler::AppendData(uint32_t byteSize)
 		ActionType::Return,
 	};
 	static_assert(sizeof(AppendDataReference) == 24, "Expected AppendDataReference to be 24 bytes");
-	
+
 	uint32_t allocationSize = (sizeof(AppendDataReference) + byteSize + 7) & -8;
 	AppendDataReference *reference = (AppendDataReference*) AppendInstructionData(byteSize,
 																				  (const uint8_t*) &appendDataActions,
 																				  allocationSize);
-	
+
 	reference->dataSize = byteSize;
 	return reference + 1;
 }
@@ -110,7 +110,7 @@ void SegmentAssembler::AppendDataPointer(const void *data, uint32_t byteSize)
 		ActionType::DataPointer,
 		ActionType::Return,
 	};
-	
+
 	AppendDataPointerReference *reference =
 		(AppendDataPointerReference*) AppendInstructionData(byteSize,
 															(const uint8_t*) &appendDataActions,
@@ -169,7 +169,7 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
             static_assert(sizeof(Opcode) == 4, "Opcode should be 4 bytes");
             Opcode opcode;
             memcpy(&opcode, p, 4);
-            
+
             int32_t rel = opcode.imm4_1 << 1
                           | opcode.imm10_5 << 5
                           | opcode.imm11 << 11
@@ -183,11 +183,11 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
             opcode.imm10_5 = rel >> 5;
             opcode.imm11 = rel >> 11;
             opcode.imm12 = rel >> 12;
-            
+
             memcpy(p, &opcode, 4);
         }
         break;
-            
+
     case RelEncoding::JDelta:
         {
             union Opcode
@@ -206,7 +206,7 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
             static_assert(sizeof(Opcode) == 4, "Opcode should be 4 bytes");
             Opcode opcode;
             memcpy(&opcode, p, 4);
-            
+
             int32_t rel = opcode.imm10_1 << 1
                           | opcode.imm11 << 11
                           | opcode.imm19_12 << 12
@@ -219,11 +219,11 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
             opcode.imm11 = rel >> 11;
             opcode.imm19_12 = rel >> 12;
             opcode.imm20 = rel >> 20;
-            
+
             memcpy(p, &opcode, 4);
         }
         break;
-            
+
     case RelEncoding::Auipc:
         {
             uint32_t opcode;
@@ -234,7 +234,7 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
             memcpy(p, &opcode, 4);
         }
         break;
-         
+
     case RelEncoding::CBDelta:
         {
             union Opcode
@@ -255,7 +255,7 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
             static_assert(sizeof(Opcode) == 2, "Opcode should be 2 bytes");
             Opcode opcode;
             memcpy(&opcode, p, 2);
-            
+
             int32_t rel = opcode.imm2_1 << 1
                             | opcode.imm4_3 << 3
                             | opcode.imm5 << 5
@@ -263,7 +263,7 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
                             | opcode.imm8 << 8;
 
             rel += delta;
-            
+
             assert((rel & 1) == 0);
             assert(rel >> 8 == 0 || rel >> 8 == -1);
 
@@ -299,7 +299,7 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
             static_assert(sizeof(Opcode) == 2, "Opcode should be 2 bytes");
             Opcode opcode;
             memcpy(&opcode, p, 2);
-            
+
             int32_t rel = opcode.imm3_1 << 1
                             | opcode.imm4 << 4
                             | opcode.imm5 << 5
@@ -310,7 +310,7 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
                             | opcode.imm11 << 11;
 
             rel += delta;
-            
+
             assert((rel & 1) == 0);
             assert(rel >> 11 == 0 || rel >> 11 == -1);
 
@@ -326,7 +326,7 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
             memcpy(p, &opcode, 2);
         }
         break;
-            
+
     case RelEncoding::Imm12:
         {
             uint32_t opcode;
@@ -340,7 +340,7 @@ void SegmentAssembler::Patch(uint8_t* p, RelEncoding encoding, intptr_t delta)
 //                      memcpy(p, &opcode, 4);
         }
         break;
-            
+
     case RelEncoding::Rel64:
         {
             int64_t rel;
@@ -361,7 +361,7 @@ void SegmentAssembler::ProcessByteCode()
 	//      and expressions.
 	// 2. Build byte code directly into executable memory
 	// 3. Shrink allocation
-	
+
 	// For relative patches that are encountered:
 	// a) Backreferences are patched immediately.
 	// b) Unresolved forward references are put into a queue.
@@ -369,7 +369,7 @@ void SegmentAssembler::ProcessByteCode()
 	//    addresses need to be patched, and clears the list
 
 	uint32_t maximumCodeSize = PrepareGenerateByteCode();
-	
+
 	// Build byte code into result memory.
 	// Allocate memory.
 	programStart = (uint8_t*) memoryManager.Allocate(maximumCodeSize+3);	// +3 is because some actions assume extra buffer.
@@ -406,7 +406,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 	AlternateData alternateStack[8];
 	bool takeJump = true;
 	int alternateStackSize = 0;
-	
+
 #if USE_GOTO_LABELS
 	static constexpr void *jumpOffsets[] =
 	{
@@ -415,7 +415,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 		#undef TAG
 	};
 #endif
-	
+
 	const AppendAssemblyReference *blockData = (AppendAssemblyReference*) buildData.begin();
 	const AppendAssemblyReference* pEnd = (AppendAssemblyReference*) buildData.end();
 	uint32_t offset = 0;
@@ -428,7 +428,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 	NextBlock:
 		blockData = blockData->GetNext();
 	}
-	
+
 	const  uint8_t* s = blockData->assemblerData;
 	for(;;)
 	{
@@ -440,7 +440,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 		{
 		CASE(Return):
 			goto NextBlock;
-                
+
         CASE(Literal1):  CONTINUE1(1);  offset += 1;  s += 1;  CONTINUE2;
         CASE(Literal2):  CONTINUE1(2);  offset += 2;  s += 2;  CONTINUE2;
         CASE(Literal4):  CONTINUE1(4);  offset += 4;  s += 4;  CONTINUE2;
@@ -749,7 +749,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *p)
 			CONTINUE1(1);
 			*p++ = *s++;
 			CONTINUE2;
-                
+
         CASE(Literal2): CONTINUE1(2); memcpy(p, s, 2); p += 2; s += 2; CONTINUE2;
         CASE(Literal4): CONTINUE1(4); memcpy(p, s, 4); p += 4; s += 4; CONTINUE2;
         CASE(Literal6): CONTINUE1(6); memcpy(p, s, 8); p += 6; s += 6; CONTINUE2;
@@ -766,7 +766,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *p)
         CASE(Literal28): CONTINUE1(28); memcpy(p, s, 28); p += 28; s += 28; CONTINUE2;
         CASE(Literal30): CONTINUE1(30); memcpy(p, s, 32); p += 30; s += 30; CONTINUE2;
         CASE(Literal32): CONTINUE1(32); memcpy(p, s, 32); p += 32; s += 32; CONTINUE2;
-                
+
 		CASE(LiteralBlock):
 			{
 				uint32_t length = ReadUnsigned16(s);
@@ -859,7 +859,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *p)
                 assert((value & ((1<<valueShift)-1)) == 0);
                 value >>= valueShift;
                 assert((value & ~bitMask) == 0 || (value | bitMask) == -1);
-                
+
                 opcodeValue = (value & bitMask) << bitOffset;
             }
             goto ProcessPatch4BOpcode;
@@ -887,7 +887,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *p)
                 assert((value & ((1<<valueShift)-1)) == 0);
                 value >>= valueShift;
                 assert(value >> numberOfBits == 0 || value >> numberOfBits == -1);
-                
+
                 uint32_t mask = (1 << numberOfBits) - 1;
                 opcodeValue = (value & mask) << bitOffset;
             }
@@ -900,7 +900,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *p)
                 int valueShift = *s++;
                 int32_t value = ReadB4ExpressionValue(s, blockData);
                 value >>= valueShift;
-                
+
                 uint32_t mask = (1 << numberOfBits) - 1;
                 opcodeValue = (value & mask) << bitOffset;
             }
@@ -917,7 +917,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *p)
                 assert((value & ((1<<valueShift)-1)) == 0);
                 value >>= valueShift;
                 assert(value >> numberOfBits == 0 || value >> numberOfBits == -1);
-                
+
                 uint32_t mask = (1 << numberOfBits) - 1;
                 opcodeValue = (value & mask) << bitOffset;
             }
@@ -1103,7 +1103,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *p)
 				} while(data);
 				unresolvedLabels.Remove(lookup, last);
 			}
-		
+
 			// Insert into map.
 			labels.Set(labelId, p);
 			CONTINUE;
@@ -1315,7 +1315,7 @@ void* Assembler::Build()
 		dataSegment.unresolvedLabels.StartUseBacking(unresolvedLabels);
 
 		dataSegment.ProcessByteCode();
-		
+
 		dataSegment.forwardLabelReferences.StopUseBacking(forwardLabelReferences);
 		dataSegment.firstPassLabelOffsets.StopUseBacking(firstPassLabelOffsets);
 		dataSegment.labels.StopUseBacking(labels);

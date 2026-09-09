@@ -5,7 +5,7 @@
 
 //============================================================================
 
-namespace Javelin 
+namespace Javelin
 {
 //============================================================================
 
@@ -14,13 +14,13 @@ namespace Javelin
 	public:
 		StandardWriter(int aFd) : fd(aFd), bufferPosition(0) { }
 		~StandardWriter();
-        
+
 		// From IWriter
 		void JCALL Release()	{ }
-        
+
 		void   JCALL WriteByte(unsigned char a) final;
 		size_t JCALL WriteAvailable(const void *data, size_t dataSize) final;
-        
+
 		void  JCALL Flush();
 
 	private:

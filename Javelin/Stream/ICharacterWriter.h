@@ -48,41 +48,41 @@ namespace Javelin
 
 		JEXPORT void JCALL WriteString(const char *data);
 		JEXPORT void JCALL WriteString(const String& string);
-		
+
 		// This dispatches to the respective VPrintF functions
 		// Use a const void* instead of const char* so that the single parameter override
 		// can be used without ambiguity.
 		// In debug mode, assert on printing "%%" -> force call to use WriteString instead as the optimized path does not substitute
 		JEXPORT void JVCALL PrintF(const void* format, ...);
 		template<size_t N> JINLINE void JCALL PrintF(const char (&string)[N]) { JASSERT(memmem(string, N-1, "%%", 2) == nullptr); WriteBlock(string, N-1); }
-		
+
 		JEXPORT virtual void JCALL VPrintF(const char* format, va_list arguments);
-		
+
 		JEXPORT void JVCALL AggregatedPrintF(const char* format, ...);
 		JEXPORT void JCALL AggregatedVPrintF(const char* format, va_list Arguments);
 
 		JEXPORT void JCALL DumpHex(const void* data, size_t length);
 		JEXPORT void JCALL DumpCStructure(const void* data, size_t length, const String& name=DEFAULT_VARIABLE_NAME);
-		
+
 		// For use with any type that supports .GetData() and .GetNumberOfBytes()
 		// eg. String, DataBlock, Table<>, Tuple, Javelin/Cryptography/Hash functions
 		template<typename T> JINLINE void JCALL WriteData(const T& d)		{ WriteBlock((char*) d.GetData(), d.GetNumberOfBytes()); }
 		template<typename T> JINLINE void JCALL DumpHex(const T& data)		{ DumpHex(data.GetData(), data.GetNumberOfBytes()); }
 		template<typename T> JINLINE void JCALL DumpCStructure(const T& data, const String& name=DEFAULT_VARIABLE_NAME)		{ DumpCStructure(data.GetData(), data.GetNumberOfBytes(), name); }
-		
+
 		static const String DEFAULT_VARIABLE_NAME;
 	};
 
 //============================================================================
-	
+
 	class JABSTRACT ITextFormatter
 	{
 	public:
 		JEXPORT void JCALL Register(char c) const;
-		
+
 		virtual void JCALL FormatText(TextFormatData &context) const = 0;
 	};
-	
+
 //============================================================================
 
 	class TextFormatData
@@ -115,7 +115,7 @@ namespace Javelin
 		void WriteByte(char c) const								{ output.WriteByte(c); }
 		void WriteString(const char* data, size_t length) const		{ output.WriteBlock(data, length); }
 		void WriteQueue(const char* data, size_t length) const;
-		
+
 		template<typename T>
 			JINLINE void WriteData(const T& data) const				{ output.WriteData(data); }
 	};

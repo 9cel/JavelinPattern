@@ -7,7 +7,7 @@
 namespace Javelin::PatternInternal
 {
 //============================================================================
-	
+
 	enum class PatternProcessorType : uint16_t
 	{
 		None,
@@ -20,17 +20,17 @@ namespace Javelin::PatternInternal
 		NfaOrBitStateBackTracking,
 		FixedLength,
 		Anchored,
-		
+
 		// Used when verifying input
 		ForwardMax = NfaOrBitStateBackTracking,
 		ReverseMax = Anchored,
-		
+
 		// The following are only used internally during compilation
 		Default,
 		NoScan,
 		NotOnePass,
 	};
-	
+
 //============================================================================
 } // namespace Javelin::PatternInternal
 //============================================================================

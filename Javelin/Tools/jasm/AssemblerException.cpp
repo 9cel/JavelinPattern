@@ -44,7 +44,7 @@ AssemblerException::AssemblerException(const char* fmt, ...)
 	vsnprintf(buffer, 10000, fmt, args);
 
 	va_end(args);
-	
+
 	push_back({ .message = buffer });
 }
 

@@ -15,10 +15,10 @@ namespace Javelin
 	{
 	public:
 		constexpr JitMemoryManager() { }
-		
+
 		virtual void* Allocate(size_t length) = 0;
 		virtual void Release(void *p) = 0;
-		
+
 		virtual void EndWrite(void *data) { }
 		virtual void Shrink(void *p, size_t length) { }
 	};
@@ -29,34 +29,34 @@ namespace Javelin
 	{
 	public:
 		static SimpleJitMemoryManager* GetInstance();
-		
+
 		static void StaticInstanceRelease(void *);
 
 		virtual void* Allocate(size_t length) final;
 		virtual void Release(void *p) final;
-		
+
 		virtual void EndWrite(void *data) final;
-		
+
 	private:
 		SimpleJitMemoryManager() { }
 	};
-	
+
 //============================================================================
-	
+
 	class SimpleJitDataMemoryManager final : public JitMemoryManager
 	{
 	public:
 		static SimpleJitDataMemoryManager* GetInstance();
-		
+
 		static void StaticInstanceRelease(void *);
 
 		virtual void* Allocate(size_t length) final;
 		virtual void Release(void *p) final;
-		
+
 	private:
 		SimpleJitDataMemoryManager() { }
 	};
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

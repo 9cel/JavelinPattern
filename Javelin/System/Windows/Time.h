@@ -19,7 +19,7 @@ namespace Javelin
 		Time(TimeInitializer) { time = GetTickCount(); }
 
 		bool operator<(const Time& a) const 	{ return time < a.time; 	}
-		
+
 		Duration operator-(const Time& a) const { return Duration((time-a.time) * 0.001); }
 		double    AsDouble()		const 		{ return time * 1000.0;		}
 

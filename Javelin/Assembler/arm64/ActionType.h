@@ -8,7 +8,7 @@
 namespace Javelin::arm64Assembler
 {
 //============================================================================
-	
+
 	enum class ActionType : uint8_t
 	{
 		#define TAG(x) x,
@@ -24,7 +24,7 @@ namespace Javelin::arm64Assembler
 		int length;
 		int rotate;
 	};
-	
+
 	BitMaskEncodeResult EncodeBitMask(uint64_t value);
 
 //============================================================================

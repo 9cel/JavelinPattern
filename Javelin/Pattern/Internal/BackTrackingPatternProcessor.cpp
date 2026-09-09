@@ -21,13 +21,13 @@ public:
 	BackTrackingPatternProcessor(const void* data, size_t length);
 	BackTrackingPatternProcessor(DataBlock&& dataBlock);
 	~BackTrackingPatternProcessor();
-	
+
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const;
 	virtual Interval<const void*> LocatePartialMatch(const void* data, size_t length, size_t offset) const;
-	
+
 private:
 	struct ProcessData
 	{
@@ -38,7 +38,7 @@ private:
 		const unsigned char* 	pEnd;
 		const char**			captures;
 		const unsigned char**	progressCheck;
-		
+
 		ProcessData(bool aIsFullMatch, const void* data, size_t length, size_t offset, const char** aCaptures, const unsigned char** aProgressCheck, uint32_t numberOfProgressChecks)
 		{
 			isFullMatch		= aIsFullMatch;
@@ -62,7 +62,7 @@ private:
 	ExpandedJumpTables		expandedJumpTables;
 
 	const void* Process(uint32_t pc, const unsigned char* p, const ProcessData& processData) const;
-	
+
 	void Set(const void* data, size_t length);
 };
 
@@ -107,33 +107,33 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AnyByte:
 		if(p == processData.pEnd) return nullptr;
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertStartOfInput:
 		if(p != processData.pStart) return nullptr;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertEndOfInput:
 		if(p != processData.pEnd) return nullptr;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertStartOfLine:
 		if(p != processData.pStart && p[-1] != '\n') return nullptr;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfLine:
 		if(p != processData.pEnd && *p != '\n') return nullptr;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertWordBoundary:
 		if(p != processData.pEnd && Character::IsWordCharacter(*p))
 		{
@@ -147,7 +147,7 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertNotWordBoundary:
 		if(p != processData.pEnd && Character::IsWordCharacter(*p))
 		{
@@ -161,17 +161,17 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertStartOfSearch:
 		if(p != processData.pSearchStart) return nullptr;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertRecurseValue:
 		if(processData.recurseValue != instruction.data) return nullptr;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::BackReference:
 		{
 			uint32_t index = instruction.data*2;
@@ -187,14 +187,14 @@ Loop:
 			}
 		}
 		return nullptr;
-			
+
 	case InstructionType::Byte:
 		if(p == processData.pEnd) return nullptr;
 		if(*p != instruction.data) return nullptr;
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteEitherOf2:
 		if(p == processData.pEnd) return nullptr;
 		if(*p != (instruction.data & 0xff)
@@ -202,7 +202,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteEitherOf3:
 		if(p == processData.pEnd) return nullptr;
 		if(*p != (instruction.data & 0xff)
@@ -211,7 +211,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::ByteRange:
 		if(p == processData.pEnd) return nullptr;
 		else
@@ -224,7 +224,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteBitMask:
 		if(p == processData.pEnd) return nullptr;
 		{
@@ -234,7 +234,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::ByteJumpTable:
 	case InstructionType::ByteJumpMask:
 		if(p == processData.pEnd) return nullptr;
@@ -246,7 +246,7 @@ Loop:
 			++p;
 			goto Loop;
 		}
-			
+
 	case InstructionType::ByteJumpRange:
 		if(p == processData.pEnd) return nullptr;
 		else
@@ -257,14 +257,14 @@ Loop:
 			++p;
 			goto Loop;
 		}
-			
+
 	case InstructionType::ByteNot:
 		if(p == processData.pEnd) return nullptr;
 		if(*p == instruction.data) return nullptr;
 		++p;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::ByteNotEitherOf2:
 		if(p == processData.pEnd) return nullptr;
 		if(*p == (instruction.data & 0xff)
@@ -272,7 +272,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::ByteNotEitherOf3:
 		if(p == processData.pEnd) return nullptr;
 		if(*p == (instruction.data & 0xff)
@@ -281,7 +281,7 @@ Loop:
 		++p;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::ByteNotRange:
 		if(p == processData.pEnd) return nullptr;
 		else
@@ -302,7 +302,7 @@ Loop:
 			if(pc == TypeData<uint32_t>::Maximum()) return nullptr;
 			goto Loop;
 		}
-			
+
 	case InstructionType::DispatchTable:
 		if(p == processData.pEnd)
 		{
@@ -316,7 +316,7 @@ Loop:
 		}
 		if(pc == TypeData<uint32_t>::Maximum()) return nullptr;
 		goto Loop;
-			
+
 	case InstructionType::DispatchMask:
 		if(p == processData.pEnd)
 		{
@@ -330,7 +330,7 @@ Loop:
 		}
 		if(pc == TypeData<uint32_t>::Maximum()) return nullptr;
 		goto Loop;
-			
+
 	case InstructionType::DispatchRange:
 		if(p == processData.pEnd)
 		{
@@ -344,7 +344,7 @@ Loop:
 		}
 		if(pc == TypeData<uint32_t>::Maximum()) return nullptr;
 		goto Loop;
-		
+
 	case InstructionType::Fail:
 		return nullptr;
 
@@ -357,7 +357,7 @@ Loop:
 			pc = instruction.data >> 8;
 			goto Loop;
 		}
-			
+
 	case InstructionType::Possess:
 		{
 			const ByteCodeCallData* callData = patternData.GetData<ByteCodeCallData>(instruction.data);
@@ -374,7 +374,7 @@ Loop:
 			if(pc == TypeData<uint32_t>::Maximum()) return nullptr;
 			goto Loop;
 		}
-		
+
 	case InstructionType::PropagateBackwards:
 		if(processData.captures != nullptr)
 		{
@@ -383,21 +383,21 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::Recurse:
 		{
 			int recurseValue = instruction.data & 0xff;
 			int recursePc = instruction.data >> 8;
-			
+
 			int oldRecurseValue = processData.recurseValue;
 			processData.recurseValue = recurseValue;
-			
+
 			const void* result;
 			if(processData.captures != nullptr)
 			{
 				const char* oldCaptures[numberOfCaptures*2];
 				memcpy(oldCaptures, processData.captures, numberOfCaptures*2*sizeof(const char*));
-				
+
 				result = Process(recursePc, p, processData);
 				memcpy(processData.captures, oldCaptures, numberOfCaptures*2*sizeof(const char*));
 			}
@@ -416,15 +416,15 @@ Loop:
 		if(processData.recurseValue == instruction.data) return p;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::SearchByte:
 		{
 			unsigned char c = instruction.data & 0xff;
 			unsigned offset = instruction.data >> 8;
-			
+
 			const unsigned char* pSearch = p+offset;
 			if(pSearch >= processData.pEnd) return nullptr;
-			
+
 			size_t remaining = processData.pEnd - pSearch;
 			pSearch = (const unsigned char*) memchr(pSearch, c, remaining);
 			if(!pSearch) return nullptr;
@@ -432,11 +432,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteEitherOf2:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteEitherOf2(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -445,11 +445,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteEitherOf3:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteEitherOf3(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -458,11 +458,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteEitherOf4:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteEitherOf4(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -471,11 +471,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteEitherOf5:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteEitherOf5(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -484,11 +484,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteEitherOf6:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteEitherOf6(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -497,11 +497,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteEitherOf7:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteEitherOf7(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -510,11 +510,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteEitherOf8:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteEitherOf8(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -523,11 +523,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchBytePair:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindBytePair(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -536,11 +536,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchBytePair2:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindBytePair2(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -549,11 +549,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchBytePair3:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindBytePair3(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -562,11 +562,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchBytePair4:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindBytePair4(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -575,11 +575,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteTriplet:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteTriplet(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -588,11 +588,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteTriplet2:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteTriplet2(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -601,11 +601,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteRange:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteRange(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -614,11 +614,11 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteRangePair:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			const unsigned char* pSearch = p+data->offset;
 			if(pSearch >= processData.pEnd) return nullptr;
 			pSearch = (const unsigned char*) FindByteRangePair(pSearch, data->GetAllBytes(), processData.pEnd);
@@ -627,7 +627,7 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchBoyerMoore:
 		{
 			const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(instruction.data);
@@ -636,7 +636,7 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchShiftOr:
 		{
 			const ByteCodeSearchData* searchData = patternData.GetData<ByteCodeSearchData>(instruction.data);
@@ -645,15 +645,15 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
-			
+
 	case InstructionType::Match:
 		if(processData.isFullMatch)	return p == processData.pEnd ? p : nullptr;
 		else return p;
-			
+
 	case InstructionType::ProgressCheck:
 		if(processData.progressCheck[instruction.data] >= p) return nullptr;
 		else
@@ -664,7 +664,7 @@ Loop:
 			processData.progressCheck[instruction.data] = old;
 			return result;
 		}
-			
+
 	case InstructionType::SaveNoRecurse:
 		if(processData.captures != nullptr)
 		{
@@ -674,7 +674,7 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::Save:
 		if(processData.captures == nullptr)
 		{
@@ -692,7 +692,7 @@ Loop:
 			else processData.captures[saveIndex] = backup;
 			return nullptr;
 		}
-			
+
 	case InstructionType::Split:
 		{
 			const ByteCodeSplitData* split = patternData.GetData<ByteCodeSplitData>(instruction.data);
@@ -705,14 +705,14 @@ Loop:
 			pc = split->targetList[numberOfTargets-1];
 			goto Loop;
 		}
-		
+
 	case InstructionType::SplitMatch:
 		{
 			const uint32_t* splitData = patternData.GetData<uint32_t>(instruction.data);
 			pc = (!processData.isFullMatch || p == processData.pEnd) ? splitData[0] : splitData[1];
 			goto Loop;
 		}
-			
+
 	case InstructionType::SplitNextN:
 		{
 			const void* result = Process(pc+1, p, processData);
@@ -720,13 +720,13 @@ Loop:
 			pc = instruction.data;
 			goto Loop;
 		}
-		
+
 	case InstructionType::SplitNNext:
 		{
 			const void* result = Process(instruction.data, p, processData);
 			if(result != nullptr) return result;
 			++pc;
-			goto Loop;			
+			goto Loop;
 		}
 
 	case InstructionType::SplitNextMatchN:
@@ -742,7 +742,7 @@ Loop:
 		if(p < processData.pStart) return nullptr;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::Success:
 		return p;
 	}

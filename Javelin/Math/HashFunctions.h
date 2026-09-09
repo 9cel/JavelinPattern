@@ -8,7 +8,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	JINLINE size_t	GetHash(const void* p)			{ return (size_t) p;			}
 	JINLINE size_t	GetHash(char c)					{ return (size_t) c;			}
 	JINLINE size_t	GetHash(unsigned char c)		{ return (size_t) c;			}
@@ -24,12 +24,12 @@ namespace Javelin
 	JINLINE size_t	GetHash(double d)				{ union { double d; uint64_t u; } u; u.d = d; return GetHash(u.u); }
 
 //============================================================================
-	
+
 	template<typename T, typename A> struct CheckEqualHash
 	{
 		JINLINE static bool IsEqual(size_t aHash, const A& value) { return aHash == GetHash(T(value)); }
 	};
-	
+
 	template<typename T> struct CheckEqualHash<T, T>
 	{
 		JINLINE static bool IsEqual(size_t aHash, const T& value) { return true; }

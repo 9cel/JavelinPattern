@@ -22,20 +22,20 @@ bool PatternData::IsSingleByteConsumerFromPcToPc(int startPc, int endPc) const
 			++pc;
 			continue;
 		}
-		
+
 		if(instruction.IsSimpleByteConsumer())
 		{
 			++pc;
 			--count;
 			continue;
 		}
-		
+
 		if(instruction.type == InstructionType::Jump)
 		{
 			pc = instruction.data;
 			continue;
 		}
-		
+
 		return pc == endPc;
 	}
 }
@@ -91,7 +91,7 @@ int PatternData::CountSingleReferenceInstructions(int offset,
 		ByteCodeInstruction i = (*this)[offset];
 		if(!i.isSingleReference) break;
 		if(i.type != type) break;
-		
+
 		++count;
 		++offset;
 	}
@@ -110,7 +110,7 @@ int PatternData::CountSingleReferenceInstructions(int offset,
 		if(!i.isSingleReference) break;
 		if(i.type != type) break;
 		if(i.data != instructionData) break;
-		
+
 		++count;
 		++offset;
 	}
@@ -128,7 +128,7 @@ uint32_t PatternData::GetMaximalJumpTargetForPc(uint32_t pc) const
 	case InstructionType::SplitNNext:
 		if(nextInstruction.data == pc) return pc+2;
 		else return TypeData<uint32_t>::Maximum();
-		
+
 	case InstructionType::Jump:
 	{
 		ByteCodeInstruction target = (*this)[nextInstruction.data];
@@ -137,11 +137,11 @@ uint32_t PatternData::GetMaximalJumpTargetForPc(uint32_t pc) const
 		case InstructionType::SplitNNext:
 			if(target.data == pc) return nextInstruction.data+1;
 			else return TypeData<uint32_t>::Maximum();
-			
+
 		case InstructionType::SplitNextN:
 			if(nextInstruction.data+1 == pc) return target.data;
 			else return TypeData<uint32_t>::Maximum();
-			
+
 		default:
 			return TypeData<uint32_t>::Maximum();
 		}

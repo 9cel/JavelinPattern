@@ -1,6 +1,6 @@
 /****************************************************************************
 
-  Lock classes 
+  Lock classes
 
   The goal of the lock class is to provide transparent synchronized access
   to member functions of any class. Example usage is:
@@ -8,12 +8,12 @@
     Lock< Table<int>, Mutex > lockedTable;
 	Lock< Table<int>, CriticalSection > lockedTable;
 	Lock< Table<int> > lockedTable;
- 
+
 	lockedTable->Append(4);
 
-  The -> operator is overloaded such that the Append function from Table is 
-  called between synchronization start and end. 
-  
+  The -> operator is overloaded such that the Append function from Table is
+  called between synchronization start and end.
+
   Access can also be performed using:
 
     lockedTable.BeginLock();
@@ -25,7 +25,7 @@
 	Sentry<> s(lockedTable);
 	lockedTable.Append(4);
 	lockedTable.QuickSort();
-	
+
 ****************************************************************************/
 
 #pragma once
@@ -73,16 +73,16 @@ namespace Javelin
 	{
 	public:
 		typedef T Type;
-		
+
 		template<typename... U> Lock(U&&... u) : T(u...) { }
 
-		Lock& operator=(const Lock &b)				
-		{ 
+		Lock& operator=(const Lock &b)
+		{
 			b.BeginLock();
 			this->BeginLock();
 			this->T::operator=(b);
 			this->EndLock();
-			b.EndLock(); 
+			b.EndLock();
 			return *this;
 		}
 

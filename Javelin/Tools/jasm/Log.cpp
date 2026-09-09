@@ -54,10 +54,10 @@ size_t Log::numberOfErrors = 0;
 bool Log::ShouldUseAnsi(FILE* fd)
 {
 	if(!isatty(fileno(fd))) return false;
-	
+
 	const char* term = getenv("TERM");
 	if(!term) return false;
-	
+
 	return strcmp(term, "dumb") != 0;
 }
 
@@ -82,15 +82,15 @@ void Log::Write(LogLevel level, const char* s, va_list a)
 {
 	char buffer[10100];
 	char* p = buffer;
-	
+
 	const char* prefix = PREFIX_LIST[(int) level];
 	strcpy(buffer, prefix);
 	p += strlen(prefix);
-	
+
 	size_t length = vsnprintf(p, 10000, s, a);
 	if(length > 10000) length = 10000;
 	p += length;
-	
+
 	if(PREFIX_LIST == ANSI_COLORS_BY_LEVEL)
 	{
 		strcpy(p, ANSI_EOL);
@@ -100,9 +100,9 @@ void Log::Write(LogLevel level, const char* s, va_list a)
 	{
 		*p++ = '\n';
 	}
-	
+
 	fwrite(buffer, 1, p-buffer, fd);
-	
+
 	if(level == LogLevel::Error) ++numberOfErrors;
 	if(level == LogLevel::Warning) ++numberOfWarnings;
 }
@@ -110,12 +110,12 @@ void Log::Write(LogLevel level, const char* s, va_list a)
 void Log::VText(const char* s, va_list args)
 {
 	char buffer[10002];
-	
+
 	size_t length = vsnprintf(buffer, 10000, s, args);
 	if(length > 10000) length = 10000;
 	char* p = buffer+length;
 	*p++ = '\n';
-	
+
 	fwrite(buffer, 1, p-buffer, fd);
 }
 
@@ -134,8 +134,8 @@ void Log::LiteralText(const char* s)
 	if(length > 10000) length = 10000;
 	memcpy(buffer, s, length);
 	buffer[length] = '\n';
-	
-	fwrite(buffer, 1, length+1, fd);	
+
+	fwrite(buffer, 1, length+1, fd);
 }
 
 //============================================================================
@@ -220,9 +220,9 @@ void Log::VError(const char* s, va_list a)
 void Log::DebugData(const void* data, size_t length)
 {
 	const unsigned char* p = static_cast<const unsigned char*>(data);
-	
+
 	size_t i = 0;
-	
+
 	while(i < length)
 	{
 		if(i % 16 == 0)
@@ -231,7 +231,7 @@ void Log::DebugData(const void* data, size_t length)
 		}
 		fprintf(fd, i % 8 == 0 ? "  %02x" : " %02x", p[i]);
 		++i;
-		
+
 		if(i % 16 == 0)
 		{
 			fprintf(fd, "   |");
@@ -243,7 +243,7 @@ void Log::DebugData(const void* data, size_t length)
 			fprintf(fd, "|\n");
 		}
 	}
-	
+
 	size_t remainder = i % 16;
 	if(remainder != 0)
 	{

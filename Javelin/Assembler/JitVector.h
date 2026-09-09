@@ -21,7 +21,7 @@ namespace Javelin
 		uint32_t offset = 0;
 		uint32_t capacity = 0;
 		uint8_t *data = nullptr;
-		
+
 		void* Append(uint32_t appendSize) 	{
 												uint32_t newOffset = offset + appendSize;
 												if(newOffset <= capacity)
@@ -36,7 +36,7 @@ namespace Javelin
 
 	private:
 		__attribute__((noinline)) void* ExpandAndAppend(uint32_t appendSize);
-		
+
 		JitVectorBase(const JitVectorBase&) = delete;
 		void operator=(const JitVectorBase&) = delete;
 	};
@@ -58,17 +58,17 @@ namespace Javelin
 
 		uint32_t GetNumberOfBytes() const		{ return offset; }
 		T& GetElementAtByteIndex(uint32_t i)	{ return *(T*) (data + i); }
-		
+
 		T* begin() 								{ return (T*) data; }
 		T* end() 								{ return (T*) (data + offset); }
-		
+
 		T& operator[](uint32_t i)				{ return *((T*) data + i); }
 		const T& operator[](uint32_t i) const	{ return *((T*) data + i); }
-		
+
 		void StartUseBacking(JitVector &a)
 		{
             assert(data == nullptr);
-            
+
 			offset = a.offset;
 			capacity = a.capacity;
 			data = a.data;
@@ -78,7 +78,7 @@ namespace Javelin
 			assert(data == a.data);
 
 			a.offset = offset;
-			
+
 			data = nullptr;
 		}
 

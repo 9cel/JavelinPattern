@@ -55,7 +55,7 @@ bool ByteCodeInstruction::IsZeroWidth() const
 		InstructionType::ReturnIfRecurseValue,
 		InstructionType::ProgressCheck,
 	};
-	
+
 	return ZERO_WIDTH_SET.Contains(type);
 }
 
@@ -74,7 +74,7 @@ bool ByteCodeInstruction::UsesJumpTargets() const
 	case InstructionType::ByteJumpTable:
 	case InstructionType::ByteJumpRange:
 		return true;
-		
+
 	default:
 		return false;
 	}
@@ -86,11 +86,11 @@ Interval<uint8_t> ByteCodeInstruction::GetRange() const	{
 	case InstructionType::Byte:
 	case InstructionType::ByteNot:
 		return {uint8_t(data), uint8_t(data)};
-			
+
 	case InstructionType::ByteRange:
 	case InstructionType::ByteNotRange:
 		return {uint8_t(data & 0xff), uint8_t(data>>8 & 0xff)};
-			
+
 	default:
 		JERROR("Invalid instruction type for GetRange call");
 		JUNREACHABLE;
@@ -233,21 +233,21 @@ ByteCodeBuilder::ByteCodeBuilder(const String&		  aPattern,
 void ByteCodeBuilder::AddInstruction(const Instruction* instruction, InstructionType opcode, uint32_t opcodeData)
 {
 	ByteCodeInstruction b;
-	
+
 	JASSERT((uint32_t) opcode < 128);
 	JASSERT(opcodeData < (1 << 26));
-	
+
 	b.data = opcodeData;
 	b.isSingleReference = instruction->IsSingleReference();
 	b.type = opcode;
-	
+
 	instructionList.Append(b.value);
 }
 
 uint32_t ByteCodeBuilder::GetOffsetForData(const void* data, size_t length)
 {
 	uint64_t hash = Crc64(data, length);
-	
+
 	Map<uint64_t, uint32_t>::Iterator it = hashToDataMap.Find(hash);
 	if(it != hashToDataMap.End())
 	{
@@ -264,7 +264,7 @@ uint32_t ByteCodeBuilder::GetOffsetForData(const void* data, size_t length)
 	{
 		hashToDataMap.Insert(hash, (uint32_t) patternData.GetCount());
 	}
-	
+
 	uint32_t offset = (uint32_t) patternData.GetCount();
 	patternData.AppendData(data, length);
 	return offset + totalInstructionCount*4;
@@ -312,7 +312,7 @@ uint32_t ByteCodeBuilder::GetMaximumInstructionForSinglePass(uint32_t startingIn
 	for(uint32_t i = startingInstruction; i < instructionList.GetCount(); ++i)
 	{
 		ByteCodeInstruction instruction = instructionList[i];
-		
+
 		switch(instruction.type)
 		{
 		case InstructionType::Split:
@@ -325,7 +325,7 @@ uint32_t ByteCodeBuilder::GetMaximumInstructionForSinglePass(uint32_t startingIn
 				}
 			}
 			break;
-				
+
 		case InstructionType::SplitNextN:
 		case InstructionType::SplitNNext:
 			if(i < maximum) maximum = i;
@@ -343,7 +343,7 @@ uint32_t ByteCodeBuilder::GetMaximumInstructionForSinglePass(uint32_t startingIn
 				}
 			}
 			break;
-				
+
 		case InstructionType::SplitNextMatchN:
 		case InstructionType::SplitNMatchNext:
 			if(includeSplitMatch)
@@ -352,7 +352,7 @@ uint32_t ByteCodeBuilder::GetMaximumInstructionForSinglePass(uint32_t startingIn
 				if(instruction.data < maximum) maximum = instruction.data;
 			}
 			break;
-			
+
 		default:
 			break;
 		}
@@ -382,16 +382,16 @@ void ByteCodeBuilder::WriteByteCode(DataBlockWriter& writer) const
 
 	bool hasBackReferences = ContainsInstruction(InstructionType::BackReference);
 	header.flags.alwaysRequiresCaptures = hasBackReferences;
-	
+
 	uint32_t maximumInstructionForSinglePassFullMatch    = GetMaximumInstructionForSinglePass(fullMatchStartingInstruction, false);
 	uint32_t maximumInstructionForSinglePassPartialMatch = GetMaximumInstructionForSinglePass(partialMatchStartingInstruction, false);
-	
+
 	if(processorType == PatternProcessorType::Default || processorType == PatternProcessorType::NoScan)
 	{
 		const PatternProcessorType fallback = processorType == PatternProcessorType::Default ? PatternProcessorType::ScanAndCapture : PatternProcessorType::NfaOrBitStateBackTracking;
 		header.flags.fullMatchProcessorType = maximumInstructionForSinglePassFullMatch == header.numberOfInstructions ? PatternProcessorType::OnePass : fallback;
 		header.flags.partialMatchProcessorType = maximumInstructionForSinglePassPartialMatch == header.numberOfInstructions ? PatternProcessorType::OnePass : fallback;
-		
+
 		if(isFixedLength && (patternStringOptions & Pattern::NO_OPTIMIZE) == 0)
 		{
 			if(header.flags.fullMatchProcessorType != PatternProcessorType::OnePass)
@@ -410,11 +410,11 @@ void ByteCodeBuilder::WriteByteCode(DataBlockWriter& writer) const
 		{
 			header.flags.useStackGuard = maximumInstructionForSinglePassPartialMatch != header.numberOfInstructions;
 		}
-		
+
 		header.flags.fullMatchProcessorType = processorType;
 		header.flags.partialMatchProcessorType = processorType;
 	}
-	
+
 	if(patternStringOptions & Pattern::DO_CONSISTENCY_CHECK)
 	{
 		header.flags.fullMatchProcessorType = PatternProcessorType::ConsistencyCheck;
@@ -428,7 +428,7 @@ void ByteCodeBuilder::WriteByteCode(DataBlockWriter& writer) const
 	   || ContainsInstruction(InstructionType::Possess))
 	{
 		header.flags.hasPotentialSlowProcessing = true;
-		
+
 		if(header.flags.fullMatchProcessorType != PatternProcessorType::OnePass
 		   && header.flags.fullMatchProcessorType != PatternProcessorType::BackTracking)
 		{
@@ -442,7 +442,7 @@ void ByteCodeBuilder::WriteByteCode(DataBlockWriter& writer) const
 			header.flags.partialMatchProcessorType = PatternProcessorType::BackTracking;
 		}
 	}
-	
+
 	header.patternStringOffset = sizeof(ByteCodeHeader) + uint32_t(instructionList.GetNumberOfBytes() + patternData.GetNumberOfBytes());
 	header.patternStringOptions = patternStringOptions;
 	header.totalPatternSize = uint32_t(header.patternStringOffset + pattern.GetNumberOfBytes());
@@ -456,7 +456,7 @@ void ByteCodeBuilder::WriteByteCode(DataBlockWriter& writer) const
 	JASSERT(header.minimumMatchLength == minimumLength);
 	JASSERT(header.partialMatchStartingInstruction == partialMatchStartingInstruction);
 	JASSERT(header.fullMatchStartingInstruction == fullMatchStartingInstruction);
-	
+
 	writer.WriteData(instructionList);
 	writer.WriteData(patternData);
 	writer.WriteData(pattern);
@@ -465,7 +465,7 @@ void ByteCodeBuilder::WriteByteCode(DataBlockWriter& writer) const
 void ByteCodeBuilder::AppendByteCode(DataBlockWriter& writer) const
 {
 	ByteCodeHeader* header = (ByteCodeHeader*) writer.GetData();
-	
+
 	if(processorType == PatternProcessorType::Default)
 	{
 		uint32_t maximumInstructionForSinglePassFullMatch = GetMaximumInstructionForSinglePass(0, true);
@@ -480,7 +480,7 @@ void ByteCodeBuilder::AppendByteCode(DataBlockWriter& writer) const
 	{
 		header->flags.reverseProcessorType = processorType;
 	}
-	
+
 	if(isFixedLength && header->flags.hasResetCapture == false)
 	{
 		if(header->flags.reverseProcessorType != PatternProcessorType::OnePass
@@ -490,7 +490,7 @@ void ByteCodeBuilder::AppendByteCode(DataBlockWriter& writer) const
 			return;
 		}
 	}
-	
+
 	if(header->partialMatchStartingInstruction == header->fullMatchStartingInstruction)
 	{
 		if(header->numberOfCaptures == 1 && header->flags.hasResetCapture == false)
@@ -502,14 +502,14 @@ void ByteCodeBuilder::AppendByteCode(DataBlockWriter& writer) const
 
 	String patternString = header->GetPatternString();
 	size_t oldPatternStringOffset = header->patternStringOffset;
-	
+
 	header->numberOfReverseInstructions = instructionList.GetCount();
 	header->reverseMatchStartingInstruction = fullMatchStartingInstruction;
 	header->reverseProgramOffset = header->patternStringOffset;
 	size_t extraDataLength = instructionList.GetNumberOfBytes() + patternData.GetNumberOfBytes();
 	header->patternStringOffset = uint32_t(header->reverseProgramOffset + extraDataLength);
 	header->totalPatternSize += extraDataLength;
-	
+
 	// Strip off the pattern string.
 	((DataBlock&) writer.GetBuffer()).SetCount(oldPatternStringOffset);
 

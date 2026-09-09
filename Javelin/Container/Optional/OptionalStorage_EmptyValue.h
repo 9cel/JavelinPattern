@@ -25,12 +25,12 @@ namespace Javelin
 	}
 
 //============================================================================
-	
+
 	template<typename U, U EMPTY_VALUE>
 		class OptionalStorage_EmptyValue : public OptionalStorage_EmptyProvider< Private::EmptyValueHelper<U, EMPTY_VALUE> >
 	{
 	};
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

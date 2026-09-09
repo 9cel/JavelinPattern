@@ -53,7 +53,7 @@ static const unsigned char* NeonFindBytePairPath2(const unsigned char* p, const 
 void ArmNeonDfaPatternProcessor::CreateNibbleMask(State* state, int numberOfBytes) const
 {
 	const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
-	
+
 	NibbleMask nibbleMask;
 	for(int i = 0; i < numberOfBytes; ++i)
 	{
@@ -71,11 +71,11 @@ void ArmNeonDfaPatternProcessor::CreateByteRangePairData(State* state) const
 		uint32_t offset;
 		uint32_t searchValues[4];
 	};
-	
+
 	const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
 	LocalData* p = (LocalData*) state->workingArea;
 	p->offset = sbd->offset;
-	
+
 	for(int i = 0; i < 2; ++i)
 	{
 		unsigned char low = sbd->bytes[i*2];
@@ -83,7 +83,7 @@ void ArmNeonDfaPatternProcessor::CreateByteRangePairData(State* state) const
 		p->searchValues[i*2] = ((127-high)&0xff)*0x1010101;
 		p->searchValues[i*2+1] = ((126-(high-low))&0xff)*0x1010101;
 	}
-	
+
 	state->searchData = p;
 }
 
@@ -101,7 +101,7 @@ ArmNeonDfaPatternProcessor::SearchHandler ArmNeonDfaPatternProcessor::GetSearchH
 		case SearchHandlerEnum::SearchByteEitherOf8:
 			CreateNibbleMask(state, (int) value - (int) SearchHandlerEnum::SearchByte0);
 			return FindNeonWrapper<0, InternalFindNibbleMask>;
-				
+
         case SearchHandlerEnum::SearchByteEitherOf3WithAssert:
 		case SearchHandlerEnum::SearchByteEitherOf4WithAssert:
 		case SearchHandlerEnum::SearchByteEitherOf5WithAssert:
@@ -110,7 +110,7 @@ ArmNeonDfaPatternProcessor::SearchHandler ArmNeonDfaPatternProcessor::GetSearchH
 		case SearchHandlerEnum::SearchByteEitherOf8WithAssert:
 			CreateNibbleMask(state, (int) value - (int) SearchHandlerEnum::SearchByte0WithAssert);
 			return FindNeonAssertWrapper<0, InternalFindNibbleMask>;
-				
+
 		case SearchHandlerEnum::SearchBytePair2:
 			{
 				const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
@@ -157,7 +157,7 @@ ArmNeonDfaPatternProcessor::SearchHandler ArmNeonDfaPatternProcessor::GetSearchH
 			{
 				const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
 				const ByteCodeSearchMultiByteData* smbd = (const ByteCodeSearchMultiByteData*) &sbd->bytes[8];
-				
+
 				if(smbd->numberOfNibbleMasks == 2)
 				{
 					return smbd->isPath ?
@@ -167,12 +167,12 @@ ArmNeonDfaPatternProcessor::SearchHandler ArmNeonDfaPatternProcessor::GetSearchH
                 // else let parent class return the default FindBytePairPath
 			}
 			break;
-				
+
 		default:
 			break;
 		}
 	}
-			   
+
 	return DfaPatternProcessor::GetSearchHandler(value, state);
 }
 

@@ -13,7 +13,7 @@ using namespace Javelin;
 void JitLabelOffsetQueue::Reserve(uint32_t numberOfLabels)
 {
 	free(hashData);
-	
+
 	if(numberOfLabels == 0)
 	{
 		hashData = nullptr;
@@ -24,7 +24,7 @@ void JitLabelOffsetQueue::Reserve(uint32_t numberOfLabels)
 	// For a load factor of ~0.75, increase by 3/8
 	uint32_t size = numberOfLabels;
 	size += (size >> 2) + (size >> 3);
-	
+
 	// Round up to power of 2.
 	uint32_t t = size-1;
 	t |= (t >> 1);
@@ -57,7 +57,7 @@ uint32_t JitLabelOffsetQueue::GetFirstLabelOffset(uint32_t label) const
 uint32_t JitLabelOffsetQueue::GetLastLabelOffset(uint32_t label) const
 {
 	assert(label != NO_LABEL);
-	
+
 	for(uint32_t key = label & lengthMask;; key = (key+1) & lengthMask)
 	{
 		HashData &hashEntry = hashData[key];
@@ -74,7 +74,7 @@ uint32_t JitLabelOffsetQueue::GetLastLabelOffset(uint32_t label) const
 uint32_t JitLabelOffsetQueue::GetLastLabelOffsetIfExists(uint32_t label) const
 {
 	assert(label != NO_LABEL);
-	
+
 	for(uint32_t key = label & lengthMask;; key = (key+1) & lengthMask)
 	{
 		HashData &hashEntry = hashData[key];
@@ -106,12 +106,12 @@ void JitLabelOffsetQueue::DequeueLabel(uint32_t label)
 void JitLabelOffsetQueue::QueueLabelOffset(uint32_t label, uint32_t offset)
 {
 	assert(label != NO_LABEL);
-	
+
 	uint32_t entryIndex = numberOfEntries++;
 	EntryData& entry = entries[entryIndex];
 	entry.offset = offset;
 	entry.nextIndex = NO_LABEL;
-	
+
 	for(uint32_t key = label & lengthMask;; key = (key+1) & lengthMask)
 	{
 		HashData &hashEntry = hashData[key];

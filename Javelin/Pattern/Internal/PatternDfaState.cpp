@@ -50,19 +50,19 @@ void DfaProcessorBase::State::Dump(const char* prefix) const
 		StandardOutput.PrintF("%s: fail\n", prefix);
 		return;
 	}
-	
+
 	if(this == (void*) &EMPTY_STATE)
 	{
 		StandardOutput.PrintF("%s: empty\n", prefix);
 		return;
 	}
-	
+
 	if(this == (void*) &EMPTY_MATCH_STATE)
 	{
 		StandardOutput.PrintF("%s: empty-match\n", prefix);
 		return;
 	}
-	
+
 	StandardOutput.PrintF("%s: %p:%x", prefix, this, nfaState.stateFlags);
 	for(uint32_t i = 0; i < nfaState.numberOfStates; ++i)
 	{
@@ -75,7 +75,7 @@ void DfaProcessorBase::State::Dump(const char* prefix) const
 	if(stateFlags & NfaState::Flag::IS_START_OF_INPUT) StandardOutput.PrintF(" IsStartOfInput");
 	if(stateFlags & NfaState::Flag::IS_SEARCH) StandardOutput.PrintF(" IsSearch");
 	if(stateFlags & NfaState::Flag::IS_MATCH) StandardOutput.PrintF(" IsMatch");
-	
+
 	StandardOutput.PrintF("\n");
 }
 

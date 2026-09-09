@@ -96,7 +96,7 @@ DfaReverseProcessor::SearchHandler DfaReverseProcessor::GetSearchHandler(SearchH
 	case SearchHandlerEnum::SearchByteRangePair:			return &NoSearchHandler;
 	case SearchHandlerEnum::SearchBoyerMoore:				return &NoSearchHandler;
 	case SearchHandlerEnum::SearchShiftOr:					return &NoSearchHandler;
-		
+
 	case SearchHandlerEnum::SearchByte0WithAssert:			return &FindByte0WithAssertHandler;
 	case SearchHandlerEnum::SearchByteWithAssert:			return &FindByteWithAssertForwarder<FindByteReverse>;
 	case SearchHandlerEnum::SearchByteEitherOf2WithAssert:	return &NoSearchHandler;
@@ -116,7 +116,7 @@ DfaReverseProcessor::SearchHandler DfaReverseProcessor::GetSearchHandler(SearchH
 	case SearchHandlerEnum::SearchByteRangePairWithAssert:	return &NoSearchHandler;
 	case SearchHandlerEnum::SearchBoyerMooreWithAssert:		return &NoSearchHandler;
 	case SearchHandlerEnum::SearchShiftOrWithAssert:		return &NoSearchHandler;
-		
+
 	default:
 		JERROR("Unexpected search handler");
 		return nullptr;
@@ -134,7 +134,7 @@ const uint8_t* DfaReverseProcessor::GetCharacterFlags() const
 	constexpr unsigned char S = 0;
 	constexpr unsigned char N = NfaState::Flag::IS_END_OF_LINE;
 	constexpr unsigned char E = NfaState::Flag::IS_END_OF_LINE | NfaState::Flag::IS_START_OF_SEARCH | NfaState::Flag::IS_START_OF_INPUT;
-	
+
 	static constexpr uint8_t FLAGS[258] =
 	{
 		S, S, S, S, S, S, S, S, S, S, N, S, S, S, S, S,
@@ -145,7 +145,7 @@ const uint8_t* DfaReverseProcessor::GetCharacterFlags() const
 		W, W, W, W, W, W, W, W, W, W, W, S, S, S, S, W,
 		S, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W,
 		W, W, W, W, W, W, W, W, W, W, W, S, S, S, S, S,
-		
+
 		S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
 		S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
 		S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
@@ -154,7 +154,7 @@ const uint8_t* DfaReverseProcessor::GetCharacterFlags() const
 		S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
 		S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
 		S, S, S, S, S, S, S, S, S, S, S, S, S, S, S, S,
-		
+
 		E
 	};
 	return FLAGS;
@@ -189,9 +189,9 @@ template<DfaReverseProcessor::SearchMode SEARCH_MODE> const void* DfaReverseProc
 #if VERBOSE_DEBUG_PATTERN
 		state->Dump("Current state");
 #endif
-		
+
 		int c = p[-1];
-		
+
 		if(JUNLIKELY(state->stateFlags & (NfaState::Flag::IS_MATCH | NfaState::Flag::HAS_EMPTY_STATES | NfaState::Flag::DFA_NEEDS_POPULATING | NfaState::Flag::IS_SEARCH | NfaState::Flag::DFA_STATE_IS_RESETTING)))
 		{
 			if(SEARCH_MODE == SearchMode::Partial)
@@ -203,7 +203,7 @@ template<DfaReverseProcessor::SearchMode SEARCH_MODE> const void* DfaReverseProc
 					StandardOutput.PrintF("** MATCH **\n");
 #endif
 				}
-				
+
 				if(state->stateFlags & NfaState::Flag::HAS_EMPTY_STATES)
 				{
 #if VERBOSE_DEBUG_PATTERN
@@ -223,15 +223,15 @@ template<DfaReverseProcessor::SearchMode SEARCH_MODE> const void* DfaReverseProc
 					return nullptr;
 				}
 			}
-			
+
 			if(JUNLIKELY(state->stateFlags & (NfaState::Flag::DFA_STATE_IS_RESETTING|NfaState::Flag::DFA_NEEDS_POPULATING)))
 			{
 				bytesProcessedSinceReset += uint64_t(pLastByteRecord - p);
 				pLastByteRecord = (const unsigned char*) p;
-				
+
 				if(state->stateFlags & NfaState::Flag::DFA_STATE_IS_RESETTING) HandleStateReset(state);
 				if(state->stateFlags & NfaState::Flag::DFA_NEEDS_POPULATING) PopulateState(state);
-				
+
 				if(state->stateFlags & NfaState::Flag::DFA_FAILED)
 				{
 #if DEBUG_PATTERN
@@ -254,11 +254,11 @@ template<DfaReverseProcessor::SearchMode SEARCH_MODE> const void* DfaReverseProc
 #if VERBOSE_DEBUG_PATTERN
 		StandardOutput.PrintF("Processing char: '%C' (offset %z)\n", c, p-pStop);
 #endif
-		
+
 		state = state->nextStates[c];
 		--p;
 	}
-	
+
 ProcessEOF:
 #if VERBOSE_DEBUG_PATTERN
 	state->Dump("Current state");
@@ -276,7 +276,7 @@ ProcessEOF:
 				StandardOutput.PrintF("** MATCH **\n");
 #endif
 			}
-			
+
 			if(state->stateFlags & NfaState::Flag::HAS_EMPTY_STATES)
 			{
 #if VERBOSE_DEBUG_PATTERN
@@ -301,7 +301,7 @@ ProcessEOF:
 				return (void*) DFA_FAILED;
 			}
 		}
-		
+
 		if(state->stateFlags & NfaState::Flag::IS_START_OF_SEARCH_MASK)
 		{
 			JASSERT(state->nextStates[State::START_OF_SEARCH_INDEX]);
@@ -334,7 +334,7 @@ ProcessEOF:
 #endif
 		return pStop;
 	}
-	
+
 #if VERBOSE_DEBUG_PATTERN
 	StandardOutput.PrintF("** END-EXIT **\n");
 #endif
@@ -360,7 +360,7 @@ DfaReverseProcessor::State* DfaReverseProcessor::CreateStartingState(size_t star
 			unsigned char nfaStateBacking[NfaState::GetSizeRequiredForNumberOfStates(numberOfInstructions)];
 			NfaState* nfaState = (NfaState*) nfaStateBacking;
 			nfaState->Reset();
-			
+
 			static const int STARTING_FLAGS[] =
 			{
 				NfaState::Flag::IS_END_OF_INPUT | NfaState::Flag::WAS_END_OF_LINE,
@@ -373,7 +373,7 @@ DfaReverseProcessor::State* DfaReverseProcessor::CreateStartingState(size_t star
 			CharacterRange dummyRange(0, 256);
 			nfaState->AddNextStateReverse(patternData, startingInstruction, dummyRange, *updateCache, startingFlags);
 			nfaState->ClearIrrelevantFlags();
-			
+
 			startingState = GetStateForNfaState(*nfaState);
 			startingState->activeCounter++;
 			startingStatesSet[startingIndex] = startingState;
@@ -411,7 +411,7 @@ const void* DfaReverseProcessor::Match(const void* data, size_t length, size_t s
 			return (void*) DFA_FAILED;
 		}
 	}
-	
+
 	const void* result;
 	const bool stopIsStartOfInput = startOffset == 0;
 	if(matchIsAnchored)

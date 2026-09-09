@@ -15,7 +15,7 @@ namespace Javelin
 		static size_t GetPageSize();
 		static size_t GetNumberOfProcessors();
 	};
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

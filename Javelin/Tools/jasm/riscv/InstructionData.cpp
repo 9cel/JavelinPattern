@@ -501,7 +501,7 @@ InstructionMap::InstructionMap()
     (*this)["n.j"] = &N_J;
     (*this)["j"] = &J;
     (*this)["ret"] = &RET;
-    
+
     // Zifencei Standard Extension
     (*this)["fence.i"] = &FENCE_I;
 
@@ -512,7 +512,7 @@ InstructionMap::InstructionMap()
     (*this)["csrrwi"] = &CSRRWI;
     (*this)["csrrsi"] = &CSRRSI;
     (*this)["csrrci"] = &CSRRCI;
-    
+
     // Counters and timers
     (*this)["rdcycle"] = &RDCYCLE;
     (*this)["rdcycleh"] = &RDCYCLEH;

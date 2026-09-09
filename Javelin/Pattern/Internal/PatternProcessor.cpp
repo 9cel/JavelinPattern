@@ -29,7 +29,7 @@ const void* PatternProcessor::FindBytePair(const void* p, uint64_t v, const void
 {
 	unsigned char c0 = v & 0xff;
 	unsigned char c1 = v>>8 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -48,7 +48,7 @@ const void* PatternProcessor::FindBytePair2(const void* p, uint64_t v, const voi
 {
 	unsigned char c1a = v>>16 & 0xff;
 	unsigned char c1b = v>>24 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -68,7 +68,7 @@ const void* PatternProcessor::FindBytePair3(const void* p, uint64_t v, const voi
 	unsigned char c1a = v>>24 & 0xff;
 	unsigned char c1b = v>>32 & 0xff;
 	unsigned char c1c = v>>40 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -89,7 +89,7 @@ const void* PatternProcessor::FindBytePair4(const void* p, uint64_t v, const voi
 	unsigned char c1b = v>>40 & 0xff;
 	unsigned char c1c = v>>48 & 0xff;
 	unsigned char c1d = v>>56 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -125,7 +125,7 @@ const void* PatternProcessor::FindByteEitherOf3(const void* p, uint64_t v, const
 	unsigned char c0 = v & 0xff;
 	unsigned char c1 = v>>8 & 0xff;
 	unsigned char c2 = v>>16 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -143,7 +143,7 @@ const void* PatternProcessor::FindByteEitherOf4(const void* p, uint64_t v, const
 	unsigned char c1 = v>>8 & 0xff;
 	unsigned char c2 = v>>16 & 0xff;
 	unsigned char c3 = v>>24 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -162,7 +162,7 @@ const void* PatternProcessor::FindByteEitherOf5(const void* p, uint64_t v, const
 	unsigned char c2 = v>>16 & 0xff;
 	unsigned char c3 = v>>24 & 0xff;
 	unsigned char c4 = v>>32 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -183,7 +183,7 @@ const void* PatternProcessor::FindByteEitherOf6(const void* p, uint64_t v, const
 	unsigned char c3 = v>>24 & 0xff;
 	unsigned char c4 = v>>32 & 0xff;
 	unsigned char c5 = v>>40 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -205,7 +205,7 @@ const void* PatternProcessor::FindByteEitherOf7(const void* p, uint64_t v, const
 	unsigned char c4 = v>>32 & 0xff;
 	unsigned char c5 = v>>40 & 0xff;
 	unsigned char c6 = v>>48 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -228,7 +228,7 @@ const void* PatternProcessor::FindByteEitherOf8(const void* p, uint64_t v, const
 	unsigned char c5 = v>>40 & 0xff;
 	unsigned char c6 = v>>48 & 0xff;
 	unsigned char c7 = v>>56 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -246,7 +246,7 @@ const void* PatternProcessor::FindByteRange(const void* p, uint64_t v, const voi
 	unsigned char c0l = v & 0xff;
 	unsigned char c0h = v>>8 & 0xff;
 	uint32_t d0 = c0h - c0l;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -263,7 +263,7 @@ const void* PatternProcessor::FindByteRangePair(const void* p, uint64_t v, const
 	unsigned char c1l = v>>16 & 0xff;
 	unsigned char c1h = v>>24 & 0xff;
 	uint32_t d1 = c1h - c1l;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{
@@ -288,7 +288,7 @@ const void* PatternProcessor::FindBoyerMoore(const void* p, const ByteCodeSearch
 		pSearch += adjust;
 		if(adjust == 0) break;
 	}
-	
+
 	return pSearch - data->length;
 }
 #endif
@@ -338,7 +338,7 @@ const void* PatternProcessor::FindShiftOr(const void* p, const ByteCodeSearchDat
 				| data->data[process[7]];
 #endif
 		process += 8;
-		
+
 		uint32_t test = ~state >> data->length;
 		if(JUNLIKELY(test != 0))
 		{
@@ -346,7 +346,7 @@ const void* PatternProcessor::FindShiftOr(const void* p, const ByteCodeSearchDat
 			return process + clz - 32 - data->length;
 		}
 	}
-	
+
 	while(process < pEnd)
 	{
 		state = (state << 1) | data->data[*process++];
@@ -378,7 +378,7 @@ const void* PatternProcessor::FindByteTriplet2(const void* p, uint64_t v, const 
 {
 	unsigned char c2a = v>>32 & 0xff;
 	unsigned char c2b = v>>40 & 0xff;
-	
+
 	const unsigned char* process = (const unsigned char*) p;
 	while(process < pEnd)
 	{

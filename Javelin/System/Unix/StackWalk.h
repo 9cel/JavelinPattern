@@ -9,7 +9,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	class String;
 
 	class StackWalkInformation final
@@ -17,7 +17,7 @@ namespace Javelin
 	public:
 		StackWalkInformation(void* address);
 		~StackWalkInformation();
-		
+
 		bool		IsValid() const			{ return functionName != nullptr;	}
         String		GetDescription() const;
 
@@ -26,11 +26,11 @@ namespace Javelin
 
 	private:
 		void DemangleFunctionNameToBuffer(const char* name);
-		
+
 		size_t	offset;
 		char*	functionName	= nullptr;
 	};
-	
+
 //============================================================================
 
 	static const size_t MAXIMUM_STACK_DEPTH	= 8;
@@ -39,7 +39,7 @@ namespace Javelin
 	{
 	private:
 		typedef StaticTable<void*, MAXIMUM_STACK_DEPTH> Inherited;
-		
+
 	public:
 		StackWalk() { }
 		StackWalk(size_t skipDepth) { Capture(skipDepth); }

@@ -17,7 +17,7 @@ namespace Javelin::arm64Assembler
         Rel21HiLo,           // e.g. adr
         Rel14Offset5,        // e.g. tbz
         Imm12,               // For add following adrp.
-        
+
         Rel64,               // For .quad labels
     };
 

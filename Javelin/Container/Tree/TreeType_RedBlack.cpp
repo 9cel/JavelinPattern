@@ -19,7 +19,7 @@ TreeType_RedBlack::NodeBase TreeType_RedBlack::NodeBase::sentinel =
 
 //============================================================================
 
-size_t TreeType_RedBlack::NodeBase::CountAllChildren(const NodeBase* p) 
+size_t TreeType_RedBlack::NodeBase::CountAllChildren(const NodeBase* p)
 {
 	if(p->IsEmpty()) return 0;
 	return 1 + CountAllChildren(p->left) + CountAllChildren(p->right);
@@ -71,12 +71,12 @@ void TreeType_RedBlack::NodeBase::FixupInsert(NodeBase* &root)
 	left	= &sentinel;
 	right	= &sentinel;
 	isRed	= true;
-	
+
 	NodeBase* node = this;
-	
+
 	while(node != root && node->parent->isRed)
 	{
-        if(node->parent == node->parent->parent->left) 
+        if(node->parent == node->parent->parent->left)
 		{
             NodeBase *uncle = node->parent->parent->right;
             if (uncle->isRed)
@@ -85,33 +85,33 @@ void TreeType_RedBlack::NodeBase::FixupInsert(NodeBase* &root)
                 uncle->isRed = false;
                 node->parent->parent->isRed = true;
                 node = node->parent->parent;
-            } 
-			else 
+            }
+			else
 			{
-                if(node == node->parent->right) 
+                if(node == node->parent->right)
 				{
                     node = node->parent;
 					node->RotateLeft(root);
                 }
-				
+
                 node->parent->isRed = false;
                 node->parent->parent->isRed = true;
 				node->parent->parent->RotateRight(root);
             }
-        } 
-		else 
+        }
+		else
 		{
             NodeBase *uncle = node->parent->parent->left;
-            if(uncle->isRed) 
+            if(uncle->isRed)
 			{
                 node->parent->isRed = false;
                 uncle->isRed = false;
                 node->parent->parent->isRed = true;
                 node = node->parent->parent;
-            } 
-			else 
+            }
+			else
 			{
-                if(node == node->parent->left) 
+                if(node == node->parent->left)
 				{
                     node = node->parent;
 					node->RotateRight(root);
@@ -122,7 +122,7 @@ void TreeType_RedBlack::NodeBase::FixupInsert(NodeBase* &root)
             }
         }
 	}
-	
+
 	root->isRed = false;
 }
 
@@ -131,11 +131,11 @@ void TreeType_RedBlack::NodeBase::FixupInsert(NodeBase* &root)
 void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 {
 	JASSERT(this);
-	
+
 	// A removable node is a node with which does not have 2 children
-	NodeBase* removableNode;	
+	NodeBase* removableNode;
 	NodeBase* removableNodeChild;
-	
+
 	// Stage 1 - determine which node needs to be replaced
 	NodeBase* node = this;
 	if(node->left->IsEmpty())
@@ -152,12 +152,12 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 	{
 		removableNode = node->right;
 		while(removableNode->left->IsUsed()) removableNode = removableNode->left;
-		
-		// As we do not know the data or datasize involved with each node, we have 
+
+		// As we do not know the data or datasize involved with each node, we have
 		// to mess with pointers to swap the RemovableNode and Node in the table.
 		Swap(removableNode->left, node->left);
 		Swap(removableNode->isRed, node->isRed);
-		
+
 		if(node->right == removableNode)
 		{
 			removableNode->parent = node->parent;
@@ -170,7 +170,7 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 			Swap(removableNode->right, node->right);
 			Swap(removableNode->parent, node->parent);
 		}
-		
+
 		if(removableNode->parent)
 		{
 			if(removableNode->parent->left == node) removableNode->parent->left = removableNode;
@@ -180,15 +180,15 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 		{
 			root = removableNode;
 		}
-		
+
 		// And fixup child pointers
 		removableNode->left->parent = removableNode;
 		removableNode->right->parent = removableNode;
-		
+
 		Swap(removableNode, node);
 		removableNodeChild = removableNode->right;
 	}
-	
+
 	// Stage 2 - unlink the node to be replaced and bind in child instead
 	removableNodeChild->parent = removableNode->parent;
 	if(removableNode->parent)
@@ -200,9 +200,9 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 	{
 		root = removableNodeChild;
 	}
-	
+
 	if(removableNode->isRed) return;
-	
+
 	// Stage 3 - restore Red-Black property.
 	node = removableNodeChild;
 	while(node != root && !node->isRed)
@@ -210,7 +210,7 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 		if(node == node->parent->left)
 		{
 			NodeBase *sibling = node->parent->right;
-			
+
 			if(sibling->isRed)
 			{
 				sibling->isRed = false;
@@ -218,7 +218,7 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 				node->parent->RotateLeft(root);
 				sibling = node->parent->right;
 			}
-			
+
 			if(!sibling->left->isRed && !sibling->right->isRed)
 			{
 				sibling->isRed = true;
@@ -233,7 +233,7 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 					sibling->RotateRight(root);
 					sibling = node->parent->right;
 				}
-				
+
 				sibling->isRed = node->parent->isRed;
 				node->parent->isRed = false;
 				sibling->right->isRed = false;
@@ -245,7 +245,7 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 		else
 		{
 			NodeBase *sibling = node->parent->left;
-			
+
 			if(sibling->isRed)
 			{
 				sibling->isRed = false;
@@ -253,7 +253,7 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 				node->parent->RotateRight(root);
 				sibling = node->parent->left;
 			}
-			
+
 			if(!sibling->right->isRed && !sibling->left->isRed)
 			{
 				sibling->isRed = true;
@@ -268,7 +268,7 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 					sibling->RotateLeft(root);
 					sibling = node->parent->left;
 				}
-				
+
 				sibling->isRed = node->parent->isRed;
 				node->parent->isRed = false;
 				sibling->left->isRed = false;
@@ -278,7 +278,7 @@ void TreeType_RedBlack::NodeBase::RemoveFromTree(NodeBase* &root)
 			}
 		}
 	}
-	
+
 	node->isRed = false;
 }
 

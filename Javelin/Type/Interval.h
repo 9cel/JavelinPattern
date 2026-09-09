@@ -54,7 +54,7 @@ namespace Javelin
 		// Comparison operators
 		bool operator==(const Interval &a) const							{ return min == a.min && max == a.max;	}
 		bool operator!=(const Interval &a) const							{ return min != a.min || max != a.max;  }
-		
+
 		// Translation operators
 		template<typename U> JINLINE Interval operator+(const U &a) const	{ return { min+a, max+a };				}
 		template<typename U> JINLINE Interval operator-(const U &a) const	{ return { min-a, max-a };				}
@@ -68,21 +68,21 @@ namespace Javelin
 		template<typename S> JINLINE Interval operator/(S a) const			{ return { min/a, max/a };				}
 							 JINLINE Interval operator/(float a) const		{ return (*this) * (1.0f / a);			}
 
-		template<typename S> 
+		template<typename S>
 			JINLINE friend Interval operator*(S a, const Interval &b)		{ return { a*b.min, a*b.max };			}
 		template<typename S> JINLINE Interval& operator*=(S a)				{ min *= a; max *= a; return *this;	}
 		template<typename S> JINLINE Interval& operator/=(S a)				{ min /= a; max /= a; return *this;	}
 							 JINLINE Interval& operator/=(float a)			{ return (*this) *= (1.0f / a);			}
 
 		template<typename S> void ScaleWithPivot(S a, const T& pivot)		{ T size = max-min; min = (1-a)*pivot + a*min; max = a*size+min; }
-		
+
 		bool Contains(const Interval &a) const								{ return min <= a.min && a.max <= max;	}
 		bool Contains(const T &a) const										{ return (*this) % a;					}
 
 		bool IsValid() const;
 
 		T Clamp(T a) const													{ return a < min ? min : a > max ? max : a; }
-			
+
 		// Union of two intervals
 		Interval	operator|(const Interval &a) const;
 		Interval&	operator|=(const Interval &a);
@@ -115,16 +115,16 @@ namespace Javelin
 		T ConvertValueToRange(const T& value, const T& max)					{ return (value-min) * max / GetSize(); 								}
 		T ConvertValueFromRange(const T& value, const Interval& oldRange)	{ return (value-oldRange.min) * GetSize() / oldRange.GetSize() + min; 	}
 		T ConvertValueFromRange(const T& value, const T& oldMax)			{ return value * GetSize() / oldMax + min;								}
-		
+
 		// Iterator support for intervals with types that define ++
 		T Begin()		{ return min; }
 		T Begin() const { return min; }
-		
+
 		JINLINE T GetEnd() const;
-			
+
 		T End()			{ return GetEnd(); }
 		T End() const	{ return GetEnd(); }
-		
+
 		JINLINE bool ApproximateEquals(const Interval& a, float ACCEPTABLE_ERROR = 0.001f) const 	{ return min.ApproximateEquals(a.min) && max.ApproximateEquals(a.max); }
 	};
 
@@ -143,7 +143,7 @@ namespace Javelin
 			JINLINE static bool IsValid(const Interval<T, false>& a)							{ return a.min < a.max; }
 			JINLINE static T GetEnd(const Interval<T, false>& a) 								{ return a.max; }
 		};
-		
+
 		template<typename T> class IntervalHelper<T, true>
 		{
 		public:
@@ -207,14 +207,14 @@ namespace Javelin
 			min = a;
 			max = a;
 		}
-		else 
+		else
 		{
 			SetMinimum(min, a);
 			SetMaximum(max, a);
 		}
 		return *this;
 	}
-	
+
 //============================================================================
 // Intersection operators
 
@@ -254,7 +254,7 @@ namespace Javelin
 	{
 		return *reinterpret_cast<const unsigned*>(&max) == TypeData<unsigned>::Maximum();
 	}
-	
+
 	template<> JINLINE void Interval<float>::SetEmpty()
 	{
 		*reinterpret_cast<unsigned*>(&max) = TypeData<unsigned>::Maximum();
@@ -272,11 +272,11 @@ namespace Javelin
 	}
 
 //============================================================================
-	
+
 	template<typename T, bool b> struct TypeData< Interval<T, b> >
 	{
 		static constexpr Interval<T, b> Zero()	{ return Interval<T,b>(TypeData<T>::Zero(), TypeData<T>::Zero());	}
-		
+
 		enum { IS_POD				= TypeData<T>::IS_POD				};
 		enum { IS_BITWISE_COPY_SAFE	= TypeData<T>::IS_BITWISE_COPY_SAFE };
 		enum { IS_POINTER			= false								};

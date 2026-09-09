@@ -12,7 +12,7 @@ namespace Javelin
 //============================================================================
 
 	template<typename...> class Tuple;
-	
+
 	namespace Private
 	{
 		template<int n, typename T, typename... U> struct FunctionParameterHelper		{ typedef typename FunctionParameterHelper<n-1, U...>::Type Type; };
@@ -25,7 +25,7 @@ namespace Javelin
 	{
 	public:
 		JINLINE bool IsUsingInlineStorage() const						{ return runnable == (Runnable<void()>*) &storage; }
-		
+
 	protected:
 		FunctionBase() 													{ }
 		FunctionBase(Runnable<void()>* aRunnable) : runnable(aRunnable) { }
@@ -34,13 +34,13 @@ namespace Javelin
 		void Copy(const FunctionBase& a);
 		void Move(FunctionBase&& a);
 		void Release();
-		
+
 		struct Storage { void* data[2]; };
-		
+
 		Storage 			storage;
 		Runnable<void()>*	runnable;
 	};
-	
+
 //============================================================================
 
 	template<typename T> class Function;
@@ -50,7 +50,7 @@ namespace Javelin
 	{
 	private:
 		typedef FunctionBase Inherited;
-		
+
 	public:
 		typedef R ReturnType;
 		typedef R (Type)(P...);
@@ -59,7 +59,7 @@ namespace Javelin
 		template<int n> struct Parameter { typedef typename Private::FunctionParameterHelper<n, P...>::Type Type; };
 		typedef Tuple<P...> ParameterList;
 		typedef Tuple<typename TypeData<P>::StorageType...> ParameterStoreList;
-	
+
 		Function() : Inherited(nullptr)							{ }
 		Function(PointerType fp)								{ runnable = (Runnable<void()>*) new(Placement(&storage)) FunctionPointerRunnable<R, P...>(fp); }
 		Function(const Function& a)								{ Copy(a); 				}
@@ -72,10 +72,10 @@ namespace Javelin
 		void operator=(Function&& a) 							{ Release(); Move((Function&&) a); 				}
 		template<typename L> void operator=(const L& lambda) 	{ Release(); Assign(lambda); 					}
 		ReturnType operator()(P... p) const 					{ return (*(Runnable<R(P...)>*)runnable)(p...); }
-		
+
 		template<typename... U>
 		ReturnType operator()(const Tuple<U...>& parameters) const { return parameters.Call(*(Runnable<R(P...)>*) runnable); }
-		
+
 	private:
 		template<typename L> void Assign(const L& lambda) 		{
 																	// The only way sizeof(LambdaRunnable) == sizeof(void*)
@@ -104,11 +104,11 @@ namespace Javelin
 		typedef Tuple<P...> ParameterList;
 		typedef Tuple<typename TypeData<P>::StorageType...> ParameterStoreList;
 	};
-	
+
 	template<typename T> class Function : public Function<decltype(&T::operator())>
 	{
 	};
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

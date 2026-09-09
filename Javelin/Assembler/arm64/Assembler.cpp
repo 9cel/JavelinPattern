@@ -67,15 +67,15 @@ void* SegmentAssembler::AppendInstructionData(uint32_t blockByteCodeSize,
 	asm volatile(".global __ZN7Javelin16SegmentAssembler21AppendInstructionDataEjPKh");
 	asm volatile("__ZN7Javelin16SegmentAssembler21AppendInstructionDataEjPKh:");
 	asm volatile("mov w3, %0" : : "i"(sizeof(AppendAssemblyReference)));
-	
+
 	// Definition for AppendInstructionData(blockByteCodeSize, s, referenceAndDataLength);
 	asm volatile("__ZN7Javelin16SegmentAssembler21AppendInstructionDataEjPKhj:");
-	
+
 	// Update byteCodeSize
 	asm volatile("ldr w5, [x0, %0]" : : "i"(JIT_OFFSETOF(Assembler, aggregateData.byteCodeSize)));
 	asm volatile("add w5, w5, w1");
 	asm volatile("str w5, [x0, %0]" : : "i"(JIT_OFFSETOF(Assembler, aggregateData.byteCodeSize)));
-	
+
 	// buildData.Append, x5 = offset, x6 = capacity.
 	asm volatile("ldp w5, w6, [x0, %0]" : : "i"(JIT_OFFSETOF(Assembler, buildData)));
 	asm volatile("add w7, w5, w3");
@@ -84,7 +84,7 @@ void* SegmentAssembler::AppendInstructionData(uint32_t blockByteCodeSize,
 	asm volatile("str w7, [x0, %0]" : : "i"(JIT_OFFSETOF(Assembler, buildData)));
 	asm volatile("ldr x0, [x0, %0]" : : "i"(JIT_OFFSETOF(Assembler, buildData.data)));
 	asm volatile("add x0, x0, x5");
-	
+
 	// Write referenceSize and assemblerData
 	asm volatile("stp x2, x3, [x0]");
 	asm volatile("ret");
@@ -93,20 +93,20 @@ void* SegmentAssembler::AppendInstructionData(uint32_t blockByteCodeSize,
 	// Update offset and capacity
 	asm volatile("add w1, w7, w7");
 	asm volatile("stp w7, w1, [x0, %0]" : : "i"(JIT_OFFSETOF(Assembler, buildData)));
-	
+
 	//  Update data (inline of JitVectorBase::ExpandAndAppend
 	asm volatile("stp x2, lr, [sp, #-48]!");
 	asm volatile("stp x0, x3, [sp, #16]");
 	asm volatile("str x5, [sp, #32]");
 	asm volatile("ldr x0, [x0, %0]" : : "i"(JIT_OFFSETOF(Assembler, buildData.data)));
-	
+
 	asm volatile("bl _realloc");
 	asm volatile("ldr x5, [sp, #32]");
 	asm volatile("ldp x7, x3, [sp, #16]");
 	asm volatile("ldp x2, lr, [sp], #48");
 	asm volatile("str x0, [x7, %0]" : : "i"(JIT_OFFSETOF(Assembler, buildData.data)));
 	asm volatile("add x0, x0, x5");
-	
+
 	// Write referenceSize and assemblerData
 	asm volatile("stp x2, x3, [x0]");
 	asm volatile("ret");
@@ -156,7 +156,7 @@ void SegmentAssembler::ProcessLabelData(uint32_t labelData)
 {
 	int numberOfLabels = labelData & 0xff;
 	int numberOfForwardLabelReferences = labelData >> 8;
-	
+
 	aggregateData.numberOfLabels += numberOfLabels;
 	aggregateData.numberOfForwardLabelReferences += numberOfForwardLabelReferences;
 }
@@ -171,7 +171,7 @@ void* SegmentAssembler::AppendData(uint32_t byteSize)
 		ActionType::Return,
 	};
 	static_assert(sizeof(AppendByteReference) == 16, "Expected AppendByteReference to be 16 bytes");
-	
+
 	uint32_t allocationSize = (sizeof(AppendByteReference) + byteSize + 7) & -8;
 	AppendByteReference *reference = (AppendByteReference*) AppendInstructionData(byteSize,
 																				  (const uint8_t*) &appendDataActions,
@@ -188,7 +188,7 @@ void SegmentAssembler::AppendDataPointer(const void *data, uint32_t byteSize)
 		ActionType::DataPointer,
 		ActionType::Return,
 	};
-	
+
 	AppendDataPointerReference *reference =
 		(AppendDataPointerReference*) AppendInstructionData(byteSize,
 															(const uint8_t*) &appendDataActions,
@@ -227,10 +227,10 @@ uint32_t SegmentAssembler::LogicalOpcodeValue(uint64_t v)
 {
 	BitMaskEncodeResult result = EncodeBitMask(v);
 	assert(result.size != 0 && "Unable to encode logical immediate");
-	
+
 	uint32_t opcodeValue = result.rotate << 16;
 	if(result.size == 64) opcodeValue |= 1 << 22;
-	
+
 	uint32_t imms = ((0x1e << __builtin_ctz(result.size)) + result.length - 1) & 0x3f;
 	opcodeValue |= imms << 10;
 	return opcodeValue;
@@ -347,7 +347,7 @@ void SegmentAssembler::ProcessByteCode()
 {
 	programStart = (uint8_t*) memoryManager.Allocate(aggregateData.byteCodeSize+4);	// +4 is because some actions assume extra buffer.
 	uint8_t *programEnd = GenerateByteCode(programStart);
-	
+
 	// Shrink allocation
 	memoryManager.EndWrite(programStart);
     codeSize = uint32_t(programEnd - programStart);
@@ -529,7 +529,7 @@ uint8_t *SegmentAssembler::GenerateByteCode(__restrict uint8_t* p)
 				assert((value & ((1<<valueShift)-1)) == 0);
 				value >>= valueShift;
 				assert((value & ~bitMask) == 0 || (value | bitMask) == -1);
-				
+
 				opcodeValue = (value & bitMask) << bitOffset;
 				goto ProcessPatchOpcode;
 			}
@@ -557,7 +557,7 @@ uint8_t *SegmentAssembler::GenerateByteCode(__restrict uint8_t* p)
 				assert((value & ((1<<valueShift)-1)) == 0);
 				value >>= valueShift;
 				assert(value >> numberOfBits == 0 || value >> numberOfBits == -1);
-				
+
 				uint32_t mask = (1 << numberOfBits) - 1;
 				opcodeValue = (value & mask) << bitOffset;
 				goto ProcessPatchOpcode;
@@ -570,7 +570,7 @@ uint8_t *SegmentAssembler::GenerateByteCode(__restrict uint8_t* p)
 				int valueShift = *s++;
 				int32_t value = ReadB4ExpressionValue(s, blockData);
 				value >>= valueShift;
-				
+
 				uint32_t mask = (1 << numberOfBits) - 1;
 				opcodeValue = (value & mask) << bitOffset;
 				goto ProcessPatchOpcode;
@@ -587,7 +587,7 @@ uint8_t *SegmentAssembler::GenerateByteCode(__restrict uint8_t* p)
 				assert((value & ((1<<valueShift)-1)) == 0);
 				value >>= valueShift;
 				assert(value >> numberOfBits == 0 || value >> numberOfBits == -1);
-				
+
 				uint32_t mask = (1 << numberOfBits) - 1;
 				opcodeValue = (value & mask) << bitOffset;
 				goto ProcessPatchOpcode;
@@ -755,7 +755,7 @@ uint8_t *SegmentAssembler::GenerateByteCode(__restrict uint8_t* p)
 			asm volatile("; This comment prevents the compiler from expanding code inappropriately.");
 			// Insert into map.
 			labels.Set(labelId, p);
-			
+
 			JitForwardReferenceMapLookupResult result = unresolvedLabels.Find(labelId);
 			if(result.reference)
 			{
@@ -863,7 +863,7 @@ uint8_t *SegmentAssembler::GenerateByteCode(__restrict uint8_t* p)
 				uint32_t imms = ((0x1e << __builtin_ctz(result.size)) + result.length - 1) & 0x3f;
 				opcode |= 0x320003e0 | (result.rotate << 16) | (imms << 10);
 			}
-			
+
 			memcpy(p, &opcode, 4);
 			p += 4;
 		}
@@ -950,10 +950,10 @@ void* Assembler::Build()
 	{
 		uint32_t numberOfLabels = aggregateData.numberOfLabels + dataSegment.aggregateData.numberOfLabels;
 		uint32_t numberOfForwardLabelReferences = aggregateData.numberOfForwardLabelReferences + dataSegment.aggregateData.numberOfForwardLabelReferences;
-		
+
 		labels.Reserve(numberOfLabels);
 		unresolvedLabels.Reserve(numberOfForwardLabelReferences);
-		
+
 		dataSegment.labels.StartUseBacking(labels);
 		dataSegment.unresolvedLabels.StartUseBacking(unresolvedLabels);
 
@@ -969,7 +969,7 @@ void* Assembler::Build()
 	}
 	ProcessByteCode();
 	assert(!unresolvedLabels.HasData() && "Not all references have been resolved");
-	
+
 	return programStart;
 }
 

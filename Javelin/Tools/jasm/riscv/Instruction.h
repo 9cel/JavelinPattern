@@ -37,7 +37,7 @@ namespace Javelin::Assembler::riscv
         MatchImmAll = MatchImm | MatchImm6 | MatchImm12 | MatchImm20 | MatchUimm20 | MatchShiftImm | MatchCShiftImm,
         MatchRelAll = MatchBRel | MatchJRel | MatchCBRel | MatchCJRel,
 	};
-	
+
 	typedef uint64_t MatchBitfield;
 
 	std::string MatchBitfieldDescription(MatchBitfield matchBitfield);
@@ -56,13 +56,13 @@ namespace Javelin::Assembler::riscv
 			Shift,
 			Extend,
 		};
-		
+
 		enum class ImmediateType : uint8_t
 		{
 			Integer,
 			Real,
 		};
-		
+
 		enum class Syntax : uint8_t
 		{
 			Colon,
@@ -93,7 +93,7 @@ namespace Javelin::Assembler::riscv
 			LE,
 			AL,
 		};
-		
+
 		enum class Shift : uint8_t
 		{
 			// Order matches encoding order.
@@ -102,7 +102,7 @@ namespace Javelin::Assembler::riscv
 			ASR,
 			ROR,
 		};
-		
+
 		enum class Extend : uint8_t
 		{
 			// Order matches encoding order.
@@ -115,7 +115,7 @@ namespace Javelin::Assembler::riscv
 			SXTW,
 			SXTX,
 		};
-		
+
 		Type type;
 		uint8_t expressionIndex;
 		union
@@ -146,38 +146,38 @@ namespace Javelin::Assembler::riscv
 			  matchBitfield(MatchCondition),
 			  registerData(0),
 			  expressionIndex(0) { }
-		
+
 		constexpr Operand(Shift aShift, MatchBitfield aMatchBitfield)
 			: type(Type::Shift),
 		 	  shift(aShift),
 		  	  matchBitfield(aMatchBitfield),
 			  registerData(0),
 			  expressionIndex(0) { }
-		
+
 		constexpr Operand(Extend aExtend, MatchBitfield aMatchBitfield)
 		: type(Type::Extend),
 		  extend(aExtend),
 		  matchBitfield(aMatchBitfield),
 		  registerData(0),
 		  expressionIndex(0) { }
-		
+
         bool MayHaveMultipleRepresentations() const { return expressionIndex != 0 || type == Type::Label; }
 
 		bool IsExpression() const 	{ return expressionIndex != 0; }
-		
+
 	protected:
 		constexpr Operand(Type aType, uint8_t aIndex, MatchBitfield aMatchBitfield)
 		: type(aType), expressionIndex(0), index(aIndex), registerData(0), matchBitfield(aMatchBitfield) { }
-		
+
         constexpr Operand(Type aType, uint8_t aIndex, uint8_t aRegisterData, MatchBitfield aMatchBitfield)
 		: type(aType), expressionIndex(0), index(aIndex), registerData(aRegisterData), matchBitfield(aMatchBitfield) { }
-		
+
         constexpr Operand(Syntax aSyntax, MatchBitfield aMatchBitfield)
 		: type(Type::Syntax), syntax(aSyntax), matchBitfield(aMatchBitfield), registerData(0), expressionIndex(0) { }
 
         constexpr Operand(Type aType, ImmediateType aImmediateType, MatchBitfield aMatchBitfield)
         : type(aType), expressionIndex(0), immediateType(aImmediateType), registerData(0), matchBitfield(aMatchBitfield) { }
-        
+
 };
 
 //============================================================================
@@ -188,9 +188,9 @@ namespace Javelin::Assembler::riscv
 		constexpr RegisterOperand(uint8_t index, MatchBitfield matchBitfield) : Operand(Type::Register, index, matchBitfield) { }
 		constexpr RegisterOperand(uint8_t index, uint8_t registerData, MatchBitfield matchBitfield) : Operand(Type::Register, index, registerData, matchBitfield) { }
 	};
-	
+
 //============================================================================
-	
+
 	struct ImmediateOperand : public Operand
 	{
 		union
@@ -198,7 +198,7 @@ namespace Javelin::Assembler::riscv
 			int64_t value;
 			long double realValue;
 		};
-		
+
         ImmediateOperand() : Operand(Type::Number, ImmediateType::Integer, MatchImm) { }
 		ImmediateOperand(int64_t aValue) : Operand(Type::Number), value(aValue)
 		{
@@ -215,7 +215,7 @@ namespace Javelin::Assembler::riscv
         constexpr ImmediateOperand(int aValue, MatchBitfield aMatchBitfield)
         : Operand(Type::Number, ImmediateType::Integer, aMatchBitfield),
           value(aValue) { }
-		
+
 		void UpdateMatchBitfield();
 
 		bool operator==(const ImmediateOperand &a) const;
@@ -224,12 +224,12 @@ namespace Javelin::Assembler::riscv
 		bool operator<=(const ImmediateOperand &a) const;
 		bool operator>(const ImmediateOperand &a) const;
 		bool operator>=(const ImmediateOperand &a) const;
-		
+
 		bool AsBool() const;
 	};
-	
+
 //============================================================================
-	
+
 	// Note that expression labels are ImmediateOperands with IsExpression() == true, not LabelOperands
 	struct LabelOperand : Operand
 	{
@@ -238,24 +238,24 @@ namespace Javelin::Assembler::riscv
 		int64_t			labelValue;
 		std::string 	labelName;
 		ImmediateOperand* displacement = nullptr;
-		
+
 		LabelOperand() : Operand(Type::Label)
 		{
 			expressionIndex = 0;
 			reference = 0;
 		}
-		
+
 		Action* CreatePatchAction(riscvAssembler::RelEncoding relEncoding, int offset) const;
 	};
 
 //============================================================================
-	
+
 	struct SyntaxOperand : Operand
 	{
 		static SyntaxOperand Comma;
 		static SyntaxOperand LeftParenthesis;
 		static SyntaxOperand RightParenthesis;
-		
+
 		constexpr SyntaxOperand(Syntax syntax, MatchBitfield matchBitfield)	: Operand(syntax, matchBitfield) { }
 	};
 
@@ -282,20 +282,20 @@ namespace Javelin::Assembler::riscv
         uint32_t extensionBitmask : 19;
 		uint32_t opcode;
 		const MatchBitfield *operandMatchMasks;
-		
+
 		bool Match(int index, const Operand &operand) const { return (operandMatchMasks[index] & operand.matchBitfield) != 0; }
 		bool Match(int operandLength, const Operand* *const operands) const;
 		int GetNP1Count() const;
 	};
 	static_assert(sizeof(EncodingVariant) == 8 + sizeof(void*), "EncodingVariant is larger than expected");
-	
+
 	struct Instruction
 	{
 		int8_t encodingVariantLength;
 		const EncodingVariant *encodingVariants;
-		
+
 		const EncodingVariant *FindFirstMatch(int operandLength, const Operand* *const operands) const;
-		
+
 		void AddToAssembler(const std::string &opcodeName, Assembler &assembler, ListAction &listAction, int operandLength, const Operand* *const operands) const;
 	};
 
@@ -306,7 +306,7 @@ namespace Javelin::Assembler::riscv
 
 	private:
 		InstructionMap();
-		
+
 		static const InstructionMap instance;
 	};
 

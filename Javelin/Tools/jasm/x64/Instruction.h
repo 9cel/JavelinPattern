@@ -31,7 +31,7 @@ namespace Javelin::Assembler::x64
 		#define TAG(x,y,z) Match##x = 1ULL << (int) MatchBitIndex::x,
 		#include "MatchTags.h"
 		#undef TAG
-		
+
 		MatchRM8 = MatchReg8 | MatchMem8,
 		MatchRM16 = MatchReg16 | MatchMem16,
 		MatchRM32 = MatchReg32 | MatchMem32,
@@ -61,7 +61,7 @@ namespace Javelin::Assembler::x64
 			Immediate,
 			Label,
 		};
-		
+
 		enum class ImmediateType : uint8_t
 		{
 			Integer,
@@ -80,11 +80,11 @@ namespace Javelin::Assembler::x64
 
 		Operand() { }
 		Operand(Operand::Type aType) : type(aType) { }
-		
+
 		bool MayHaveMultipleRepresentations() const { return expressionIndex != 0 || type == Type::Label; }
 
 		bool IsExpression() const 	{ return expressionIndex != 0; }
-		
+
 		bool HasMultipleMemoryWidths() const { return __builtin_popcountll(matchBitfield & MatchMemAll) > 1; }
 		bool HasMultipleImmediateWidths() const { return __builtin_popcountll(matchBitfield & MatchImmAll) > 1; }
 
@@ -99,16 +99,16 @@ namespace Javelin::Assembler::x64
 	{
 		RegisterOperand() : Operand(Type::Register) { }
 		constexpr RegisterOperand(uint8_t index, uint64_t matchBitfield) : Operand(Type::Register, index, matchBitfield) { }
-		
+
 		// Returns true for AH, BH, CH, DH
 		bool IsHighByte() const		{ return (matchBitfield & MatchReg8Hi) != 0; }
 
 		// Returns true for byte registers >= 4 (e.g. SPL, BPL, SIL, DIL)
 		bool RequiresREX() const	{ return ((matchBitfield & (MatchReg8|MatchReg8Hi)) == MatchReg8 && index >= 4) || (index >= 8); }
 	};
-	
+
 //============================================================================
-	
+
 	struct ImmediateOperand : public Operand
 	{
 		union
@@ -116,7 +116,7 @@ namespace Javelin::Assembler::x64
 			int64_t value;
 			long double realValue;
 		};
-		
+
 		ImmediateOperand() : Operand(Type::Immediate) { immediateType = ImmediateType::Integer; }
 		ImmediateOperand(int64_t aValue) : Operand(Type::Immediate), value(aValue)
 		{
@@ -130,17 +130,17 @@ namespace Javelin::Assembler::x64
 			expressionIndex = 0;
 			matchBitfield = 0;
 		}
-		
+
 		bool operator==(const ImmediateOperand &a) const;
 		bool operator!=(const ImmediateOperand &a) const;
 		bool operator<(const ImmediateOperand &a) const;
 		bool operator<=(const ImmediateOperand &a) const;
 		bool operator>(const ImmediateOperand &a) const;
 		bool operator>=(const ImmediateOperand &a) const;
-		
+
 		bool AsBool() const;
 	};
-	
+
 //============================================================================
 
 	struct MemoryOperand : public Operand
@@ -149,17 +149,17 @@ namespace Javelin::Assembler::x64
 		const RegisterOperand *index = nullptr;
 		const RegisterOperand *base = nullptr;
 		const ImmediateOperand *displacement = nullptr;
-		
+
 		MemoryOperand() : Operand(Type::Memory)
 		{
 			expressionIndex = 0;
 		}
-		
+
 		bool IsDirectMemoryAdddress() const { return index == nullptr && base == nullptr; }
 	};
 
 //============================================================================
-	
+
 	// Note that expression labels are ImmediateOperands with IsExpression() == true, not LabelOperands
 	struct LabelOperand : Operand
 	{
@@ -168,16 +168,16 @@ namespace Javelin::Assembler::x64
 		int64_t			labelValue;
 		std::string 	labelName;
 		ImmediateOperand* displacement = nullptr;
-		
+
 		LabelOperand() : Operand(Type::Label)
 		{
 			expressionIndex = 0;
 			reference = 0;
 		}
-		
+
 		Action* CreatePatchAction(int bytes, int offset) const;
 	};
-	
+
 //============================================================================
 
 	struct EncodingVariant
@@ -190,29 +190,29 @@ namespace Javelin::Assembler::x64
 		Encoder encoder;
 		uint8_t opcodePrefix;
 		uint8_t opcodes[4];
-		
+
 		bool Match(int index, const Operand &operand) const { return (operandMatchMasks[index] & operand.matchBitfield) != 0; }
 		bool Match(int operandLength, const Operand* *const operands) const;
 		uint64_t GetLastOperandMatchMask() const { return operandMatchMasks[operandMatchMasksLength-1]; }
-		
+
 		std::vector<uint8_t> GetOpcodeVector() const { return {opcodes, opcodes+opcodeLength}; }
-		
+
 		int GetAvxPrefixValue() const;
 		int GetAvxMmValue(const uint8_t* &outOpcodes, uint32_t &outOpcodeLength) const;
 	};
-	
+
 	struct Instruction
 	{
 		// -1 means this instruction is a prefix
 		int16_t defaultWidth;
 
 		int8_t encodingVariantLength;
-		
+
 		const EncodingVariant *encodingVariants;
-		
+
 		bool IsPrefix() const { return defaultWidth == -1; }
 		const EncodingVariant *FindFirstMatch(int operandLength, const Operand* *const operands) const;
-		
+
 		void AddToAssembler(const std::string &opcodeName, Assembler &assembler, ListAction &listAction, int operandLength, const Operand* *const operands) const;
 	};
 
@@ -223,7 +223,7 @@ namespace Javelin::Assembler::x64
 
 	private:
 		InstructionMap();
-		
+
 		static const InstructionMap instance;
 	};
 

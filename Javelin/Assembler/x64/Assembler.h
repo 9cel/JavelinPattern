@@ -21,7 +21,7 @@ namespace Javelin
 	{
 	public:
 		SegmentAssembler(JitMemoryManager &aMemoryManager);
-		
+
 		void AppendInstructionData(uint32_t blockByteCodeSize, const uint8_t *s);
 		void* AppendInstructionData(uint32_t blockByteCodeSize, const uint8_t *s, uint32_t referenceAndDataLength);
 		void* AppendInstructionData(uint32_t blockByteCodeSize, const uint8_t *s, uint32_t referenceAndDataLength, uint32_t labelData);
@@ -29,14 +29,14 @@ namespace Javelin
 		// Appends an instruction to append bytes of byteSize.
 		// Returns a region of memory that the caller should populate byteSize bytes.
 		void* AppendData(uint32_t byteSize);
-		
+
 		void AppendData(const void *data, uint32_t byteSize)  { memcpy(AppendData(byteSize), data, byteSize); }
 		void AppendDataPointer(const void *data, uint32_t byteSize);
 
 		// Returns address to start of assembly.
 		// After this, the Assembler class is not required and can be destroyed.
 		void* Build();
-		
+
         void* GetLabelIdAddress(uint32_t labelId) const       { return labels.GetIfExists(labelId); }
 		void* GetNamedLabelAddress(const char *label) const   { return labels.GetIfExists(GetLabelIdForNamed(label)); }
 		void* GetNumericLabelAddress(uint32_t label) const    { return labels.GetIfExists(GetLabelIdForNumeric(label)); }
@@ -65,7 +65,7 @@ namespace Javelin
 		{
 			uint32_t dataSize;
 		};
-		
+
 		struct AppendDataPointerReference : public AppendDataReference
 		{
 			const uint8_t *pData;
@@ -79,26 +79,26 @@ namespace Javelin
 			uint32_t numberOfForwardLabelReferences;
 		};
 		LabelData allLabelData = { };
-		
+
 		// Mapping of label id -> max offset.
 		JitLabelOffsetQueue firstPassLabelOffsets;
-		
+
 		// Map of label id -> offset
 		JitLabelMap labels;
-		
+
 		// [index] -> max offset.
 		JitVector<uint32_t> forwardLabelReferences;
 
 		// Unresolved named labels
 		JitForwardReferenceMap unresolvedLabels;
-		
+
 		uint8_t *programStart;
 		JitMemoryManager &memoryManager;
 
         uint32_t codeSize = (uint32_t) -1;
 
         void ProcessLabelData(uint32_t labelData);
-		
+
 		void ProcessByteCode();
 		uint32_t PrepareGenerateByteCode();
 		uint8_t *GenerateByteCode(uint8_t* __restrict p);
@@ -124,7 +124,7 @@ public:
 	Assembler(JitMemoryManager *codeSegmentMemoryManager = SimpleJitMemoryManager::GetInstance(),
 			  JitMemoryManager *dataSegmentMemoryManager = nullptr);
 	~Assembler();
-	
+
 	// Returns address to start of assembly.
 	// After this, the Assembler class is not required and can be destroyed.
 	void* Build();

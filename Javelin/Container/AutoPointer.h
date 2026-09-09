@@ -2,10 +2,10 @@
 //
 // Simpler than a SmartObject, the AutoPointer automatically
 // deletes objects created with new when they go out of scope.
-// 
+//
 //===========================================================================
 
-#pragma once 
+#pragma once
 #include "Javelin/JavelinBase.h"
 
 //===========================================================================
@@ -25,7 +25,7 @@ namespace Javelin
 		AutoPointer& operator=(AutoPointer& a)	{ delete p; p = a.p; a.p = nullptr; return *this; }
 
 		bool IsValid() const					{ return p != nullptr; }
-		
+
 		T*		 operator->() const				{ return p;		}
 		T&		 operator*() const				{ return *p;	}
 		operator T*() const						{ return p; 	}
@@ -58,11 +58,11 @@ namespace Javelin
 		T* operator+(int count)								{ return p + count; }
 
 		// Probably shouldn't be using operator- on AutoArrayPointer, so don't provide it!
-		
+
 		T* operator->() const								{ return p;		}
 		T& operator*() const								{ return *p;	}
 		operator T*() const									{ return p; 	}
-		
+
 		const T& operator[](int i) const					{ return p[i];	}
 		T& operator[](int i)								{ return p[i];	}
 		const T& operator[](size_t i) const					{ return p[i];	}
@@ -71,13 +71,13 @@ namespace Javelin
 		T* GetPointer() const								{ return p; }
 		T* RelinquishPointer()								{ T *r = p; p = nullptr; return r;	}
 		void Release()										{ delete [] p; p = nullptr; }
-		
+
 	private:
 		T*	p;
 	};
 
 //===========================================================================
-	
+
 	template<typename T, size_t N> class AutoArrayPointerWithInlineStore
 	{
 	public:
@@ -87,11 +87,11 @@ namespace Javelin
 
 		T* operator+(size_t count)						{ return p + count; }
 		T* operator+(int count)							{ return p + count; }
-		
+
 		T* operator->() const							{ return p;		}
 		T& operator*() const							{ return *p;	}
 		operator T*() const								{ return p; 	}
-		
+
 		const T& operator[](int i) const				{ return p[i];	}
 		T& operator[](int i)							{ return p[i];	}
 		const T& operator[](size_t i) const				{ return p[i];	}
@@ -104,7 +104,7 @@ namespace Javelin
 		T*	p;
 		T	store[N];
 	};
-	
+
 //===========================================================================
 } // namespace Javelin
 //===========================================================================

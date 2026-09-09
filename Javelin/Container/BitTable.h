@@ -30,24 +30,24 @@ namespace Javelin
 			static size_t CountBitsInTable(const unsigned* data, size_t numberOfWords);
 			static size_t CountTrailingZeros(const unsigned* data, size_t numberOfWords);
 		};
-		
+
 		template<size_t N, bool...> struct GetBitHelper;
-		
+
 		template<size_t N, bool b1, bool b2, bool ...bs> struct GetBitHelper<N, b1, b2, bs...>
 		{
 			static constexpr bool GetBit() { return N == 0 ? b1 : N >= 2 ? GetBitHelper<N-2, bs...>::GetBit() : GetBitHelper<N-1, b2, bs...>::GetBit(); }
 		};
-		
+
 		template<size_t N, bool b> struct GetBitHelper<N, b>
 		{
 			static constexpr bool GetBit() { return b && N == 0; }
 		};
-		
+
 		template<size_t N> struct GetBitHelper<N>
 		{
 			static constexpr bool GetBit() { return false; }
 		};
-		
+
 		template<size_t N, bool ...bs> struct GetBitWordHelper
 		{
 			static constexpr unsigned GetWord()
@@ -86,16 +86,16 @@ namespace Javelin
 				| GetBitHelper<N*32+31, bs...>::GetBit() << 31;
 			}
 		};
-		
+
 	}
 
 //============================================================================
-	
+
 	template<bool... bs> struct BitTableInitializer
 	{
 		template<size_t N> static constexpr unsigned GetWord() { return Private::GetBitWordHelper<N, bs...>::GetWord(); }
 	};
-	
+
 //============================================================================
 
 	template<size_t N> class StaticBitTable : private Private::BitTableBase
@@ -103,36 +103,36 @@ namespace Javelin
 	public:
 		// Default constructor zero-initializes all bits
 		constexpr StaticBitTable() : StaticBitTable(typename CreateSequence<GetNumberOfWords()>::Type())	{ }
-		
+
 		StaticBitTable(const NoInitialize*) { }
-		
+
 		// BitTableInitializer constructor can compile time setup BitTable
 		template<bool... bs> constexpr StaticBitTable(BitTableInitializer<bs...> bf) : StaticBitTable(BitTableInitializer<bs...>(), typename CreateSequence<GetNumberOfWords()>::Type()) { }
-		
+
 		size_t GetCount() const								{ return N; }
-		
+
 		void SetBit(size_t bitIndex)						{ JASSERT(bitIndex < N); BitUtility::SetBit(data, bitIndex);	}
 		void ClearBit(size_t bitIndex)						{ JASSERT(bitIndex < N); BitUtility::ClearBit(data, bitIndex);	}
 
 		// Will clear based on words, ie. a few extra bits could be zeroed.
 		void ClearFirstNBits(size_t n)						{ JASSERT(n <= N); Private::BitTableBase::ClearAllBitsInTable(data, GetNumberOfWordsForBits(n)); }
-		
+
 		void SetAllBits()									{ Private::BitTableBase::SetAllBitsInTable(data, GetNumberOfWords()); 	}
 		void ClearAllBits()									{ Private::BitTableBase::ClearAllBitsInTable(data, GetNumberOfWords()); }
-		
+
 		bool HasAnyBitSet() const							{ return Private::BitTableBase::HasAnyBitSetInTable(data, GetNumberOfWords()); }
 		bool HasAllBitsSet() const							{ return Private::BitTableBase::HasAllBitSetInTable(data, N); }
 		bool HasAllBitsClear() const						{ return !HasAnyBitSet(); }
-		
+
 		// returns minimium i for which bitTable[i] == true
 		size_t CountTrailingZeros() const					{ return Private::BitTableBase::CountTrailingZeros(data, GetNumberOfWords()); }
-		
+
 		bool IsContiguous() const 							{ return Private::BitTableBase::GetContiguousRange(data, GetNumberOfWords()).HasValue(); }
 		Optional<Interval<size_t>> GetContiguousRange() const { return Private::BitTableBase::GetContiguousRange(data, GetNumberOfWords()); }
-		
+
 		// Count the number of 1 bits
 		size_t GetPopulationCount() const					{ return Private::BitTableBase::CountBitsInTable(data, GetNumberOfWords()); }
-		
+
 		template<typename F> void ForEachSetBit(F&& f) const
 		{
 			for(size_t word = 0; word < GetNumberOfWords(); ++word)
@@ -143,34 +143,34 @@ namespace Javelin
 				}
 			}
 		}
-		
+
 		bool operator[](size_t bitIndex) const				{ JASSERT(bitIndex < N); return BitUtility::IsBitSet(data, bitIndex); 	}
 		BitUtility::BitProxy operator[](size_t bitIndex)	{ JASSERT(bitIndex < N); return BitUtility::BitProxy(data, bitIndex);	}
-		
+
 		bool operator==(const StaticBitTable& a) const		{ return memcmp(data, a.data, sizeof(data)) == 0; }
-		
+
 		StaticBitTable& operator|=(const StaticBitTable& a) { Private::BitTableBase::OrAllBitsInTable(data, a.data, GetNumberOfWords()); return *this; }
 		StaticBitTable& operator&=(const StaticBitTable& a) { Private::BitTableBase::AndAllBitsInTable(data, a.data, GetNumberOfWords()); return *this; }
-		
+
 		StaticBitTable operator|(const StaticBitTable& a) const { StaticBitTable r{*this}; r |= a; return r; }
 		StaticBitTable operator&(const StaticBitTable& a) const { StaticBitTable r{*this}; r &= a; return r; }
 		StaticBitTable operator~() const 						{ StaticBitTable r{NO_INITIALIZE}; Private::BitTableBase::NotAllBitsInTable(r.data, data, GetNumberOfWords()); return r; }
-		
+
 	private:
 		template<int ...S> constexpr StaticBitTable(Sequence<S...>)
 		: data{ S * 0 ... } { }
-		
+
 		template<bool... bs, int ...S> constexpr StaticBitTable(BitTableInitializer<bs...>, Sequence<S...>)
 		: data{ BitTableInitializer<bs...>::template GetWord<S>()... } { }
 
 		static constexpr size_t GetNumberOfWords() 					{ return (N+31)/32; }
 		static constexpr size_t GetNumberOfWordsForBits(size_t n) 	{ return (n+31)/32; }
-		
+
 		unsigned	data[GetNumberOfWords()];
 	};
-	
+
 //============================================================================
-	
+
 	class BitTable : private Private::BitTableBase
 	{
 	public:
@@ -179,16 +179,16 @@ namespace Javelin
 		BitTable(const BitTable &a);
 		BitTable(BitTable&& a);
 		~BitTable();
-		
+
 		BitTable& operator=(const BitTable& a)				{ this->~BitTable(); new(Placement(this)) BitTable(a); return *this; }
 		BitTable& operator=(BitTable&& a)					{ this->~BitTable(); new(Placement(this)) BitTable((BitTable&&) a); return *this; }
-		
+
 		size_t GetCount() const								{ return numberOfBits; }
 		void SetCount(size_t numberOfBits);
-		
+
 		void SetBit(size_t bitIndex)						{ JASSERT(bitIndex < numberOfBits); BitUtility::SetBit(data, bitIndex); }
 		void ClearBit(size_t bitIndex)						{ JASSERT(bitIndex < numberOfBits); BitUtility::ClearBit(data, bitIndex); }
-		
+
 		void SetAllBits()									{ Private::BitTableBase::SetAllBitsInTable(data, GetNumberOfWords(numberOfBits)); 	}
 		void ClearAllBits()									{ Private::BitTableBase::ClearAllBitsInTable(data, GetNumberOfWords(numberOfBits)); }
 
@@ -198,15 +198,15 @@ namespace Javelin
 
 		bool operator[](size_t bitIndex) const				{ JASSERT(bitIndex < numberOfBits); return BitUtility::IsBitSet(data, bitIndex); 	}
 		BitUtility::BitProxy operator[](size_t bitIndex)	{ JASSERT(bitIndex < numberOfBits); return BitUtility::BitProxy(data, bitIndex);	}
-		
+
 	private:
 		static constexpr size_t GetNumberOfWords(size_t numberOfBits) { return (numberOfBits+31)/32; }
-		
+
 		size_t 		numberOfBits;
 		size_t		capacityInWords;
 		unsigned*	data;
 	};
-	
+
 //============================================================================
 }
 //============================================================================

@@ -14,7 +14,7 @@ namespace Javelin::PatternInternal
 	{
 	public:
 		ArmNeonDfaPatternProcessor(const void* data, size_t length) : DfaPatternProcessor(data, length) { }
-		
+
 	private:
 		SearchHandler GetSearchHandler(SearchHandlerEnum value, State* state) const override;
 

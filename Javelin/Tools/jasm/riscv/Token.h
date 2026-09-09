@@ -39,17 +39,17 @@ namespace Javelin::Assembler::riscv
 			const Instruction*		instruction;
             const ImmediateOperand* immediateOperand;
 		};
-		
+
 		Token() { }
 		Token(const Type aType) : type(aType) { }
 		Token(int64_t aValue, int32_t aLabelScopeId) : type(Type::IntegerValue), iValue(aValue), labelScopeId(aLabelScopeId) { }
 		Token(double aValue) : type(Type::RealValue), rValue(aValue) { }
 
 		std::string GetDescription() const;
-		
-		int64_t GetLabelValue() const { return iValue + (int64_t(labelScopeId) << 32); }		
+
+		int64_t GetLabelValue() const { return iValue + (int64_t(labelScopeId) << 32); }
 	};
-	
+
 //============================================================================
 }
 //============================================================================

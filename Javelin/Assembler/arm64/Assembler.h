@@ -29,7 +29,7 @@ namespace Javelin
 		// Appends an instruction to append bytes of byteSize.
 		// Returns a region of memory that the caller should populate byteSize bytes.
 		void* AppendData(uint32_t byteSize);
-		
+
 		void AppendData(const void *data, uint32_t byteSize) { memcpy(AppendData(byteSize), data, byteSize); }
 		void AppendDataPointer(const void *data, uint32_t byteSize);
 
@@ -39,10 +39,10 @@ namespace Javelin
 		void* GetExpressionLabelAddress(uint32_t label) const { return labels.GetIfExists(GetLabelIdForExpression(label)); }
 
 		void Reset()										  { buildData.Clear(); aggregateData = { }; }
-		
+
 		static bool IsValidBitmask32(uint64_t v)			  { return IsValidBitmask64(v | (v << 32)); }
 		static bool IsValidBitmask64(uint64_t v);
-		
+
         // Provides the size of the code once the segment has been built.
         uint32_t GetCodeSize() const                          { return codeSize; }
 
@@ -54,7 +54,7 @@ namespace Javelin
 		{
 			const uint8_t* assemblerData;
 			uint32_t referenceSize;
-			
+
 			const AppendAssemblyReference* GetNext() const { return (AppendAssemblyReference*) (size_t(this) + referenceSize); }
 		};
 		static_assert(sizeof(AppendAssemblyReference) == 16, "Expect AppendAssemblyReference to be 16 bytes. Update Assembler::arm64::Assembler::Write if this has changed");
@@ -80,22 +80,22 @@ namespace Javelin
 			uint32_t numberOfLabels;
 			uint32_t numberOfForwardLabelReferences;
 		};
-		
+
 		AggregateData aggregateData = { };
-		
+
 		// Map of label id -> offset
 		JitLabelMap labels;
-		
+
 		// Unresolved named labels
 		JitForwardReferenceMap unresolvedLabels;
-		
+
 		uint8_t *programStart;
 		JitMemoryManager &memoryManager;
 
         uint32_t codeSize = (uint32_t) -1;
 
 		void ProcessLabelData(uint32_t labelData);
-		
+
 		void ProcessByteCode();
 		uint8_t *GenerateByteCode(uint8_t* p);
 
@@ -109,7 +109,7 @@ namespace Javelin
 		int32_t ReadB2ExpressionValue(const uint8_t* &s, const AppendAssemblyReference *blockData);
 		int32_t ReadB4ExpressionValue(const uint8_t* &s, const AppendAssemblyReference *blockData);
 		int64_t ReadB8ExpressionValue(const uint8_t* &s, const AppendAssemblyReference *blockData);
-		
+
 		friend class Assembler;
 	};
 
@@ -121,14 +121,14 @@ namespace Javelin
 		Assembler(JitMemoryManager *codeSegmentMemoryManager = SimpleJitMemoryManager::GetInstance(),
 				  JitMemoryManager *dataSegmentMemoryManager = nullptr);
 		~Assembler();
-		
+
 		// Returns address to start of assembly.
 		// After this, the Assembler class is not required and can be destroyed.
 		void* Build();
-	
+
 		void* GetCodeSegment()	 { return programStart; }
 		void* GetDataSegment()	 { return dataSegment.programStart; }
-		
+
 		SegmentAssembler& GetDataSegmentAssembler() { return dataSegment; }
 
 	private:

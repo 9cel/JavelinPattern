@@ -28,37 +28,37 @@ namespace Javelin
 				Type() { *GetFlagPointer(*this) &= ~FLAG_VALUE; }
 				template<typename... A> JINLINE Type(A&&... a) : value((A&&) a...) { *GetFlagPointer(*this) |= FLAG_VALUE; }
 				~Type() { }
-				
+
 				union
 				{
 					T 	value;
 				};
 			};
-			
+
 			JINLINE static void DestroyValue(Type& a)				{ a.value.~T(); }
-			
+
 			template<typename... A>
 			JINLINE static void Replace(Type &a, A&&... b)			{ a.value.~T(); new(Placement(&a.value)) Type((A&&) b...); *GetFlagPointer(a) |= FLAG_VALUE; }
-			
+
 //			JINLINE static void CopyFrom(Type& a, Type& b)			{ a.hasValue = b.hasValue; if(b.hasValue) new(Placement(&a.value)) T(b.value); }
 //			JINLINE static void CopyFrom(Type& a, const Type& b)	{ a.hasValue = b.hasValue; if(b.hasValue) new(Placement(&a.value)) T(b.value); }
 //			JINLINE static void MoveFrom(Type& a, Type&& b)			{ a.hasValue = b.hasValue; if(b.hasValue) new(Placement(&a.value)) T((T&&) b.value); }
-			
+
 			template<typename... A>
 			JINLINE static T& CopyFrom(Type& a, A&&... b)			{ return (new(Placement(&a.value)) Type((A&&) b...))->value; }
-			
+
 			JINLINE static bool HasValue(const Type& a) 			{ return (*GetFlagPointer(a) & FLAG_VALUE) != 0; }
 			JINLINE static void SetEmpty(Type& a) 					{ return &GetFlagPointer(a) &= ~FLAG_VALUE; }
-			
+
 			JINLINE static T& GetValue(Type& a) 					{ JASSERT(HasValue(a)); return a.value; }
 			JINLINE static const T& GetValue(const Type& a)			{ JASSERT(HasValue(a)); return a.value; }
-			
+
 		private:
 			JINLINE static U* GetFlagPointer(Type& a)			 	{ return reinterpret_cast<U*>(reinterpret_cast<unsigned char*>(&a) + FLAG_OFFSET); 				}
 			JINLINE static const U* GetFlagPointer(const Type& a) 	{ return reinterpret_cast<const U*>(reinterpret_cast<const unsigned char*>(&a) + FLAG_OFFSET);	}
 		};
 	};
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

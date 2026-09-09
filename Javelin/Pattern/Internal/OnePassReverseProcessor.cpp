@@ -20,7 +20,7 @@ class OnePassReverseProcessor final : public ReverseProcessor
 public:
 	OnePassReverseProcessor(const void* data, size_t length);
 	~OnePassReverseProcessor();
-	
+
 	virtual const void* Match(const void* data, size_t length, size_t startOffset, const void* matchEnd, const char** captures, bool matchIsAnchored) const final;
 	virtual bool ProvidesCaptures() const { return true; }
 
@@ -36,7 +36,7 @@ private:
 	ExpandedJumpTables		expandedJumpTables;
 
 	void Process(uint32_t pc, const unsigned char* p, const ProcessData& processData) const;
-	
+
 	void Set(const void* data, size_t length);
 };
 
@@ -72,7 +72,7 @@ Loop:
 		--p;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::ByteJumpTable:
 	case InstructionType::ByteJumpMask:
 		{
@@ -83,7 +83,7 @@ Loop:
 			--p;
 			goto Loop;
 		}
-			
+
 	case InstructionType::ByteJumpRange:
 		{
 			JASSERT(p != processData.pStop);
@@ -93,7 +93,7 @@ Loop:
 			--p;
 			goto Loop;
 		}
-			
+
 	case InstructionType::DispatchTable:
 		if(p == processData.pStop)
 		{
@@ -107,7 +107,7 @@ Loop:
 		}
 		JASSERT(pc != TypeData<uint32_t>::Maximum());
 		goto Loop;
-			
+
 	case InstructionType::DispatchMask:
 		if(p == processData.pStop)
 		{
@@ -121,7 +121,7 @@ Loop:
 		}
 		JASSERT(pc != TypeData<uint32_t>::Maximum());
 		goto Loop;
-			
+
 	case InstructionType::DispatchRange:
 		if(p == processData.pStop)
 		{
@@ -135,7 +135,7 @@ Loop:
 		}
 		JASSERT(pc != TypeData<uint32_t>::Maximum());
 		goto Loop;
-		
+
 	case InstructionType::FindByte:
 		{
 			unsigned char c = instruction.data & 0xff;
@@ -145,14 +145,14 @@ Loop:
 			pc = instruction.data >> 8;
 			goto Loop;
 		}
-			
+
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
-			
+
 	case InstructionType::Match:
 		return;
-			
+
 	case InstructionType::SaveNoRecurse:
 	case InstructionType::Save:
 		{
@@ -216,7 +216,7 @@ Loop:
 	case InstructionType::Success:
 		JERROR("Unexpected instruction");
 	}
-	
+
 	JERROR("Unhandled switch case");
 	return;
 }

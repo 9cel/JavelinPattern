@@ -27,12 +27,12 @@ AssemblerType::AssemblerType(const std::string& typeString)
 
 	const char *data = typeString.data();
 	const char *end = data + typeString.size();
-	
+
 	while(data < end && Character::IsWhitespace(*data)) ++data;
 
 	if(data >= end || *data != '.') return;
 	++data;
-	
+
 	if(HasPrefix(data, end, "x64", 3))
 	{
 		type = X64;
@@ -65,9 +65,9 @@ CommandLine::CommandLine(int argc, const char** argv)
 {
 	assert(instance == NULL);
 	instance = this;
-	
+
 	if(argc <= 1) ShowHelpTextAndExit();
-	
+
 	for(int i = 1; i < argc;)
 	{
 		if(strcmp(argv[i], "-h") == 0)
@@ -190,7 +190,7 @@ CommandLine::CommandLine(int argc, const char** argv)
 			ShowHelpTextAndExit(1);
 		}
 	}
-	
+
 	if(!inputFilename)
 	{
 		Log::Error("No input file specified");
@@ -217,7 +217,7 @@ void CommandLine::ShowHelpTextAndExit(int errorLevel)
     " -riscvcmode <mode> Set riscv compressed instruction mode [always, never, maybe*].\n"
     "\n"
     ;
-	
+
     Log::Text(VERSION_TEXT);
     Log::Text(HELP_TEXT);
     exit(errorLevel);

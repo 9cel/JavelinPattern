@@ -96,7 +96,7 @@ void InstructionWalker::UpdateChildMasks()
 {
 	if(childMasksUpdated) return;
 	childMasksUpdated = true;
-	
+
 //	for(int i = 0; i < pathIndex; ++i)
 //	{
 //		printf("Parent: %i: %x\n", i, parentMasks[i]);
@@ -109,7 +109,7 @@ void InstructionWalker::UpdateChildMasks()
 		{
 			uint32_t nextIterationMask = mask & (mask-1);		// Pull off the lowest bit
 			uint32_t singleBit = mask & ~nextIterationMask;
-			
+
 			uint32_t parentIndex = BitUtility::DetermineHighestNonZeroBit32(singleBit);
 			childMasks[parentIndex] |= (1<<i);
 
@@ -141,10 +141,10 @@ uint32_t InstructionWalker::GetFullMask(uint32_t mask, uint32_t stateMask) const
 	{
 		uint32_t nextIterationMask = mask & (mask-1);		// Pull off the lowest bit
 		uint32_t singleBit = mask & ~nextIterationMask;
-		
+
 		uint32_t index = BitUtility::DetermineHighestNonZeroBit32(singleBit);
 		result |= childMasks[index] & ~stateMask;
-		
+
 		mask = nextIterationMask;
 	}
 	return result;
@@ -157,7 +157,7 @@ void InstructionWalker::ProcessInstruction(OpenHashSet<const Instruction*> &prog
 	case InstructionType::Jump:
 		ProcessInstruction(progressCheckSet, nextState, presence, static_cast<const JumpInstruction*>(instruction)->target, pathMask);
 		break;
-			
+
 	case InstructionType::Call:
 		{
 			const CallInstruction* callInstruction = static_cast<const CallInstruction*>(instruction);
@@ -193,7 +193,7 @@ void InstructionWalker::ProcessInstruction(OpenHashSet<const Instruction*> &prog
 			ProcessInstruction(progressCheckSet, nextState, presence, instruction->GetNext(), pathMask);
 		}
 		break;
-			
+
 	case InstructionType::Fail:
 		// This removes FAIL paths from the instruction walk.
 		for(Presence& p : presenceList)
@@ -206,20 +206,20 @@ void InstructionWalker::ProcessInstruction(OpenHashSet<const Instruction*> &prog
 			}
 		}
 		break;
-			
+
 	case InstructionType::Split:
 		{
 			const SplitInstruction* split = static_cast<const SplitInstruction*>(instruction);
 			if(split->targetList.IsEmpty()) break;
 			ProcessInstruction(progressCheckSet, nextState, presence, split->targetList[0], pathMask);
-			
+
 			for(size_t i = 1; i < split->targetList.GetCount(); ++i)
 			{
 				ProcessInstruction(progressCheckSet, nextState, presence, split->targetList[i], GetNewPathMask(pathMask));
 			}
 		}
 		break;
-			
+
 	default:
 		{
 			JASSERT(instruction->IsByteConsumer());
@@ -227,18 +227,18 @@ void InstructionWalker::ProcessInstruction(OpenHashSet<const Instruction*> &prog
 			for(uint32_t p = 0; p < numberOfPlanes; ++p)
 			{
 				presence.Update(instruction->GetValidBytesForPlane(p), pathMask);
-				
+
 				uint32_t newPathMask;
 				if(p == 0) newPathMask = pathMask;
 				else newPathMask = GetNewPathMask(pathMask);
-				
+
 				const Instruction* target = instruction->GetTargetForPlane(p);
 				JASSERT(target);
 				nextState[target] |= newPathMask;
 			}
 		}
 		break;
-			
+
 	case InstructionType::BackReference:
 	case InstructionType::Recurse:
 		JERROR("Unexpected instruction");
@@ -270,7 +270,7 @@ Table<NibbleMask> InstructionWalker::BuildNibbleMaskList(size_t index, size_t le
 //		}
 //		StandardOutput.PrintF("\n\n");
 //	}
-//	
+//
 	Table<uint32_t> pathMaskList = GetPathMaskList(index, length);
 	if(!allowSinglePath && pathMaskList.GetCount() <= 1) return result;
 
@@ -279,9 +279,9 @@ Table<NibbleMask> InstructionWalker::BuildNibbleMaskList(size_t index, size_t le
 //	{
 //		StandardOutput.PrintF("%z: %u\n", i, pathMaskList[i]);
 //	}
-//	
+//
 	BuildNibbleMaskListFromPathMaskList(result, pathMaskList, index, length);
-	
+
 //	if(result.GetCount())
 //	{
 //		StandardOutput.PrintF("NibbleMasks\n");
@@ -295,7 +295,7 @@ Table<NibbleMask> InstructionWalker::BuildNibbleMaskList(size_t index, size_t le
 	{
 		result.Reset();
 	}
-	
+
 //	if(pathMaskList.GetCount() >= 8)
 //	{
 //		StandardOutput.PrintF("Mask for bytes\n");
@@ -306,14 +306,14 @@ Table<NibbleMask> InstructionWalker::BuildNibbleMaskList(size_t index, size_t le
 //		}
 //		StandardOutput.PrintF("\n");
 //	}
-	
+
 	return result;
 }
 
 Table<uint32_t> InstructionWalker::GetPathMaskList(size_t index, size_t length) const
 {
 	Table<uint32_t> result;
-	
+
 	Table<OpenHashSet<uint32_t>> presenceMaskList;
 	presenceMaskList.SetCount(length);
 	for(int b = 0; b < length; ++b)
@@ -327,7 +327,7 @@ Table<uint32_t> InstructionWalker::GetPathMaskList(size_t index, size_t length) 
 			}
 		}
 	}
-	
+
 	uint32_t maskTest = uint32_t((1ull << pathIndex) - 1);
 	for(uint32_t i = 0; i < pathIndex; ++i)
 	{
@@ -347,21 +347,21 @@ Table<uint32_t> InstructionWalker::GetPathMaskList(size_t index, size_t length) 
 				}
 			}
 		}
-		
+
 		if(found)
 		{
 			result.Append(mask);
 			maskTest &= ~clearMaskTest;
 		}
 	}
-	
+
 	return result;
 }
 
 void InstructionWalker::BuildNibbleMaskListFromPathMaskList(Table<NibbleMask>& result, const Table<uint32_t>& pathMaskList, size_t index, size_t length) const
 {
 	result.SetCount(length);
-	
+
 	for(uint32_t mask : pathMaskList)
 	{
 		JASSERT(length <= 4);
@@ -372,13 +372,13 @@ void InstructionWalker::BuildNibbleMaskListFromPathMaskList(Table<NibbleMask>& r
 		{
 			const Presence& presence = GetPresence(index+b);
 			NibbleMask* nibbleMask = new(Placement(nibbleMaskList+b)) NibbleMask(presence.masks, mask);
-			
+
 //			StandardOutput.PrintF("NibbleMask for %u, %d: %A\n", mask, b, &String::CreateHexStringFromBytes(nibbleMask.GetNibbleMask(), 32));
 
 			if(nibbleMask->GetNumberOfBitsUsed() == 0) goto SkipMask;
 			if(nibbleMask->GetNumberOfBitsUsed() > 1) requiresRecursiveAdd = true;
 		}
-	
+
 		if(requiresRecursiveAdd)
 		{
 			if(!AddToNibbleMaskPathList(result, nibbleMaskList))
@@ -395,7 +395,7 @@ void InstructionWalker::BuildNibbleMaskListFromPathMaskList(Table<NibbleMask>& r
 				return;
 			}
 		}
-		
+
 	SkipMask:
 		;
 	}
@@ -422,7 +422,7 @@ bool InstructionWalker::AddToNibbleMaskPathList(Table<NibbleMask>& result, const
 		}
 		return true;
 	}
-	
+
 	JASSERT(result.GetCount() <= 4);
 	NibbleMask singleNibbleMask[4];
 	for(int i = 0; i < result.GetCount(); ++i)
@@ -445,12 +445,12 @@ bool InstructionWalker::AddSingleNibbleMaskListToResult(Table<NibbleMask>& resul
 		}
 		return true;
 	}
-	
+
 	// More difficult case. We need to figure out the best masks to merge.
 	uint32_t minimumCost = TypeData<uint32_t>::Maximum();
 	int bestI = -1;
 	int bestJ = -1;
-	
+
 	for(int i = 0; i < 8; ++i)
 	{
 		for(int j = i+1; j < 9; ++j)
@@ -465,9 +465,9 @@ bool InstructionWalker::AddSingleNibbleMaskListToResult(Table<NibbleMask>& resul
 			}
 		}
 	}
-	
+
 	// TODO: Return false in some cases?
-	
+
 	// Now update the necessary channels.
 //	StandardOutput.PrintF("Merge path %d & %d\n", bestI, bestJ);
 	if(bestJ != 8)
@@ -481,7 +481,7 @@ bool InstructionWalker::AddSingleNibbleMaskListToResult(Table<NibbleMask>& resul
 	{
 		result[i].MergeToChannel(singleNibbleMaskList[i], bestI);
 	}
-	
+
 	return true;
 }
 

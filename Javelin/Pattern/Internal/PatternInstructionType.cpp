@@ -16,7 +16,7 @@ String Javelin::ToString(PatternInternal::InstructionType type)
 		#include "PatternInstructionTypeTags.h"
 		#undef TAG
 	};
-	
+
 	return INSTRUCTION_NAMES[(int)type];
 }
 

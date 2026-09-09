@@ -38,7 +38,7 @@ union ModRM
 		IndirectDisplacement32 = 2,
 		Register = 3,
 	};
-	
+
 	struct
 	{
 		uint8_t rm  : 3;
@@ -108,7 +108,7 @@ void* SegmentAssembler::AppendInstructionData(uint32_t blockByteCodeSize,
 	asm volatile(".global " FUNCTION_PREFIX "_ZN7Javelin16SegmentAssembler21AppendInstructionDataEjPKh");
 	asm volatile(FUNCTION_PREFIX "_ZN7Javelin16SegmentAssembler21AppendInstructionDataEjPKh:");
 	asm volatile("mov %0, %%ecx" : : "i"(sizeof(AppendAssemblyReference)));
-	
+
 	// Definition for AppendInstructionData(blockByteCodeSize, s, referenceAndDataLength);
 	asm volatile(FUNCTION_PREFIX "_ZN7Javelin16SegmentAssembler21AppendInstructionDataEjPKhj:");
 
@@ -128,7 +128,7 @@ void* SegmentAssembler::AppendInstructionData(uint32_t blockByteCodeSize,
 
 	// Capacity doesn't fit
 	asm volatile("1:");
-	
+
 	// Save all registers required to complete the update.
 	asm volatile("push %rdi");
 	asm volatile("push %rsi");
@@ -141,7 +141,7 @@ void* SegmentAssembler::AppendInstructionData(uint32_t blockByteCodeSize,
 	asm volatile("movl %%esi, %c0(%%rdi)" : : "i"(JIT_OFFSETOF(Assembler, buildData.capacity)));
 	asm volatile("movq %c0(%%rdi), %%rdi" : : "i"(JIT_OFFSETOF(Assembler, buildData.data)));
 	asm volatile("call " FUNCTION_PREFIX "realloc");
-	
+
 	asm volatile("pop %r10");
 	asm volatile("pop %rcx");
 	asm volatile("pop %rdx");
@@ -200,7 +200,7 @@ void* SegmentAssembler::AppendInstructionData(uint32_t blockByteCodeSize,
 	reference->forwardLabelReferenceOffset = allLabelData.numberOfForwardLabelReferences;
 
 	ProcessLabelData(labelData);
-	
+
 	return reference;
 }
 
@@ -208,7 +208,7 @@ void SegmentAssembler::ProcessLabelData(uint32_t labelData)
 {
 	int numberOfLabels = labelData & 0xff;
 	int numberOfForwardLabelReferences = labelData >> 8;
-	
+
 	allLabelData.numberOfLabels += numberOfLabels;
 	allLabelData.numberOfForwardLabelReferences += numberOfForwardLabelReferences;
 }
@@ -225,12 +225,12 @@ void* SegmentAssembler::AppendData(uint32_t byteSize)
 		ActionType::Return,
 	};
 	static_assert(sizeof(AppendDataReference) == 24, "Expected AppendDataReference to be 24 bytes");
-	
+
 	uint32_t allocationSize = (sizeof(AppendDataReference) + byteSize + 7) & -8;
 	AppendDataReference *reference = (AppendDataReference*) AppendInstructionData(byteSize,
 																				  (const uint8_t*) &appendDataActions,
 																				  allocationSize);
-	
+
 	reference->dataSize = byteSize;
 	return reference + 1;
 }
@@ -242,7 +242,7 @@ void SegmentAssembler::AppendDataPointer(const void *data, uint32_t byteSize)
 		ActionType::DataPointer,
 		ActionType::Return,
 	};
-	
+
 	AppendDataPointerReference *reference =
 		(AppendDataPointerReference*) AppendInstructionData(byteSize,
 															(const uint8_t*) &appendDataActions,
@@ -305,7 +305,7 @@ void SegmentAssembler::ProcessByteCode()
 	//      and expressions.
 	// 2. Build byte code directly into executable memory
 	// 3. Shrink allocation
-	
+
 	// For relative patches that are encountered:
 	// a) Backreferences are patched immediately.
 	// b) Unresolved forward references are put into a queue.
@@ -313,7 +313,7 @@ void SegmentAssembler::ProcessByteCode()
 	//    addresses need to be patched, and clears the list
 
 	uint32_t maximumCodeSize = PrepareGenerateByteCode();
-	
+
 	// Build byte code into result memory.
 	// Allocate memory.
 	programStart = (uint8_t*) memoryManager.Allocate(maximumCodeSize+3);	// +3 is because some actions assume extra buffer.
@@ -350,7 +350,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 	AlternateData alternateStack[8];
 	bool takeJump = false;
 	int alternateStackSize = 0;
-	
+
 #if USE_GOTO_LABELS
 	static constexpr void *jumpOffsets[] =
 	{
@@ -359,7 +359,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 		#undef TAG
 	};
 #endif
-	
+
 	const AppendAssemblyReference *blockData = (AppendAssemblyReference*) buildData.begin();
 	const AppendAssemblyReference* pEnd = (AppendAssemblyReference*) buildData.end();
 	uint32_t offset = 0;
@@ -372,7 +372,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 	NextBlock:
 		blockData = blockData->GetNext();
 	}
-	
+
 	const  uint8_t* __restrict s = blockData->assemblerData;
 	for(;;)
 	{
@@ -601,7 +601,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 			{
 				uint8_t rex = *s++;
 				++s;
-				
+
 				DynamicOpcodeRControlByte controlByte = { .value = *s++ };
 				assert(controlByte.hasRegExpression);
 				int8_t reg = ReadB1ExpressionValue(s, blockData);
@@ -617,7 +617,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 			{
 				uint8_t rex = *s++;
 				++s;
-				
+
 				DynamicOpcodeRRControlByte controlByte = { .value = *s++ };
 				if(controlByte.hasRegExpression)
 				{
@@ -642,7 +642,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 				SIB sib = { .value = *s++ };
 
 				DynamicOpcodeRMControlByte controlByte = { .value = *s++ };
-				
+
 				int displacement = controlByte.hasDisplacementExpression ?
 									ReadB4ExpressionValue(s, blockData) :
 									ReadSigned32(s);
@@ -665,7 +665,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 					modRM.mod = ModRM::Mod::IndirectDisplacement32;
 					displacementBytes = 4;
 				}
-				
+
 				if(controlByte.hasRegExpression)
 				{
 					int8_t reg = ReadB1ExpressionValue(s, blockData);
@@ -687,7 +687,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 				{
 					int8_t base = ReadB1ExpressionValue(s, blockData);
 					if(base & 8) rex |= 0x41;	// Set rex and .b bit.
-					
+
 					if((base & 7) == kSIBNoBase && modRM.mod == ModRM::Mod::IndirectDisplacement0)
 					{
 						displacementBytes = 1;
@@ -697,7 +697,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 						modRM.rm = kModRMRmSIB;
 					}
 				}
-				
+
 				if(rex) ++offset;
 				int opcodeLength = controlByte.opcodeLengthM1+1;
 				offset += opcodeLength;
@@ -712,7 +712,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 				uint8_t vex3B2 = *s++;
 				uint8_t vex3B3 = *s++;
 				s++;	// Skip ModRM
-				
+
 				DynamicOpcodeRVControlByte controlByte;
 				controlByte.value = *s++;
 				if(controlByte.hasReg0Expression) SkipExpressionValue(s);
@@ -730,7 +730,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 				uint8_t vex3B2 = *s++;
 				uint8_t vex3B3 = *s++;
 				s++;	// Skip ModRM
-				
+
 				DynamicOpcodeRVRControlByte controlByte;
 				controlByte.value = *s++;
 				if(controlByte.hasReg0Expression) SkipExpressionValue(s);
@@ -756,7 +756,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 				SIB sib = { .value = *s++ };
 
 				DynamicOpcodeRVMControlByte controlByte = { .value = *s++ };
-				
+
 				int displacement = controlByte.hasDisplacementExpression ?
 									ReadB4ExpressionValue(s, blockData) :
 									ReadSigned32(s);
@@ -779,7 +779,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 					modRM.mod = ModRM::Mod::IndirectDisplacement32;
 					displacementBytes = 4;
 				}
-				
+
 				if(controlByte.hasReg0Expression)
 				{
 					int8_t reg = ReadB1ExpressionValue(s, blockData);
@@ -816,7 +816,7 @@ uint32_t SegmentAssembler::PrepareGenerateByteCode()
 						modRM.rm = kModRMRmSIB;
 					}
 				}
-				
+
 				if((vex3B2 & 0x7f) != 1 || (vex3B3 & 0x80)) offset += 3;
 				else offset += 2;
 				int opcodeLength = controlByte.opcodeLengthM1+1;
@@ -993,13 +993,13 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 				static const uint8_t nop6[] = { 0x66, 0x0f, 0x1f, 0x44, 0x00, 0x00 };
 				static const uint8_t nop7[] = { 0x0f, 0x1f, 0x80, 0x00, 0x00, 0x00, 0x00 };
 				static const uint8_t nop15[] = { 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 };
-				
+
 				static const uint8_t *nops[] = {
 					nop2+1, nop2, nop3, nop4, nop6+1,
 					nop6, nop7, nop15+7, nop15+6, nop15+5,
 					nop15+4, nop15+3, nop15+2, nop15+1, nop15
 				};
-				
+
 				uint8_t alignmentM1 = *s++;
 				uint32_t fillLength = (-(size_t) p) & alignmentM1;
 				while(fillLength)
@@ -1210,7 +1210,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 			{
 				uint8_t rex = *s++;
 				uint8_t modRM = *s++;
-				
+
 				DynamicOpcodeRControlByte controlByte;
 				controlByte.value = *s++;
 				if(controlByte.hasRegExpression)
@@ -1231,7 +1231,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 			{
 				uint8_t rex = *s++;
 				uint8_t modRM = *s++;
-				
+
 				DynamicOpcodeRRControlByte controlByte;
 				controlByte.value = *s++;
 				if(controlByte.hasRegExpression)
@@ -1261,7 +1261,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 				SIB sib = { .value = *s++ };
 
 				DynamicOpcodeRMControlByte controlByte = { .value = *s++ };
-				
+
 				int displacement = controlByte.hasDisplacementExpression ?
 									ReadB4ExpressionValue(s, blockData) :
 									ReadSigned32(s);
@@ -1284,7 +1284,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 					modRM.mod = ModRM::Mod::IndirectDisplacement32;
 					displacementBytes = 4;
 				}
-				
+
 				if(controlByte.hasRegExpression)
 				{
 					int8_t reg = ReadB1ExpressionValue(s, blockData);
@@ -1311,7 +1311,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 				{
 					int8_t base = ReadB1ExpressionValue(s, blockData);
 					if(base & 8) rex |= 0x41;	// Set rex and .b bit.
-					
+
 					if((base & 7) == kSIBNoBase && modRM.mod == ModRM::Mod::IndirectDisplacement0)
 					{
 						modRM.mod = ModRM::Mod::IndirectDisplacement8;
@@ -1332,7 +1332,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 						modRM.rm = base;
 					}
 				}
-				
+
 				if(rex) *p++ = rex;
 				int opcodeLength = controlByte.opcodeLengthM1+1;
 				memcpy(p, s, 4);
@@ -1349,7 +1349,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 				uint8_t vex3B2 = *s++;
 				uint8_t vex3B3 = *s++;
 				ModRM modRM = { .value = *s++ };
-				
+
 				DynamicOpcodeRVControlByte controlByte;
 				controlByte.value = *s++;
 				if(controlByte.hasReg0Expression)
@@ -1390,7 +1390,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 				uint8_t vex3B2 = *s++;
 				uint8_t vex3B3 = *s++;
 				ModRM modRM = { .value = *s++ };
-				
+
 				DynamicOpcodeRVRControlByte controlByte;
 				controlByte.value = *s++;
 				if(controlByte.hasReg0Expression)
@@ -1438,9 +1438,9 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 				uint8_t vex3B3 = *s++;
 				ModRM modRM = { .value = *s++ };
 				SIB sib = { .value = *s++ };
-				
+
 				DynamicOpcodeRVMControlByte controlByte = { .value = *s++ };
-				
+
 				int displacement = controlByte.hasDisplacementExpression ?
 									ReadB4ExpressionValue(s, blockData) :
 									ReadSigned32(s);
@@ -1463,7 +1463,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 					modRM.mod = ModRM::Mod::IndirectDisplacement32;
 					displacementBytes = 4;
 				}
-				
+
 				if(controlByte.hasReg0Expression)
 				{
 					int8_t reg = ReadB1ExpressionValue(s, blockData);
@@ -1517,7 +1517,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 						modRM.rm = base;
 					}
 				}
-				
+
 				if((vex3B2 & 0x7f) != 1 || (vex3B3 & 0x80))
 				{
 					// 3 byte VEX required.
@@ -1569,7 +1569,7 @@ uint8_t* SegmentAssembler::GenerateByteCode(uint8_t *__restrict p)
 				} while(data);
 				unresolvedLabels.Remove(lookup, last);
 			}
-		
+
 			// Insert into map.
 			labels.Set(labelId, p);
 			CONTINUE;
@@ -1779,7 +1779,7 @@ void* Assembler::Build()
 		dataSegment.unresolvedLabels.StartUseBacking(unresolvedLabels);
 
 		dataSegment.ProcessByteCode();
-		
+
 		dataSegment.forwardLabelReferences.StopUseBacking(forwardLabelReferences);
 		dataSegment.firstPassLabelOffsets.StopUseBacking(firstPassLabelOffsets);
 		dataSegment.labels.StopUseBacking(labels);

@@ -31,27 +31,27 @@ namespace Javelin::Assembler::x64::Register
 	constexpr RegisterOperand DX(2, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand EDX(2, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand RDX(2, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand SIL(6, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand SI(6, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand ESI(6, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand RSI(6, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand DIL(7, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand DI(7, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand EDI(7, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand RDI(7, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand BPL(5, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand BP(5, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand EBP(5, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand RBP(5, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand SPL(4, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand SP(4, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand ESP(4, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand RSP(4, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand R8B(8, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand R8W(8, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand R8D(8, MatchReg32 | MatchRM32);
@@ -61,32 +61,32 @@ namespace Javelin::Assembler::x64::Register
 	constexpr RegisterOperand R9W(9, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand R9D(9, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand R9(9, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand R10B(10, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand R10W(10, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand R10D(10, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand R10(10, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand R11B(11, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand R11W(11, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand R11D(11, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand R11(11, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand R12B(12, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand R12W(12, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand R12D(12, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand R12(12, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand R13B(13, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand R13W(13, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand R13D(13, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand R13(13, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand R14B(14, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand R14W(14, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand R14D(14, MatchReg32 | MatchRM32);
 	constexpr RegisterOperand R14(14, MatchReg64 | MatchRM64);
-	
+
 	constexpr RegisterOperand R15B(15, MatchReg8 | MatchRM8);
 	constexpr RegisterOperand R15W(15, MatchReg16 | MatchRM16);
 	constexpr RegisterOperand R15D(15, MatchReg32 | MatchRM32);
@@ -111,7 +111,7 @@ namespace Javelin::Assembler::x64::Register
 	constexpr RegisterOperand MM5(5, MatchMm);
 	constexpr RegisterOperand MM6(6, MatchMm);
 	constexpr RegisterOperand MM7(7, MatchMm);
-	
+
 	constexpr RegisterOperand XMM0(0, MatchXmm | MatchXmmHi);
 	constexpr RegisterOperand XMM1(1, MatchXmm | MatchXmmHi);
 	constexpr RegisterOperand XMM2(2, MatchXmm | MatchXmmHi);
@@ -227,19 +227,19 @@ namespace Javelin::Assembler::x64
 	RegisterMap::RegisterMap()
 	{
 		using namespace Register;
-		
+
 		(*this)["al"] = &AL;
 		(*this)["ah"] = &AH;
 		(*this)["ax"] = &AX;
 		(*this)["eax"] = &EAX;
 		(*this)["rax"] = &RAX;
-		
+
 		(*this)["bl"] = &BL;
 		(*this)["bh"] = &BH;
 		(*this)["bx"] = &BX;
 		(*this)["ebx"] = &EBX;
 		(*this)["rbx"] = &RBX;
-		
+
 		(*this)["cl"] = &CL;
 		(*this)["ch"] = &CH;
 		(*this)["cx"] = &CX;
@@ -313,7 +313,7 @@ namespace Javelin::Assembler::x64
 		(*this)["r15"] = &R15;
 
 		(*this)["rip"] = &RIP;
-	
+
 		(*this)["st0"] = &ST0;
 		(*this)["st1"] = &ST1;
 		(*this)["st2"] = &ST2;
@@ -322,7 +322,7 @@ namespace Javelin::Assembler::x64
 		(*this)["st5"] = &ST5;
 		(*this)["st6"] = &ST6;
 		(*this)["st7"] = &ST7;
-		
+
 		(*this)["mm0"] = &MM0;
 		(*this)["mm1"] = &MM1;
 		(*this)["mm2"] = &MM2;
@@ -331,7 +331,7 @@ namespace Javelin::Assembler::x64
 		(*this)["mm5"] = &MM5;
 		(*this)["mm6"] = &MM6;
 		(*this)["mm7"] = &MM7;
-		
+
 		(*this)["xmm0"] = &XMM0;
 		(*this)["xmm1"] = &XMM1;
 		(*this)["xmm2"] = &XMM2;
@@ -446,7 +446,7 @@ namespace Javelin::Assembler::x64
 		(*this)["ymm"] = MatchYmm;
 		(*this)["zmm"] = MatchZmm;
 	}
-	
+
 //============================================================================
 } // Javelin::Assembler::x64
 //============================================================================

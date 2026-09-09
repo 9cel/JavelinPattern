@@ -25,7 +25,7 @@ public:
 	Main(int argc, const char** argv) : commandLine(argc, argv) { }
 
 	int Run();
-	
+
 private:
 	CommandLine commandLine;
 	SourceFileSegments fileSegments;
@@ -65,7 +65,7 @@ void Main::ReadInputFile()
 		exit(1);
 	}
 	fileSegments.AddSegmentsFromFile(file);
-	
+
 	if(Log::IsVerboseEnabled())
 	{
 		Log::Verbose("File Segments");
@@ -99,7 +99,7 @@ void Main::PreprocessFileSegments()
 			for(const auto &it : ex) Log::Error("%s", it.GetLogString(fileSegments.GetFilenameList()).c_str());
 		}
 	}
-	
+
 	if(Log::IsVerboseEnabled())
 	{
 		Log::Verbose("Preprocessed Segments");
@@ -107,7 +107,7 @@ void Main::PreprocessFileSegments()
 		Log::Verbose("Preprocessed Tokens");
 		preprocessedFileSegments.DumpTokens();
 	}
-	
+
 	preprocessedFileSegments.AdoptFileNameList(fileSegments);
 	fileSegments = std::move(preprocessedFileSegments);
 }
@@ -125,7 +125,7 @@ void Main::ProcessFileSegments(FILE *outputFile)
 				for(const CodeLine &line : codeSegment->contents)
 				{
                     AssemblerType type(line.line);
-                    
+
                     // This check is because comment lines can be merged with AssemblerTypeChange.
                     if (type.IsValid())
                     {
@@ -152,7 +152,7 @@ void Main::ProcessFileSegments(FILE *outputFile)
 					{
 						fprintf(outputFile, "#line %d\n", lineNumber);
 					}
-					
+
 					switch(commandLine.GetAssemblerType())
 					{
 					case AssemblerType::Unknown:
@@ -241,7 +241,7 @@ void Main::ProcessFileSegments(FILE *outputFile)
 					}
 					else ++expectedLineNumber;
 					fprintf(outputFile, "%s\n", s.line.c_str());
-					
+
 					// clang seems to get line numbers wrong when some preprocessor commands are issued.
 					// Force a #line after a preprocessor:
 					if(!s.line.empty() && s.line[0] == '#') expectedLineNumber = -1;
@@ -260,13 +260,13 @@ void Main::ProcessFileSegments(FILE *outputFile)
 int Main::Run()
 {
 	FILE *outputFile = CreateOutputFile();
-	
+
 	ReadInputFile();
 	PreprocessFileSegments();
 	ProcessFileSegments(outputFile);
-	
+
 	if(outputFile != stdout) fclose(outputFile);
-	
+
 	if(Log::GetNumberOfErrors() > 0)
 	{
 		unlink(commandLine.GetOutputFilename());

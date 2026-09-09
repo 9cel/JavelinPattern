@@ -14,7 +14,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	class Task : public Runnable<void(void)>
 	{
 	public:
@@ -29,7 +29,7 @@ namespace Javelin
 	protected:
 		virtual void OnComplete()	{ delete this; 		}
 	};
-	
+
 //============================================================================
 
 	namespace Private
@@ -38,42 +38,42 @@ namespace Javelin
 		{
 		protected:
 			typedef T ResultType;
-			
+
 		public:
 			// Start with a reference count of one so that the thread it will execute
 			// on is ensured a valid object. RemoveReference in OnComplete of the task
 			FutureResultTask() : SmartObject(1)	{ }
 			~FutureResultTask()					{ }
-			
+
 			// From Task
 			virtual void RunTask() override = 0;
-			
+
 			virtual void OnComplete() final					{ if(RemoveReference()) delete this; else resultReady.Signal(); }
-		
+
 			void Wait()										{ Sentry<Barrier> sentry(resultReady); }
 			const T& GetResult() const 						{ Sentry<Barrier> sentry(resultReady); return result; }
-			
+
 		private:
 			mutable Barrier resultReady;
-		
+
 		protected:
 			Optional<T>	result;
 		};
-		
+
 		template<typename F, typename... T> class ExecuteFutureTask : public FutureResultTask<typename Function<F>::ReturnType>
 		{
 		private:
 			typedef FutureResultTask<typename Function<F>::ReturnType> Inherited;
 			typedef typename Function<F>::ParameterList ParameterListType;
-			
+
 		public:
 			ExecuteFutureTask(const Function<F>& aFunction, const ParameterListType& aParameters) : function(aFunction), parameters(aParameters) { }
-			
+
 			virtual void RunTask() override
 			{
 				this->result = function(parameters);
 			}
-		
+
 		private:
 			Function<F> function;
 			ParameterListType parameters;
@@ -84,10 +84,10 @@ namespace Javelin
 		{
 		private:
 			typedef typename Function<F>::ParameterList ParameterListType;
-			
+
 		public:
 			ExecuteFunctionTask(const Function<F>& aFunction, const ParameterListType aParameters) : function(aFunction), parameters(aParameters) { }
-			
+
 			virtual void RunTask() override
 			{
 				function(parameters);
@@ -105,13 +105,13 @@ namespace Javelin
 	{
 	private:
 		typedef SmartPointer< Private::FutureResultTask<T> > Inherited;
-		
+
 	public:
 		Future(Private::FutureResultTask<T>* p) : Inherited(p) { }
-		
+
 		const T& GetResult() const { return (*this)->GetResult(); }
 	};
-	
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

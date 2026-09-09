@@ -21,7 +21,7 @@ namespace Javelin
 		JINLINE operator const volatile T&() const	{ return value;	}
 
 		JINLINE T operator->() const				{ return value; }
-		
+
 		JINLINE Atomic& operator=(const Atomic& a)	{ value = a.value; return *this; }
 		template<typename U>
 		JINLINE Atomic& operator=(U&& a)			{ value = a; return *this;	}
@@ -38,14 +38,14 @@ namespace Javelin
 		JINLINE T operator^=(T a)					{ return AtomicUpdate::Xor(value, a);			}
 
         JINLINE bool Update(T oldValue, T newValue) { return AtomicUpdate::CompareAndSwap(value, oldValue, newValue); }
-        
+
 		JINLINE T& GetValue() volatile				{ return const_cast<T&>(value); }
 		JINLINE const T& GetValue() const volatile	{ return const_cast<const T&>(value); }
-		
+
 	private:
 		volatile T	value;
 	};
-  
+
 //============================================================================
 } // namespace Javelin
 //============================================================================

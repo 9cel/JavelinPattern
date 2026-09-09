@@ -33,10 +33,10 @@ static const unsigned char* AvxFindByteNibbleMask(const unsigned char* p, const 
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovdqu %0, %%xmm0" : : "m"(sbd->bytes[0]) : "%xmm0");
 	asm volatile("vmovdqu %0, %%xmm1" : : "m"(sbd->bytes[16]) : "%xmm1");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindNibbleMask)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset;
@@ -48,10 +48,10 @@ static const unsigned char* Avx2FindByteNibbleMask(const unsigned char* p, const
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovdqu %0, %%xmm0" : : "m"(sbd->bytes[0]) : "%xmm0");
 	asm volatile("vmovdqu %0, %%xmm1" : : "m"(sbd->bytes[16]) : "%xmm1");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvx2FindNibbleMask)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset;
@@ -82,12 +82,12 @@ static const unsigned char* Avx2FindPairNibbleMask(const unsigned char* p, const
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovdqu %0, %%xmm0" : : "m"(mbd->nibbleMask[0]) : "%xmm0");
 	asm volatile("vmovdqu %0, %%xmm1" : : "m"(mbd->nibbleMask[1]) : "%xmm1");
 	asm volatile("vmovdqu %0, %%xmm2" : : "m"(mbd->nibbleMask[2]) : "%xmm2");
 	asm volatile("vmovdqu %0, %%xmm3" : : "m"(mbd->nibbleMask[3]) : "%xmm3");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvx2FindPairNibbleMask)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -100,12 +100,12 @@ static const unsigned char* AvxFindPairNibbleMaskPath(const unsigned char* p, co
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovdqu %0, %%xmm0" : : "m"(mbd->nibbleMask[0]) : "%xmm0");
 	asm volatile("vmovdqu %0, %%xmm1" : : "m"(mbd->nibbleMask[1]) : "%xmm1");
 	asm volatile("vmovdqu %0, %%xmm2" : : "m"(mbd->nibbleMask[2]) : "%xmm2");
 	asm volatile("vmovdqu %0, %%xmm3" : : "m"(mbd->nibbleMask[3]) : "%xmm3");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindPairNibbleMaskPath)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -118,12 +118,12 @@ static const unsigned char* Avx2FindPairNibbleMaskPath(const unsigned char* p, c
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovdqu %0, %%xmm0" : : "m"(mbd->nibbleMask[0]) : "%xmm0");
 	asm volatile("vmovdqu %0, %%xmm1" : : "m"(mbd->nibbleMask[1]) : "%xmm1");
 	asm volatile("vmovdqu %0, %%xmm2" : : "m"(mbd->nibbleMask[2]) : "%xmm2");
 	asm volatile("vmovdqu %0, %%xmm3" : : "m"(mbd->nibbleMask[3]) : "%xmm3");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvx2FindPairNibbleMaskPath)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -138,7 +138,7 @@ static const unsigned char* AvxShiftOrFindTripletNibbleMask(const unsigned char*
 	asm volatile("vmovdqu %0, %%xmm3" : : "m"(sbd->nibbleMask[3]) : "%xmm3");
 	asm volatile("vmovdqu %0, %%xmm4" : : "m"(sbd->nibbleMask[4]) : "%xmm4");
 	asm volatile("vmovdqu %0, %%xmm5" : : "m"(sbd->nibbleMask[5]) : "%xmm5");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindTripletNibbleMask)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - 2;
@@ -168,7 +168,7 @@ static const unsigned char* Avx2ShiftOrFindTripletNibbleMaskPath(const unsigned 
 	asm volatile("vmovdqu %0, %%xmm3" : : "m"(sbd->nibbleMask[3]) : "%xmm3");
 	asm volatile("vmovdqu %0, %%xmm4" : : "m"(sbd->nibbleMask[4]) : "%xmm4");
 	asm volatile("vmovdqu %0, %%xmm5" : : "m"(sbd->nibbleMask[5]) : "%xmm5");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvx2FindTripletNibbleMaskPath)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - 2;
@@ -184,11 +184,11 @@ static const unsigned char* AvxFindEitherOf2(const unsigned char* p, const void*
 	asm volatile("vmovd %0, %%xmm0\n"
 				 "vpunpcklbw %%xmm0, %%xmm0, %%xmm0\n"
 				 "vpunpcklwd %%xmm0, %%xmm0, %%xmm0\n"
-	
+
 				 "vpshufd $0x55, %%xmm0, %%xmm1\n"
 				 : : "r"((uint32_t) sbd->GetFourBytes()) : "%xmm0", "%xmm1");
-	
-	
+
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindEitherOf2)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset;
@@ -200,10 +200,10 @@ static const unsigned char* Avx2FindEitherOf2(const unsigned char* p, const void
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vpbroadcastb %0, %%xmm0" : : "m"(sbd->bytes[0]) : "%xmm0");
 	asm volatile("vpbroadcastb %0, %%xmm1" : : "m"(sbd->bytes[1]) : "%xmm1");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvx2FindEitherOf2)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset;
@@ -215,16 +215,16 @@ static const unsigned char* AvxFindEitherOf3(const unsigned char* p, const void*
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovd %0, %%xmm0\n"
 				 "vpunpcklbw %%xmm0, %%xmm0, %%xmm0\n"
 				 "vpunpcklwd %%xmm0, %%xmm0, %%xmm0\n"
-				 
+
 				 "vpshufd $0xaa, %%xmm0, %%xmm2\n"
 				 "vpshufd $0x55, %%xmm0, %%xmm1\n"
 				 : : "r"((uint32_t) sbd->GetFourBytes()) : "%xmm0", "%xmm1", "%xmm2");
-	
-	
+
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindEitherOf3)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset;
@@ -236,11 +236,11 @@ static const unsigned char* Avx2FindEitherOf3(const unsigned char* p, const void
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vpbroadcastb %0, %%xmm0" : : "m"(sbd->bytes[0]) : "%xmm0");
 	asm volatile("vpbroadcastb %0, %%xmm1" : : "m"(sbd->bytes[1]) : "%xmm1");
 	asm volatile("vpbroadcastb %0, %%xmm2" : : "m"(sbd->bytes[2]) : "%xmm2");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvx2FindEitherOf3)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset;
@@ -252,15 +252,15 @@ static const unsigned char* AvxFindBytePair(const unsigned char* p, const void* 
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovd %0, %%xmm0\n"
 				 "vpunpcklbw %%xmm0, %%xmm0, %%xmm0\n"
 				 "vpunpcklwd %%xmm0, %%xmm0, %%xmm0\n"
-				 
+
 				 "vpshufd $0x55, %%xmm0, %%xmm1\n"
 				 : : "r"((uint32_t) sbd->GetFourBytes()) : "%xmm0", "%xmm1");
-	
-	
+
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindPair)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -272,10 +272,10 @@ static const unsigned char* Avx2FindBytePair(const unsigned char* p, const void*
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vpbroadcastb %0, %%xmm0" : : "m"(sbd->bytes[0]) : "%xmm0");
 	asm volatile("vpbroadcastb %0, %%xmm1" : : "m"(sbd->bytes[1]) : "%xmm1");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvx2FindPair)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -293,12 +293,12 @@ static const unsigned char* AvxFindByteRange(const unsigned char* p, const void*
     uint32_t offset = sbd->offset;
     p += offset;
     if(p >= pStop) return nullptr;
-    
+
     asm volatile("vmovq %0, %%xmm0\n"
                  "vpshufd $0x55, %%xmm0, %%xmm1\n"
                  : : "m"(sbd->searchValues[0]) : "%xmm0", "%xmm1");
-    
-    
+
+
     const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindByteRange)(p, p, pStop);
     if(!pSearch) return nullptr;
     return pSearch - offset;
@@ -310,15 +310,15 @@ static const unsigned char* AvxFindByteRangePair(const unsigned char* p, const v
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovdqu %0, %%xmm0\n"
-				 
+
 				 "vpshufd $0xff, %%xmm0, %%xmm3\n"
 				 "vpshufd $0xaa, %%xmm0, %%xmm2\n"
 				 "vpshufd $0x55, %%xmm0, %%xmm1\n"
 				 : : "m"(sbd->searchValues[0]) : "%xmm0", "%xmm1", "%xmm2", "%xmm3");
-	
-	
+
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindByteRangePair)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -330,17 +330,17 @@ static const unsigned char* AvxFindBytePair2(const unsigned char* p, const void*
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovd %0, %%xmm0\n"
 				 "vpunpcklbw %%xmm0, %%xmm0, %%xmm0\n"
 				 "vpunpcklwd %%xmm0, %%xmm0, %%xmm0\n"
-				 
+
 				 "vpshufd $0xff, %%xmm0, %%xmm3\n"
 				 "vpshufd $0xaa, %%xmm0, %%xmm2\n"
 				 "vpshufd $0x55, %%xmm0, %%xmm1\n"
 				 : : "r"((uint32_t) sbd->GetFourBytes()) : "%xmm0", "%xmm1", "%xmm2", "%xmm3");
-	
-	
+
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindPair2)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -352,12 +352,12 @@ static const unsigned char* Avx2FindBytePair2(const unsigned char* p, const void
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vpbroadcastb %0, %%xmm0" : : "m"(sbd->bytes[0]) : "%xmm0");
 	asm volatile("vpbroadcastb %0, %%xmm1" : : "m"(sbd->bytes[1]) : "%xmm1");
 	asm volatile("vpbroadcastb %0, %%xmm2" : : "m"(sbd->bytes[2]) : "%xmm2");
 	asm volatile("vpbroadcastb %0, %%xmm3" : : "m"(sbd->bytes[3]) : "%xmm3");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvx2FindPair2)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -369,17 +369,17 @@ static const unsigned char* AvxFindBytePairPath2(const unsigned char* p, const v
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vmovd %0, %%xmm0\n"
 				 "vpunpcklbw %%xmm0, %%xmm0, %%xmm0\n"
 				 "vpunpcklwd %%xmm0, %%xmm0, %%xmm0\n"
-				 
+
 				 "vpshufd $0xff, %%xmm0, %%xmm3\n"
 				 "vpshufd $0xaa, %%xmm0, %%xmm2\n"
 				 "vpshufd $0x55, %%xmm0, %%xmm1\n"
 				 : : "r"((uint32_t) sbd->GetFourBytes()) : "%xmm0", "%xmm1", "%xmm2", "%xmm3");
-	
-	
+
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvxFindPairPath2)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -391,12 +391,12 @@ static const unsigned char* Avx2FindBytePairPath2(const unsigned char* p, const 
 	uint32_t offset = sbd->offset;
 	p += offset;
 	if(p >= pStop) return nullptr;
-	
+
 	asm volatile("vpbroadcastb %0, %%xmm0" : : "m"(sbd->bytes[0]) : "%xmm0");
 	asm volatile("vpbroadcastb %0, %%xmm1" : : "m"(sbd->bytes[1]) : "%xmm1");
 	asm volatile("vpbroadcastb %0, %%xmm2" : : "m"(sbd->bytes[2]) : "%xmm2");
 	asm volatile("vpbroadcastb %0, %%xmm3" : : "m"(sbd->bytes[3]) : "%xmm3");
-	
+
 	const unsigned char* pSearch = ((const unsigned char* (*)(const void* data, const unsigned char* p, const unsigned char* pEnd)) &Amd64FindMethods::InternalAvx2FindPairPath2)(p, p, pStop);
 	if(!pSearch) return nullptr;
 	return pSearch - offset - 1;
@@ -407,7 +407,7 @@ static const unsigned char* Avx2FindBytePairPath2(const unsigned char* p, const 
 void Amd64DfaPatternProcessor::CreateNibbleMask(State* state, int numberOfBytes) const
 {
 	const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
-	
+
 	NibbleMask nibbleMask;
 	for(int i = 0; i < numberOfBytes; ++i)
 	{
@@ -423,7 +423,7 @@ void Amd64DfaPatternProcessor::CreateByteRangeData(State* state, int count) cons
     const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
     Amd64ByteRangeSearchData* p = (Amd64ByteRangeSearchData*) state->workingArea;
     p->offset = sbd->offset;
-    
+
     for(int i = 0; i < count; ++i)
     {
         unsigned char low = sbd->bytes[i*2];
@@ -431,7 +431,7 @@ void Amd64DfaPatternProcessor::CreateByteRangeData(State* state, int count) cons
         p->searchValues[i*2] = ((127-high)&0xff)*0x1010101;
         p->searchValues[i*2+1] = ((126-(high-low))&0xff)*0x1010101;
     }
-    
+
     state->searchData = p;
 }
 
@@ -460,7 +460,7 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
 		case SearchHandlerEnum::SearchByteEitherOf8:
 			CreateNibbleMask(state, (int) value - (int) SearchHandlerEnum::SearchByte0);
 			return Machine::SupportsAvx2() ? Avx2FindByteNibbleMask : AvxFindByteNibbleMask;
-				
+
 		case SearchHandlerEnum::SearchByteEitherOf4WithAssert:
 		case SearchHandlerEnum::SearchByteEitherOf5WithAssert:
 		case SearchHandlerEnum::SearchByteEitherOf6WithAssert:
@@ -468,13 +468,13 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
 		case SearchHandlerEnum::SearchByteEitherOf8WithAssert:
 			CreateNibbleMask(state, (int) value - (int) SearchHandlerEnum::SearchByte0WithAssert);
 			return Machine::SupportsAvx2() ? FindAssertWrapper<Avx2FindByteNibbleMask> : FindAssertWrapper<AvxFindByteNibbleMask>;
-				
+
 		case SearchHandlerEnum::SearchBytePair:
 			return Machine::SupportsAvx2() ? (SearchHandler) Avx2FindBytePair : (SearchHandler) AvxFindBytePair;
-				
+
 		case SearchHandlerEnum::SearchBytePairWithAssert:
 			return Machine::SupportsAvx2() ? FindAssertWrapper<Avx2FindBytePair> : FindAssertWrapper<AvxFindBytePair>;
-			
+
 		case SearchHandlerEnum::SearchBytePair2:
 			{
 				const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
@@ -492,12 +492,12 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
 				}
 			}
 			break;
-				
+
 		case SearchHandlerEnum::SearchBytePair2WithAssert:
 			{
 				const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
 				const ByteCodeSearchMultiByteData* smbd = (const ByteCodeSearchMultiByteData*) &sbd->bytes[4];
-				
+
 				if(smbd->numberOfNibbleMasks == 2)
 				{
 					return smbd->isPath ?
@@ -510,13 +510,13 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
 				}
 			}
 			break;
-				
+
 		case SearchHandlerEnum::SearchBytePair3:
 		case SearchHandlerEnum::SearchBytePair4:
 			{
 				const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
 				const ByteCodeSearchMultiByteData* smbd = (const ByteCodeSearchMultiByteData*) &sbd->bytes[8];
-				
+
 				if(smbd->numberOfNibbleMasks == 2)
 				{
 					return smbd->isPath ?
@@ -527,13 +527,13 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
 				}
 			}
 			break;
-				
+
 		case SearchHandlerEnum::SearchBytePair3WithAssert:
 		case SearchHandlerEnum::SearchBytePair4WithAssert:
 			{
 				const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
 				const ByteCodeSearchMultiByteData* smbd = (const ByteCodeSearchMultiByteData*) &sbd->bytes[8];
-				
+
 				if(smbd->numberOfNibbleMasks == 2)
 				{
 					return smbd->isPath ?
@@ -556,11 +556,11 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
         case SearchHandlerEnum::SearchByteRangePair:
 			CreateByteRangeData(state, 2);
 			return (SearchHandler) AvxFindByteRangePair;
-				
+
 		case SearchHandlerEnum::SearchByteRangePairWithAssert:
 			CreateByteRangeData(state, 2);
 			return FindAssertWrapper<AvxFindByteRangePair>;
-			
+
 		case SearchHandlerEnum::SearchShiftOr:
 			{
 				const ByteCodeSearchShiftOrData* searchData = (const ByteCodeSearchShiftOrData*) state->searchData;
@@ -578,7 +578,7 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
 				}
 			}
 			break;
-				
+
 		case SearchHandlerEnum::SearchShiftOrWithAssert:
 			{
 				const ByteCodeSearchShiftOrData* searchData = (const ByteCodeSearchShiftOrData*) state->searchData;
@@ -596,12 +596,12 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
 				}
 			}
 			break;
-				
+
 		default:
 			break;
 		}
 	}
-			   
+
 	return DfaPatternProcessor::GetSearchHandler(value, state);
 }
 

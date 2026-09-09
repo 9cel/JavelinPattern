@@ -14,14 +14,14 @@ namespace Javelin
 	{
 		T			value;
 		size_t		hash;
-		
+
 		ObjectWithHash() 											{ hash = GetHash(value); }
 		explicit ObjectWithHash(const T& aValue) : value(aValue)	{ hash = GetHash(value); }
 		explicit ObjectWithHash(const T& aValue, size_t aHash) : value(aValue), hash(aHash) { }
 
 		JINLINE ObjectWithHash& operator=(const T& aValue)			{ value = aValue; hash = GetHash(value); }
 		JINLINE ObjectWithHash& operator=(const ObjectWithHash& a)	{ value = a.value; hash = a.hash; }
-		
+
 		JINLINE bool operator==(const T& a) const					{ return value == a;    }
 		JINLINE bool operator!=(const T& a) const					{ return value != a;    }
 
@@ -31,13 +31,13 @@ namespace Javelin
 		JINLINE bool operator> (const ObjectWithHash& a) const		{ return  (a < *this);	}
 		JINLINE bool operator<=(const ObjectWithHash& a) const		{ return !(a < *this);	}
 		JINLINE bool operator>=(const ObjectWithHash& a) const		{ return !(*this < a);	}
-		
+
 		friend size_t GetHash(const ObjectWithHash& a) 				{ return a.hash; 		}
-		
+
 		operator T&() 												{ return value; 		}
 		operator const T&() const									{ return value;			}
 	};
-	
+
 //============================================================================
 
 	// This definition of JSH has the following properties:
@@ -45,7 +45,7 @@ namespace Javelin
 	//  Release builds collapse the entire function, with no global guards for static variable accesses
 	//  The StringData is correctly defined in read-write memory so that reference count increments/decrements are valid
 	//  The string contents is defined right next to the structure so that cache misses are minimized.
-	
+
 	namespace Private
 	{
 		template<int N> struct RawStringWithHashInline
@@ -59,7 +59,7 @@ namespace Javelin
 			char		storage[N];
 		};
 	}
-	
+
 	#define JSH(x)	([]() -> const Javelin::ObjectWithHash<Javelin::String>&						\
 	{ 																								\
 		static constexpr Javelin::Private::RawStringWithHashInline<sizeof(x)> rawString 			\

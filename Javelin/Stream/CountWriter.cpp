@@ -4,14 +4,14 @@
 
 //============================================================================
 
-using namespace Javelin; 
+using namespace Javelin;
 
 //============================================================================
 
-size_t CountWriter::WriteAvailable(const void*, size_t dataSize)	
-{ 
+size_t CountWriter::WriteAvailable(const void*, size_t dataSize)
+{
 	count += dataSize;
-	return dataSize; 
+	return dataSize;
 }
 
 void CountWriter::WriteBlock(const void*, size_t dataSize)

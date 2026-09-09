@@ -122,17 +122,17 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Immediate);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const ImmediateOperand *immr = (const ImmediateOperand*) operands[2];
 		const ImmediateOperand *imms = (const ImmediateOperand*) operands[3];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rd && !rd->IsExpression()) opcode |= rd->index;
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
-		
+
 		int immr_value = immr ? int(immr->value) : 0;
 		int imms_value = imms ? int(imms->value) : 0;
 
@@ -152,9 +152,9 @@ namespace Javelin::Assembler::arm64::Encoders
 				opcode |= v << 10;
 			}
 		}
-		
+
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -201,11 +201,11 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[0] == nullptr || operands[0]->type == Operand::Type::Register);
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[2];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
 		if(rd && !rd->IsExpression()) opcode |= rd->index;
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
@@ -216,18 +216,18 @@ namespace Javelin::Assembler::arm64::Encoders
 
 			BitMaskEncodeResult result = EncodeBitMask(value);
 			if(result.size == 0) throw AssemblerException("Unable to encode logical immediate %" PRId64, imm->value);
-			
+
 			opcode |= result.rotate << 16;
 			if(result.size == 64) opcode |= 1 << 22;
-			
+
 			uint32_t imms = ((0x1e << __builtin_ctz(result.size)) + result.length - 1) & 0x3f;
 			opcode |= imms << 10;
 		}
-		
+
 		uint8_t opcodeBytes[4];
 		memcpy(opcodeBytes, &opcode, 4);
 		listAction.Append(new LiteralAction({opcodeBytes, opcodeBytes+4}));
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -241,7 +241,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchLogicalImmediateOpcodeAction(encodingVariant.data, imm->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void RtRnImm9(Assembler &assembler,
 						 ListAction& listAction,
 						 const Instruction& instruction,
@@ -286,7 +286,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Signed, 9, 12, valueShift, imm->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void Rel26(Assembler &assembler,
 					  ListAction& listAction,
 					  const Instruction& instruction,
@@ -303,14 +303,14 @@ namespace Javelin::Assembler::arm64::Encoders
 		case Operand::Type::Label:
 			{
 				const LabelOperand *label = (const LabelOperand*) operands[0];
-				
+
 				int displacement = int32_t(label->displacement ? label->displacement->value : 0);
 				int32_t rel = displacement / 4;
 				opcode |= rel & 0x3ffffff;
-				
+
 				listAction.AppendOpcode(opcode);
 				listAction.Append(label->CreatePatchAction(RelEncoding::Rel26, 4));
-				
+
 				if(label->displacement && label->displacement->IsExpression())
 				{
 					assert(!"Not implemented yet");
@@ -330,7 +330,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			break;
 		}
 	}
-	
+
 	static void RtRel19(Assembler &assembler,
 						ListAction& listAction,
 						const Instruction& instruction,
@@ -340,7 +340,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[0] == nullptr || operands[0]->type == Operand::Type::Register);
 		assert(operands[1]->type == Operand::Type::Label
 			   || (operands[1]->type == Operand::Type::Number && operands[1]->IsExpression()));
-		
+
 		const RegisterOperand *rt = (const RegisterOperand*) operands[0];
 		uint32_t opcode = encodingVariant.opcode;
 		if(rt) opcode |= rt->index;
@@ -350,14 +350,14 @@ namespace Javelin::Assembler::arm64::Encoders
 		case Operand::Type::Label:
 			{
 				const LabelOperand *label = (const LabelOperand*) operands[1];
-		 
+
 				int displacement = int32_t(label->displacement ? label->displacement->value : 0);
 				int32_t rel = displacement / 4;
 				opcode |= (rel << 5) & 0x7ffff;
-				
+
 				listAction.AppendOpcode(opcode);
 				listAction.Append(label->CreatePatchAction(RelEncoding::Rel19Offset5, 4));
-				
+
 				if(label->displacement && label->displacement->IsExpression())
 				{
 					throw AssemblerException("Displacement expressions not implemented yet");
@@ -367,7 +367,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		case Operand::Type::Number:
 			{
 				const ImmediateOperand* imm = (const ImmediateOperand*) operands[1];
-				
+
 				listAction.AppendOpcode(opcode);
 				listAction.Append(new PatchExpressionAction(RelEncoding::Rel19Offset5, 4, imm->expressionIndex, assembler));
 			}
@@ -376,13 +376,13 @@ namespace Javelin::Assembler::arm64::Encoders
 			assert(!"Internal error");
 			break;
 		}
-		
+
 		if(rt && rt->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rt->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void RtImmRel14(Assembler &assembler,
 						   ListAction& listAction,
 						   const Instruction& instruction,
@@ -393,10 +393,10 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Immediate);
 		assert(operands[2]->type == Operand::Type::Label
 			   || (operands[2]->type == Operand::Type::Number && operands[2]->IsExpression()));
-		
+
 		const RegisterOperand *rt = (const RegisterOperand*) operands[0];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[1];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
 		if(rt) opcode |= rt->index;
 		if(imm && !imm->IsExpression())
@@ -413,9 +413,9 @@ namespace Javelin::Assembler::arm64::Encoders
 				int displacement = int32_t(label->displacement ? label->displacement->value : 0);
 				int32_t rel = displacement / 4;
 				opcode |= (rel << 5) & 0x3fff;
-				
+
 				listAction.AppendOpcode(opcode);
-				
+
 				listAction.Append(label->CreatePatchAction(RelEncoding::Rel14Offset5, 4));
 				if(label->displacement && label->displacement->IsExpression())
 				{
@@ -426,7 +426,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		case Operand::Type::Number:
 			{
 				const ImmediateOperand* imm = (const ImmediateOperand*) operands[2];
-				
+
 				listAction.AppendOpcode(opcode);
 				listAction.Append(new PatchExpressionAction(RelEncoding::Rel14Offset5, 4, imm->expressionIndex, assembler));
 			}
@@ -449,7 +449,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			}
 		}
 	}
-	
+
 	/**
 	 * encodingVariant.Data
 	 *   0: ADR
@@ -479,7 +479,7 @@ namespace Javelin::Assembler::arm64::Encoders
 				const LabelOperand *label = (const LabelOperand*) operands[1];
 				int displacement = int32_t(label->displacement ? label->displacement->value : 0);
 				int32_t rel = displacement;
-				
+
 				if(encodingVariant.data == 1)
 				{
 					if(rel != 0)
@@ -492,7 +492,7 @@ namespace Javelin::Assembler::arm64::Encoders
 					opcode |= (rel & 3) << 29;
 					opcode |= (rel & 0x1ffffc) << 3;
 				}
-				
+
 				listAction.AppendOpcode(opcode);
 				listAction.Append(label->CreatePatchAction(relEncoding, 4));
 
@@ -505,7 +505,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		case Operand::Type::Number:
 			{
 				const ImmediateOperand* imm = (const ImmediateOperand*) operands[1];
-				
+
 				listAction.AppendOpcode(opcode);
 				listAction.Append(new PatchExpressionAction(relEncoding, 4, imm->expressionIndex, assembler));
 			}
@@ -514,13 +514,13 @@ namespace Javelin::Assembler::arm64::Encoders
 			assert(!"Internal error");
 			break;
 		}
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void RtRnUImm12(Assembler &assembler,
 						   ListAction& listAction,
 						   const Instruction& instruction,
@@ -530,11 +530,11 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[0] == nullptr || operands[0]->type == Operand::Type::Register);
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rt = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[2];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
 		if(rt && !rt->IsExpression()) opcode |= rt->index;
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
@@ -565,7 +565,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 12, 10, valueShift, imm->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void RdRnRmImm6(Assembler &assembler,
 						   ListAction& listAction,
 						   const Instruction& instruction,
@@ -612,7 +612,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 6, 10, 0, imm->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void RnImmNzcvCond(Assembler &assembler,
 							  ListAction& listAction,
 							  const Instruction& instruction,
@@ -623,14 +623,14 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Immediate);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Immediate);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Condition);
-		
+
 		const RegisterOperand *rn = (const RegisterOperand*) operands[0];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[1];
 		const ImmediateOperand *nzcv = (const ImmediateOperand*) operands[2];
 		const Operand *cond = operands[3];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
 		if(imm && !imm->IsExpression())
 		{
@@ -651,7 +651,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		}
 
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rn && rn->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 5, 0, rn->expressionIndex, assembler));
@@ -665,7 +665,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 4, 0, 0, nzcv->expressionIndex, assembler));
 		}
 	}
-	
+
 	/**
 	 * RegisterData is taken from Op7
 	 * encodingVariant.data bits:
@@ -681,14 +681,14 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Immediate);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Condition);
-		
+
 		const RegisterOperand *rn = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rm = (const RegisterOperand*) operands[1];
 		const ImmediateOperand *nzcv = (const ImmediateOperand*) operands[2];
 		const Operand *cond = operands[3];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
 		if(rm && !rm->IsExpression()) opcode |= rm->index << 16;
 		if(nzcv && !nzcv->IsExpression())
@@ -703,16 +703,16 @@ namespace Javelin::Assembler::arm64::Encoders
 			if(encodingVariant.data & 0x100) c ^= 1;
 			opcode |= c << 12;
 		}
-		
+
 		const RegisterOperand *enc = (const RegisterOperand*) operands[7];
 		if(encodingVariant.data & 8)
 		{
 			assert(enc);
 			opcode |= ((enc->registerData >> 4) & 3) << 22;
 		}
-		
+
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rn && rn->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 5, 0, rn->expressionIndex, assembler));
@@ -726,7 +726,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 4, 0, 0, nzcv->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void RdRnRmCond(Assembler &assembler,
 						   ListAction& listAction,
 						   const Instruction& instruction,
@@ -737,14 +737,14 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Register);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Condition);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const RegisterOperand *rm = (const RegisterOperand*) operands[2];
 		const Operand *cond = operands[3];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rd && !rd->IsExpression()) opcode |= rd->index;
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
 		if(rm && !rm->IsExpression()) opcode |= rm->index << 16;
@@ -755,9 +755,9 @@ namespace Javelin::Assembler::arm64::Encoders
 			if(encodingVariant.data & 0x100) c ^= 1;
 			opcode |= c << 12;
 		}
-		
+
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -771,7 +771,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 16, 0, rm->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void RdRnRmRa(Assembler &assembler,
 						 ListAction& listAction,
 						 const Instruction& instruction,
@@ -782,19 +782,19 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Register);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Register);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const RegisterOperand *rm = (const RegisterOperand*) operands[2];
 		const RegisterOperand *ra = (const RegisterOperand*) operands[3];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rd && !rd->IsExpression()) opcode |= rd->index;
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
 		if(rm && !rm->IsExpression()) opcode |= rm->index << 16;
 		if(ra && !ra->IsExpression()) opcode |= ra->index << 10;
-		
+
 		listAction.AppendOpcode(opcode);
 
 		if(rd && rd->IsExpression())
@@ -814,7 +814,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 10, 0, ra->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void RdHwImm16(Assembler &assembler,
 						  ListAction& listAction,
 						  const Instruction& instruction,
@@ -841,10 +841,10 @@ namespace Javelin::Assembler::arm64::Encoders
 			++hw;
 			v >>= 16;
 		}
-		
+
 		opcode |= v << 5;
 		opcode |= hw << 21;
-		
+
 		listAction.AppendOpcode(opcode);
 
 		if(rd && rd->IsExpression())
@@ -874,7 +874,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(encodingVariant.data == 32 || encodingVariant.data == 64);
 
 		listAction.Append(new MovExpressionImmediateAction(encodingVariant.data, rd->index, imm->expressionIndex, assembler));
-		
+
 		if(rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -893,16 +893,16 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[0] == nullptr || operands[0]->type == Operand::Type::Register);
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Immediate);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[1];
 		const ImmediateOperand *shiftImm = (const ImmediateOperand*) operands[2];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rd) opcode |= rd->index;
 		if(imm) opcode |= imm->value << 5;
-		
+
 		if(shiftImm)
 		{
 			switch(shiftImm->value)
@@ -914,9 +914,9 @@ namespace Javelin::Assembler::arm64::Encoders
 			default: throw AssemblerException("Invalid shift value : %" PRId64, shiftImm->value);
 			}
 		}
-		
+
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -930,7 +930,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 2, 21, 4, shiftImm->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void RdNot32HwImm16(Assembler &assembler,
 							   ListAction& listAction,
 							   const Instruction& instruction,
@@ -944,7 +944,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[1];
 		assert(int32_t(imm->value | 0xffff) == -1
 			   || int32_t(imm->value | 0xffff0000) == -1);
-		
+
 		uint32_t opcode = encodingVariant.opcode;
 		if(rd) opcode |= rd->index;
 
@@ -952,7 +952,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		{
 			throw AssemblerException("Unsupported expression");
 		}
-		
+
 		uint32_t v = ~uint32_t(imm->value);
 		uint8_t hw = 0;
 		while((v >> 16) != 0)
@@ -960,10 +960,10 @@ namespace Javelin::Assembler::arm64::Encoders
 			++hw;
 			v >>= 16;
 		}
-		
+
 		opcode |= v << 5;
 		opcode |= hw << 21;
-		
+
 		listAction.AppendOpcode(opcode);
 		if(rd && rd->IsExpression())
 		{
@@ -979,14 +979,14 @@ namespace Javelin::Assembler::arm64::Encoders
 	{
 		assert(operands[0] && operands[0]->type == Operand::Type::Register);
 		assert(operands[1] && operands[1]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[1];
 		assert((imm->value | 0xffff) == -1
 			   || (imm->value | 0xffff0000) == -1
 			   || (imm->value | 0xffff00000000) == -1
 			   || (imm->value | 0xffff000000000000) == -1);
-		
+
 		uint32_t opcode = encodingVariant.opcode;
 		if(rd) opcode |= rd->index;
 
@@ -1002,10 +1002,10 @@ namespace Javelin::Assembler::arm64::Encoders
 			++hw;
 			v >>= 16;
 		}
-		
+
 		opcode |= v << 5;
 		opcode |= hw << 21;
-		
+
 		listAction.AppendOpcode(opcode);
 		if(rd && rd->IsExpression())
 		{
@@ -1036,13 +1036,13 @@ namespace Javelin::Assembler::arm64::Encoders
 		const RegisterOperand *rm = (const RegisterOperand*) operands[2];
 		const Operand *extend = operands[3];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[4];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		opcode |= rt->index;
 		opcode |= rn->index << 5;
 		opcode |= rm->index << 16;
-		
+
 		if(extend)
 		{
 			int option = 0;
@@ -1067,7 +1067,7 @@ namespace Javelin::Assembler::arm64::Encoders
 				{
 					throw AssemblerException("Shift expression not permitted for LoadStore");
 				}
-				
+
 				int shift = 0;
 				if(imm->value == encodingVariant.data) shift = 1;
 				else if(imm->value == 0) shift = 0;
@@ -1075,7 +1075,7 @@ namespace Javelin::Assembler::arm64::Encoders
 				opcode |= shift << 12;
 			}
 		}
-		
+
 		listAction.AppendOpcode(opcode);
 
 		if(rt->IsExpression())
@@ -1091,7 +1091,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 16, 0, rm->expressionIndex, assembler));
 		}
 	}
-	
+
 	// operands[0] = load/store reg1
 	// operands[1] = load/store reg2
 	// operands[2] = base register
@@ -1106,18 +1106,18 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1]->type == Operand::Type::Register);
 		assert(operands[2]->type == Operand::Type::Register);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rt1 = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rt2 = (const RegisterOperand*) operands[1];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[2];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[3];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		opcode |= rt1->index;
 		opcode |= rt2->index << 10;
 		opcode |= rn->index << 5;
-		
+
 		if(imm)
 		{
 			assert(imm->value % encodingVariant.data == 0);
@@ -1125,7 +1125,7 @@ namespace Javelin::Assembler::arm64::Encoders
             assert(BitUtility::IsValidSignedImmediate(immValue, 7));
 
 			immValue &= 0x7f;
-			
+
 			opcode |= immValue << 15;
 		}
 
@@ -1149,7 +1149,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Signed, 7, 15, valueShift, imm->expressionIndex, assembler));
 		}
 	}
-	
+
 	// operands[0] = destination
 	// operands[1] = opA
 	// operands[2] = opB
@@ -1167,19 +1167,19 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Extend
 			   || (operands[3]->type == Operand::Type::Shift && operands[3]->shift == Operand::Shift::LSL));
 		assert(operands[4] == nullptr || operands[4]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const RegisterOperand *rm = (const RegisterOperand*) operands[2];
 		const Operand *extend = operands[3];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[4];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rd) opcode |= rd->index;
 		if(rn) opcode |= rn->index << 5;
 		if(rm) opcode |= rm->index << 16;
-		
+
 		if(extend)
 		{
 			int option = 0;
@@ -1197,14 +1197,14 @@ namespace Javelin::Assembler::arm64::Encoders
 				break;
 			}
 			opcode |= option << 13;
-			
+
 			if(imm)
 			{
 				assert(0 <= imm->value && imm->value <= 4);
 				opcode |= imm->value << 10;
 			}
 		}
-		
+
 		listAction.AppendOpcode(opcode);
 
 		if(rd && rd->IsExpression())
@@ -1224,7 +1224,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 6, 10, 0, imm->expressionIndex, assembler));
 		}
 	}
-	
+
 	// operands[0] = destination
 	// operands[1] = opA
 	// operands[2] = immediate
@@ -1239,17 +1239,17 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
 		assert(operands[2]->type == Operand::Type::Immediate);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[2];
 		const ImmediateOperand *shiftImm = (const ImmediateOperand*) operands[3];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rd) opcode |= rd->index;
 		if(rn) opcode |= rn->index << 5;
-		
+
 		if((imm->value & ~0xfff000ull) != 0
 		   && (imm->value & ~0xfffull) != 0)
 		{
@@ -1265,8 +1265,8 @@ namespace Javelin::Assembler::arm64::Encoders
 		{
 			opcode |= imm->value << 10;
 		}
-		
-		
+
+
 		if(shiftImm)
 		{
 			if(shiftImm->IsExpression())
@@ -1277,7 +1277,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			{
 				throw AssemblerException("Shift (%" PRId64 ") must be #0 or #12", shiftImm->value);
 			}
-			
+
 			if(shiftImm->value == 12) opcode |= 1 << 22;
 		}
 
@@ -1296,7 +1296,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 12, 10, 0, imm->expressionIndex, assembler));
 		}
 	}
-	
+
 	// operands[0] = destination
 	// operands[1] = opA
 	// operands[2] = opB
@@ -1313,24 +1313,24 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Register);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Shift);
 		assert(operands[4] == nullptr || operands[4]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const RegisterOperand *rm = (const RegisterOperand*) operands[2];
 		const Operand *shift = operands[3];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[4];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rd) opcode |= rd->index;
 		if(rn) opcode |= rn->index << 5;
 		if(rm) opcode |= rm->index << 16;
-		
+
 		if(shift)
 		{
 			int option = (int) shift->shift;
 			opcode |= option << 22;
-			
+
 			if(imm)
 			{
 				if(0 <= imm->value && imm->value <= 63)
@@ -1434,12 +1434,12 @@ namespace Javelin::Assembler::arm64::Encoders
 
 			if(!imm) throw AssemblerException("Internal error: Immediate expected for encodingVariant.data & 0x20");
 			if(imm->IsExpression()) throw AssemblerException("Expressions not available for fixed-immediate post indexing");
-			
+
 			int count = encodingVariant.GetNP1Count() + 1;
 
 			int validImmediate = count << (enc->registerData & 3);
 			if(imm->value != validImmediate) throw AssemblerException("Specified post index %" PRId64 " cannot be encoded. Must be %d.", imm->value, validImmediate);
-			
+
 			opcode |= 0x1f0000;
 		}
 		if(encodingVariant.data & 0x40)
@@ -1448,7 +1448,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			if(!index) throw AssemblerException("Internal error: Index expected for encodingVariant.data & 0x40");
 
 			int registerSize = (enc->registerData & 3); // 0 = B, 1 = H, 2 = S, 3 = D
-			
+
 			switch(registerSize)
 			{
 			case 0: break;
@@ -1456,36 +1456,36 @@ namespace Javelin::Assembler::arm64::Encoders
 			case 2: opcode |= 0x8000; break;
 			case 3: opcode |= 0x8400; break;
 			}
-			
+
 			int i = int(index->value) << registerSize;
 			if(i >= 16) throw AssemblerException("Index %" PRId64 " out of range", index->value);
-			
+
 			if(i & 8) opcode |= 1 << 30;
 			opcode |= (i & 7) << 10;
 		}
 		if(encodingVariant.data & 0x80)
 		{
 			assert(enc);
-			
+
 			if(!imm) throw AssemblerException("Internal error: Immediate expected for encodingVariant.data & 0x80");
 			if(imm->IsExpression()) throw AssemblerException("Expressions not available for fixed-immediate post indexing");
-			
+
 			int count = encodingVariant.GetNP1Count() + 1;
 			int registerSize = (enc->registerData & 4) ? 16 : 8;
-			
+
 			int validImmediate = count * registerSize;
 			if(imm->value != validImmediate) throw AssemblerException("Specified post index %" PRId64 " cannot be encoded. Must be %d.", imm->value, validImmediate);
-			
+
 			opcode |= 0x1f0000;
 		}
 		if(encodingVariant.data & 0x100)
 		{
 			assert(enc);
 			int Q = (enc->registerData >> 2) & 1;
-			
+
 			if(!imm) throw AssemblerException("Internal error: Immediate expected for encodingVariant.data & 0x100");
 			if(imm->value < 1 || imm->value > 8*Q + 7) throw AssemblerException("Shift %" PRId64 " out of range 1..%d", imm->value, 8*Q + 7);
-			
+
 			opcode |= imm->value << 11;
 		}
 		if(encodingVariant.data & 0x200)
@@ -1501,24 +1501,24 @@ namespace Javelin::Assembler::arm64::Encoders
 		if(encodingVariant.data & 0x400)
 		{
 			assert(enc);
-			
+
 			int size = enc->registerData & 3;
 			if(!imm) throw AssemblerException("Internal error: Immediate expected for encodingVariant.data & 0x400");
 			if(imm->value < 0 || imm->value >= (8 << size)) throw AssemblerException("Index %" PRId64 " out of range 0..%d", imm->value, (8 << size) - 1);
-			
+
 			opcode |= ((8 << size) + imm->value) << 16;
 		}
 		if(encodingVariant.data & 0x800)
 		{
 			assert(enc);
 			if(rm && rm->index > 15) throw AssemblerException("Element vector must be in range 0..15");
-			
+
 			int registerSize = (enc->registerData & 3); // 0 = B, 1 = H, 2 = S, 3 = D
 			assert(registerSize != 0);
-			
+
 			int i = int(index->value) << (registerSize-1);
 			if(i >= 16) throw AssemblerException("Index %" PRId64 " out of range", index->value);
-			
+
 			opcode |= (i & 4) << 9;
 			opcode |= (i & 3) << 20;
 		}
@@ -1526,7 +1526,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		{
 			if(!imm) throw AssemblerException("Internal error: Immediate expected for encodingVariant.data & 0x1000");
 			if(imm->value < 1 || imm->value > 64) throw AssemblerException("Fixed point %" PRId64 " out of range 1..64", imm->value);
-			
+
 			opcode |= (64 - imm->value) << 10;
 		}
 
@@ -1536,7 +1536,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		if(ra && !ra->IsExpression()) opcode |= rm->index << 10;
 
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -1621,7 +1621,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[0] && operands[0]->type == Operand::Type::Register);
 		assert(operands[1] && operands[1]->type == Operand::Type::Register);
 		assert(operands[2] && operands[2]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[2];
@@ -1631,7 +1631,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		{
 			opcode |= (rn->registerData & 4) << 28;
 		}
-		
+
 		opcode |= rd->index;
 		opcode |= rn->index << 5;
 
@@ -1639,15 +1639,15 @@ namespace Javelin::Assembler::arm64::Encoders
 		{
 			// fpSize: 0 = 16 bit, 1 = 32 bit, 2 = 64 bit
 			int fpSize = (rn->registerData & 3) - 1;
-			
+
 			// Sets operand width bit.
 			opcode |= (1 << 20) << fpSize;
-			
+
 			if(!imm->IsExpression())
 			{
 				int maxShift = 16 << ((rn->registerData >> 4) & 3);
 				if(imm->value <= 0 || imm->value > maxShift) throw AssemblerException("Fixed point shift must be between #1 and #%d", maxShift);
-				
+
 				int mask = (16 << fpSize) - 1;
 				int immValue = (uint32_t) (-imm->value & mask);
 				opcode |= immValue << 16;
@@ -1662,7 +1662,7 @@ namespace Javelin::Assembler::arm64::Encoders
 				opcode |= immValue << 10;
 			}
 		}
-		
+
 		if(encodingVariant.data & 4)
 		{
 			// Opcode[30] = (rn->registerData & 4) != 0
@@ -1674,7 +1674,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			int fpType = (rn->registerData >> 4) & 3;
 			opcode |= fpType << 22;
 		}
-		
+
 		if(encodingVariant.data & 0x10)
 		{
 			if(rd->matchBitfield & MatchReg64)
@@ -1684,7 +1684,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		}
 
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -1702,7 +1702,7 @@ namespace Javelin::Assembler::arm64::Encoders
 
 				char buffer[16];
 				sprintf(buffer, "%d-(", 16 << fpSize);
-				
+
 				std::string expr = buffer + assembler.GetExpression(imm->expressionIndex) + ")";
 				int expressionIndex = assembler.AddExpression(expr,
 															  8,
@@ -1710,7 +1710,7 @@ namespace Javelin::Assembler::arm64::Encoders
 															  assembler.GetExpressionFileIndex(imm->expressionIndex));
 				listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 4+fpSize, 16, 0, expressionIndex, assembler));
 			}
-			
+
 			if(encodingVariant.data & 2)
 			{
 				std::string expr = "64-(" + assembler.GetExpression(imm->expressionIndex) + ")";
@@ -1722,7 +1722,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			}
 		}
 	}
-	
+
 	static void FpRdRnIndex1Index2(Assembler &assembler,
 								   ListAction& listAction,
 								   const Instruction& instruction,
@@ -1733,7 +1733,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Number);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Number);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const ImmediateOperand *index1 = (const ImmediateOperand*) operands[2];
@@ -1749,7 +1749,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		int size = enc->registerData & 3;
 		if(!index1) throw AssemblerException("Internal error: Immediate expected for encodingVariant.data & 0x200");
 		if(index1->value < 0 || index1->value > (15 >> size)) throw AssemblerException("Index %" PRId64 " out of range 0..%d", index1->value, 15 >> size);
-		
+
 		opcode |= ((2*index1->value + 1) << size) << 16;
 
 		if(index2)
@@ -1758,12 +1758,12 @@ namespace Javelin::Assembler::arm64::Encoders
 			if(i2 < 0 || i2 > 15) throw AssemblerException("Index %" PRId64 " out of range 0..%d", index2->value, 15 >> size);
 			opcode |= i2 << 11;
 		}
-		
+
 		if(rd && !rd->IsExpression()) opcode |= rd->index;
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
-		
+
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -1787,27 +1787,27 @@ namespace Javelin::Assembler::arm64::Encoders
 		long double ld = (imm->immediateType == ImmediateOperand::ImmediateType::Integer) ?
 							(long double) imm->value :
 							imm->realValue;
-		
+
 		double d = ld;
 		static_assert(sizeof(d) == 8, "Expect double to be 4 bytes");
 		uint64_t u;
 		memcpy(&u, &d, 8);
-		
+
 		uint8_t result = 0;
 		if(u & 0x8000000000000000) result |= 0x80;
-		
+
 		int64_t exp = (u >> 52) & 0x7ff;
 		int64_t unbiasedExp = exp - 1023;
 		if(unbiasedExp <= -4 || unbiasedExp > 4) throw AssemblerException("Cannot encode %f accurately (exponent %d out of range)", d, (int) unbiasedExp);
 		result |= (exp & 7) << 4;
-		
+
 		uint64_t frac = u & 0xfffffffffffff;
 		if(frac & 0xffffffffffff) throw AssemblerException("Cannot encode %f accurately (fraction bits truncated)", d);
 		result |= frac >> 48;
-		
+
 		return result;
 	}
-	
+
 	/**
 	 * RegisterData is taken from Op7
 	 * RegisterData2 is taken from Op6
@@ -1830,14 +1830,14 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Immediate);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Register);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Number);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[1];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[2];
 		const ImmediateOperand *index = (const ImmediateOperand*) operands[3];
 
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		const RegisterOperand *enc = (const RegisterOperand*) operands[7];
 		const RegisterOperand *enc2 = (const RegisterOperand*) operands[6];
 
@@ -1882,7 +1882,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
 
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -1941,7 +1941,7 @@ namespace Javelin::Assembler::arm64::Encoders
 				throw AssemblerException("Invalid shift value (%" PRId64 ")", hwShift->value);
 			}
 		}
-		
+
 		switch(target->type)
 		{
 		case Operand::Type::Label:
@@ -1960,7 +1960,7 @@ namespace Javelin::Assembler::arm64::Encoders
 
 				listAction.AppendOpcode(opcode);
 				listAction.Append(label->CreatePatchAction(RelEncoding::Imm12, 4));
-				
+
 				if(label->displacement && label->displacement->IsExpression())
 				{
 					throw AssemblerException("Label displacements are not supported when subfields are specified");
@@ -1973,7 +1973,7 @@ namespace Javelin::Assembler::arm64::Encoders
 				{
 					throw AssemblerException("Only bitrange [11:0] is supported for absolute targets");
 				}
-				
+
 				listAction.AppendOpcode(opcode);
 				listAction.Append(new PatchExpressionAction(RelEncoding::Imm12, 4, target->expressionIndex, assembler));
 			}
@@ -1981,7 +1981,7 @@ namespace Javelin::Assembler::arm64::Encoders
 		case Operand::Type::Immediate:
 			{
 				listAction.AppendOpcode(opcode);
-				
+
 				if(lowBitIndex->value >= highBitIndex->value)
 				{
 					throw AssemblerException("HighBitIndex (%" PRId64 ") must be greater than LowBitIndex (%" PRId64 ")", highBitIndex->value, lowBitIndex->value);
@@ -1991,7 +1991,7 @@ namespace Javelin::Assembler::arm64::Encoders
 				{
 					throw AssemblerException("Bit range [%" PRId64 ":%" PRId64 "] expected to be width %d", highBitIndex->value, lowBitIndex->value, encodingVariant.data >> 8);
 				}
-				
+
 				listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Masked,
 														numberOfBits,
 														encodingVariant.data & 0xff,
@@ -2003,7 +2003,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			assert(!"Internal error");
 			break;
 		}
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -2031,20 +2031,20 @@ namespace Javelin::Assembler::arm64::Encoders
 			   || operands[2]->type == Operand::Type::Label
 			   || (operands[2]->type == Operand::Type::Shift && operands[2]->shift == Operand::Shift::LSL));
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Immediate);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[1];
 		const ImmediateOperand *amountImm = (const ImmediateOperand*) operands[3];
-		
+
 		int64_t shiftAmount = amountImm ? amountImm->value : 0;
-		
+
 		uint32_t opcode = encodingVariant.opcode;
 		if(rd->registerData & 4) opcode |= 0x40000000;
 
 		int64_t value = imm->value;
-		
+
 		if(rd && !rd->IsExpression()) opcode |= rd->index;
-		
+
 		switch(encodingVariant.data)
 		{
 		case 0: // LSL
@@ -2138,14 +2138,14 @@ namespace Javelin::Assembler::arm64::Encoders
 		{
 			throw AssemblerException("VectorImmediate must be 8 bits wide");
 		}
-		
+
 		int lower5Bits = int(value & 0x1f);
 		int upper3Bits = int(value >> 5);
 		opcode |= lower5Bits << 5;
 		opcode |= upper3Bits << 16;
 
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -2175,14 +2175,14 @@ namespace Javelin::Assembler::arm64::Encoders
 		assert(operands[1] == nullptr || operands[1]->type == Operand::Type::Register);
 		assert(operands[2] == nullptr || operands[2]->type == Operand::Type::Register);
 		assert(operands[3] == nullptr || operands[3]->type == Operand::Type::Number);
-		
+
 		const RegisterOperand *rd = (const RegisterOperand*) operands[0];
 		const RegisterOperand *rn = (const RegisterOperand*) operands[1];
 		const RegisterOperand *rm = (const RegisterOperand*) operands[2];
 		const ImmediateOperand *imm = (const ImmediateOperand*) operands[3];
-		
+
 		uint32_t opcode = encodingVariant.opcode;
-		
+
 		if(rd && !rd->IsExpression()) opcode |= rd->index;
 		if(rn && !rn->IsExpression()) opcode |= rn->index << 5;
 		if(rm && !rm->IsExpression()) opcode |= rm->index << 16;
@@ -2191,9 +2191,9 @@ namespace Javelin::Assembler::arm64::Encoders
 			assert(0 <= imm->value && imm->value < 4);
 			opcode |= imm->value << 12;
 		}
-		
+
 		listAction.AppendOpcode(opcode);
-		
+
 		if(rd && rd->IsExpression())
 		{
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 5, 0, 0, rd->expressionIndex, assembler));
@@ -2211,7 +2211,7 @@ namespace Javelin::Assembler::arm64::Encoders
 			listAction.Append(new PatchOpcodeAction(PatchOpcodeAction::Unsigned, 2, 12, 0, imm->expressionIndex, assembler));
 		}
 	}
-	
+
 	static void Fixed(Assembler &assembler,
 					  ListAction& listAction,
 					  const Instruction& instruction,

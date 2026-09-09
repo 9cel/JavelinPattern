@@ -24,10 +24,10 @@ namespace Javelin
 
 		void JCALL Wait()		const	{ JVERIFY(semaphore_wait(data) == KERN_SUCCESS);				}
 		void JCALL Signal()		const	{ JVERIFY(semaphore_signal(data) == KERN_SUCCESS);				}
-		
+
 		JEXPORT void JCALL Wait(size_t n) const;
 		JEXPORT void JCALL Signal(size_t n) const;
-		
+
 	private:
 		mutable semaphore_t data;
 	};

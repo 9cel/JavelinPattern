@@ -28,7 +28,7 @@ namespace Javelin
 				Type() : hasValue(false) { }
 				template<typename... A> JINLINE Type(A&&... a) : hasValue(true), value((A&&) a...) { }
 				~Type() { }
-				
+
 				// Put inside a union to prevent T's constructor from being called
 				union
 				{
@@ -38,20 +38,20 @@ namespace Javelin
 			};
 
 			JINLINE static void DestroyValue(Type& a)				{ a.value.~T(); }
-			
+
 			template<typename... A>
 			JINLINE static void Replace(Type &a, A&&... b)			{ a.value.~T(); new(Placement(&a.value)) Type((A&&) b...); }
-			
+
 			JINLINE static void CopyFrom(Type& a, Type& b)			{ a.hasValue = b.hasValue; if(b.hasValue) new(Placement(&a.value)) T(b.value); }
 			JINLINE static void CopyFrom(Type& a, const Type& b)	{ a.hasValue = b.hasValue; if(b.hasValue) new(Placement(&a.value)) T(b.value); }
 			JINLINE static void MoveFrom(Type& a, Type&& b)			{ a.hasValue = b.hasValue; if(b.hasValue) new(Placement(&a.value)) T((T&&) b.value); }
-			
+
 			template<typename... A>
 			JINLINE static T& CopyFrom(Type& a, A&&... b)			{ return (new(Placement(&a.value)) Type((A&&) b...))->value; }
-			
+
 			JINLINE static bool HasValue(const Type& a) 			{ return a.hasValue; }
 			JINLINE static void SetEmpty(Type& a) 					{ a.hasValue = false; }
-			
+
 			JINLINE static T& GetValue(Type& a) 					{ JASSERT(a.hasValue); return a.value; }
 			JINLINE static const T& GetValue(const Type& a)			{ JASSERT(a.hasValue); return a.value; }
 

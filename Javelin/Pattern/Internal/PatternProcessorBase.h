@@ -29,7 +29,7 @@ namespace Javelin::PatternInternal
 
 	struct ByteCodeSearchData;
 	class InstructionListBuilder;
-	
+
 	class PatternProcessorBase
 	{
 	public:

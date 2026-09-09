@@ -27,7 +27,7 @@ TAG(Literal32)
  * literal bytes to copy.
  **/
 TAG(LiteralBlock)
-	
+
 /**
  * Alternate block
  * Followed by:
@@ -52,7 +52,7 @@ TAG(Jump)
  * 2 byte alignment.
  */
 TAG(Align)
-		
+
 /**
  * Unalign command.
  */

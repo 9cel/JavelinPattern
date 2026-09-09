@@ -8,7 +8,7 @@
 namespace Javelin
 {
 //============================================================================
-	
+
 	namespace Private
 	{
         // This is CRC32C
@@ -54,7 +54,7 @@ namespace Javelin
 	}
 
 //============================================================================
-	
+
 	#define JIT_HASH(x) (~Javelin::Private::JitHash<sizeof(x) - 2>((const unsigned char*) x))
 
 	unsigned JitHash(const void* p, size_t count);

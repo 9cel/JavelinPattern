@@ -123,7 +123,7 @@ std::string Javelin::Assembler::riscv::MatchBitfieldsDescription(const MatchBitf
 void ImmediateOperand::UpdateMatchBitfield()
 {
     matchBitfield = immediateType == ImmediateType::Integer ? MatchImm : MatchFloatImm;
-    
+
     if(BitUtility::IsValidSignedImmediate(value, 20)) matchBitfield |= MatchImm20;
     if(BitUtility::IsValidUnsignedImmediate(value, 20)) matchBitfield |= MatchUimm20;
     if(BitUtility::IsValidSignedImmediate(value, 12)) matchBitfield |= MatchImm12;
@@ -210,14 +210,14 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
 			++numberOfExpressions;
 		}
 	}
-	
+
     for(int i = 0; i < encodingVariantLength; ++i)
     {
         const EncodingVariant *encoding = &encodingVariants[i];
         if(encodingVariantLength != 1
             && !assembler.UseCompressedInstructions()
             && (encoding->extensionBitmask & ExtensionBitmask::C)) continue;
-        
+
         if(encoding->Match(operandLength, operands))
         {
             const Operand* encodingOperands[8] = {};
@@ -230,7 +230,7 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
                     if(opMask & (1 << opIndex)) encodingOperands[opIndex] = operands[i];
                 }
             }
-            
+
             InstructionEncoder *encoder = encoding->encoder.GetFunction();
             if(numberOfExpressions == 0)
             {
@@ -241,28 +241,28 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
                            encodingOperands);
                 return;
             }
-            
+
             ListAction* subList = new ListAction();
-            
+
             (*encoder)(assembler,
                        *subList,
                        *this,
                        *encoding,
                        encodingOperands);
-            
+
             if(!subList->HasData())
             {
                 delete subList;
                 continue;
             }
-            
+
             const AlternateActionCondition *condition;
             if(numberOfExpressions == 1)
             {
                 uint64_t operandMatchMask = encoding->operandMatchMasks[expressionIndex] & operands[expressionIndex]->matchBitfield;
                 uint64_t operandMatchBitIndex = __builtin_ctzll(operandMatchMask);
                 condition = (*kActionConditions[operandMatchBitIndex])(operands[expressionIndex]);
-                
+
                 if(operands[expressionIndex]->IsExpression())
                 {
                     int operandExpressionSize = 32;
@@ -319,11 +319,11 @@ void Instruction::AddToAssembler(const std::string &opcodeName, Assembler &assem
             delete alternateAction;
             return;
         }
-        
+
         listAction.Append(alternateAction);
         return;
     }
-    
+
 	assert(operandLength <= 16);
 	MatchBitfield operandMatchBitfields[16];
 	for(int i = 0; i < operandLength; ++i) operandMatchBitfields[i] = operands[i]->matchBitfield;

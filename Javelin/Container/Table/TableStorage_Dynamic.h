@@ -18,15 +18,15 @@ namespace Javelin
 	public:
 		JINLINE static void* Allocate(size_t elementSize, size_t count)		{ return ::operator new(elementSize*count); }
 		JINLINE static void	 Release(void* p)								{ ::operator delete(p);	}
-		
+
 		JINLINE static size_t GetRecommendedCapacity(size_t capacity)		{ return capacity; 	}
 		JINLINE static constexpr size_t GetDefaultCapacity()				{ return 0; 		}
 		JINLINE static void* GetDefaultAllocation()							{ return nullptr; 	}
 		JINLINE static bool RequiresCopy(void* data)						{ return false; 	}
 
-		static size_t GetExpandedTableCount(size_t oldTableSize)	
-		{ 
-			return oldTableSize + (oldTableSize >> 3) + 13;	
+		static size_t GetExpandedTableCount(size_t oldTableSize)
+		{
+			return oldTableSize + (oldTableSize >> 3) + 13;
 		}
 	};
 
@@ -38,12 +38,12 @@ namespace Javelin
 		public:
 			JINLINE void* Allocate(size_t elementSize, size_t count)		{ return count == N ? storage : ::operator new(elementSize*count); }
 			JINLINE void  Release(void* p)									{ if(p != storage) ::operator delete(p);	}
-			
+
 			JINLINE static size_t GetRecommendedCapacity(size_t capacity)	{ return capacity < N ? N : capacity; 	}
 			JINLINE static constexpr size_t GetDefaultCapacity()			{ return N; 							}
 			JINLINE void* GetDefaultAllocation()							{ return storage;						}
 			JINLINE bool RequiresCopy(void* data)							{ return storage == data; 				}
-			
+
 			static size_t GetExpandedTableCount(size_t oldTableSize)
 			{
 				return oldTableSize + (oldTableSize >> 3) + 13;
@@ -60,7 +60,7 @@ namespace Javelin
 	class TableStorage_Dynamic
 	{
 	public:
-		template<typename T, typename DataIntegrityPolicy = DataIntegrityPolicy_Automatic<T> > 
+		template<typename T, typename DataIntegrityPolicy = DataIntegrityPolicy_Automatic<T> >
 		class Implementation : private AllocationPolicy<T>
 		{
 		public:
@@ -93,8 +93,8 @@ namespace Javelin
 																	}
 																}
 
-			JINLINE	void	Reset() 							{ 
-																	DataIntegrityPolicy::Destroy(Begin(), count);	
+			JINLINE	void	Reset() 							{
+																	DataIntegrityPolicy::Destroy(Begin(), count);
 																	AllocationPolicy<T>::Release(data);
 																	count	 = 0;
 																	capacity = AllocationPolicy<T>::GetDefaultCapacity();
@@ -111,7 +111,7 @@ namespace Javelin
 
 			JINLINE	void	AppendCount(const T* p, size_t n)	{ PrepareAppend(n); DataIntegrityPolicy::InitialCopy(&Begin()[count], p, n); count += n; }
 			JINLINE T*		AppendCount(size_t n)				{ PrepareAppend(n); T* r = Begin(); DataIntegrityPolicy::CreateCount(r, n); count += n; return r; }
-			
+
 			template<typename U>
 			JINLINE	void	AppendNoExpand(U &&a)						{
 																			JASSERT(count < capacity);
@@ -132,7 +132,7 @@ namespace Javelin
 																	DataIntegrityPolicy::CopyBackwards(Begin()+i+1, Begin()+i, count++ - i);
 																	DataIntegrityPolicy::CreateOnZombie(&Begin()[i], (U&&) a);
 																}
-		
+
 			JINLINE	void	RemoveIndex(size_t i)				{
 																	JASSERT(i < count);
 																	DataIntegrityPolicy::Copy(Begin()+i, Begin()+i+1, --count-i);
@@ -145,8 +145,8 @@ namespace Javelin
 																			DataIntegrityPolicy::Copy(Begin()+i, Begin()+i+numElements, count-i);
 																			DataIntegrityPolicy::Destroy(Begin()+count, numElements);
 																		}
-			
-			
+
+
 			JINLINE	void	RemoveBack()						{
 																	JASSERT(count);
 																	DataIntegrityPolicy::Destroy(Begin() + --count);
@@ -154,7 +154,7 @@ namespace Javelin
 
 			JINLINE	T*&			GetData()						{ return reinterpret_cast<T*&>(data);		}
 			JINLINE	const T*	GetData() const					{ return reinterpret_cast<const T*>(data); 	}
-			
+
 			JINLINE	T*			Begin()							{ return reinterpret_cast<T*>(data);		}
 			JINLINE	const T*	Begin()	const					{ return reinterpret_cast<const T*>(data); 	}
 
@@ -185,8 +185,8 @@ namespace Javelin
 																		if(capacity != 0) AllocationPolicy<T>::Release(data);
 																	}
 			~Implementation()										{ Destroy(); }
-			
-			
+
+
 			constexpr Implementation() : count(0), capacity(AllocationPolicy<T>::GetDefaultCapacity()), data(AllocationPolicy<T>::GetDefaultAllocation()) { }
 
 			Implementation(const T* p, size_t length)				{
@@ -210,11 +210,11 @@ namespace Javelin
 																		capacity	= 0;
 																		data		= (void*) p;
 																	}
-			
+
 			void _ForceNoopDestructor()								{
 																		capacity	= 0;
 																	}
-			
+
 			Implementation(const Implementation& a)					{
 																		count	 = a.count;
 																		capacity = a.capacity;
@@ -245,7 +245,7 @@ namespace Javelin
 																		a.capacity	= a.AllocationPolicy<T>::GetDefaultCapacity();
 																		a.data		= a.AllocationPolicy<T>::GetDefaultAllocation();
 																	}
-			
+
 			Implementation(size_t initialCapacity)					{
 																		count	 = 0;
 																		capacity = AllocationPolicy<T>::GetRecommendedCapacity(initialCapacity);
@@ -272,10 +272,10 @@ namespace Javelin
 
 			Implementation& operator=(Implementation&& a) JNOTHROW	{
 																		Destroy();
-																
+
 																		count		= a.count;
 																		capacity	= a.capacity;
-				
+
 																		if(a.AllocationPolicy<T>::RequiresCopy(a.data))
 																		{
 																			data = AllocationPolicy<T>::GetDefaultAllocation();
@@ -285,27 +285,27 @@ namespace Javelin
 																		{
 																			data = a.data;
 																		}
-				
+
 																		a.count		= 0;
 																		a.capacity	= a.AllocationPolicy<T>::GetDefaultCapacity();
 																		a.data		= a.AllocationPolicy<T>::GetDefaultAllocation();
-																		
+
 																		return (*this);
 																	}
 
-			
+
 			JINLINE void PrepareAppend(size_t expand)				{
 																		if(count+expand > capacity)
 																		{
 																			ExpandData(expand);
 																		}
 																	}
-			
+
 		private:
 			size_t	count;
 			size_t	capacity;
 			void*	data;
-			
+
 			void	ExpandData(size_t expand);
 		};
 	};
@@ -315,11 +315,11 @@ namespace Javelin
 	JNOINLINE void TableStorage_Dynamic<AllocationPolicy>::Implementation<T, DataIntegrityPolicy>::ExpandData(size_t expand)
 	{
 		size_t newCapacity = AllocationPolicy<T>::GetExpandedTableCount(count+expand);
-		
+
 		void* newData = AllocationPolicy<T>::Allocate(sizeof(T), newCapacity);
 		DataIntegrityPolicy::Relocate(reinterpret_cast<T*>(newData), reinterpret_cast<T*>(data), count);
 		AllocationPolicy<T>::Release(data);
-		
+
 		data = newData;
 		capacity = newCapacity;
 	}

@@ -109,7 +109,7 @@ void ImmediateAlternateActionCondition::WriteByteCode(std::vector<uint8_t> &resu
 	std::vector<uint8_t> conditionCode;
 	conditionCode.push_back((int) opcode);
 	Action::WriteExpressionOffset(conditionCode, context, expressionIndex);
-	
+
 	if(result.size() >= 256) throw AssemblerException("Encoding Error: Alternate jump offset should be less than 256 bytes");
 	conditionCode.push_back(result.size());
 	result.insert(result.begin(), conditionCode.begin(), conditionCode.end());
@@ -223,7 +223,7 @@ LiteralAction::LiteralAction(const std::vector<uint8_t> &aBytes) : bytes(aBytes)
 }
 
 LiteralAction::~LiteralAction()
-{	
+{
 }
 
 void LiteralAction::Dump() const
@@ -262,7 +262,7 @@ bool LiteralAction::Simplify(ListAction *parent, size_t index)
 
 	LiteralAction *literalAction = (LiteralAction *) previousAction;
 	literalAction->AppendBytes(bytes);
-	
+
 	parent->RemoveActionAtIndex(index);
 	delete this;
 	return true;
@@ -278,7 +278,7 @@ void AlignedAction::Dump() const
 bool AlignedAction::ResolveRelativeAddresses(ActionContext &context)
 {
 	if(context.forwards == false) return false;
-	
+
 	context.offset.alignment = alignment;
 	context.offset.blockIndex++;
 	context.offset.offsetIntoBlock = 0;
@@ -345,7 +345,7 @@ size_t UnalignAction::GetMaximumLength() const
 bool UnalignAction::ResolveRelativeAddresses(ActionContext &context)
 {
 	if(context.forwards == false) return false;
-	
+
 	if(context.offset.alignment >= alignment)
 	{
 		isFixed = true;
@@ -372,7 +372,7 @@ bool LabelAction::Simplify(ListAction *parent, size_t index)
 {
 	if(global) return false;
 	if(hasReference) return false;
-	
+
 	if(Log::IsVerboseEnabled())
 	{
 		printf("\n");
@@ -380,7 +380,7 @@ bool LabelAction::Simplify(ListAction *parent, size_t index)
 		Dump();
 		printf("\n");
 	}
-	
+
 	// Local variable that has no references. Remove it.
 	parent->RemoveActionAtIndex(index);
 	delete this;
@@ -395,7 +395,7 @@ void NamedLabelAction::Dump() const
 bool NamedLabelAction::ResolveRelativeAddresses(ActionContext &context)
 {
 	if(context.forwards) hasReference = global;
-	
+
 	if(!global)
 	{
 		if(context.namedReferenceSet.find(value) != context.namedReferenceSet.end())
@@ -416,7 +416,7 @@ bool NumericLabelAction::ResolveRelativeAddresses(ActionContext &context)
 {
 	// First pass reset code.
 	if(context.forwards) hasReference = global;
-	
+
 	if(!global)
 	{
 		if(context.numericReferenceSet.find(value) != context.numericReferenceSet.end())
@@ -424,7 +424,7 @@ bool NumericLabelAction::ResolveRelativeAddresses(ActionContext &context)
 			hasReference = true;
 		}
 	}
-	
+
 	context.numericLabels[global ? value ^ -1 : value] = context.offset;
 	return Inherited::ResolveRelativeAddresses(context);
 }
@@ -473,7 +473,7 @@ void AlternateAction::Dump() const
 size_t AlternateAction::GetMinimumLength() const
 {
 	if(alternateList.size() == 0) return 0;
-	
+
 	size_t minimumLength = (size_t) -1;
 	for(const Alternate &alternate : alternateList)
 	{
@@ -528,7 +528,7 @@ void AlternateAction::Add(Action *action, const AlternateActionCondition *condit
 			return;
 		}
 	}
-	
+
 	const Alternate alternate =
 	{
 		.condition = condition,
@@ -545,9 +545,9 @@ bool AlternateAction::ResolveRelativeAddresses(ActionContext &context)
 	for(int i = 0; i < alternateList.size(); ++i)
 	{
 		Alternate &alternate = alternateList[i];
-		
+
 		context.offset = offset;
-        
+
         bool resolveBeforeIsValid = alternate.condition->ShouldProcessIsValidAtEndOfAlternate() == context.forwards;
 
 		if(resolveBeforeIsValid)
@@ -556,12 +556,12 @@ bool AlternateAction::ResolveRelativeAddresses(ActionContext &context)
 		}
 
 		AlternateActionCondition::Result result = alternate.condition->IsValid(context, alternate.action);
-		
+
 		if(!resolveBeforeIsValid)
 		{
 			if(alternate.action->ResolveRelativeAddresses(context)) changed = true;
 		}
-		
+
 		switch(result)
 		{
 		case AlternateActionCondition::Result::Never:
@@ -583,18 +583,18 @@ bool AlternateAction::ResolveRelativeAddresses(ActionContext &context)
 				alternateList[j].condition->Release();
 				delete alternateList[j].action;
 			}
-				
+
 			alternateList.erase(alternateList.begin()+i+1, alternateList.end());
 			changed = true;
 			goto end;
 		}
-		
+
 	}
 
 end:
 	context.offset = offset;
 	Action::ResolveRelativeAddresses(context);
-	
+
 	return changed;
 }
 
@@ -606,7 +606,7 @@ bool AlternateAction::Simplify(ListAction *parent, size_t index)
 		--i;
 		if(alternateList[i].action->Simplify(nullptr, 0)) result = true;
 	}
-	
+
 	switch(alternateList.size())
 	{
 	case 0:
@@ -740,9 +740,9 @@ void ListAction::ResolveRelativeAddresses()
 			actionContext.offset.totalMaximumOffset = 0;
 			if(ResolveRelativeAddresses(actionContext)) changes = true;
 		}
-		
+
 		if(Simplify(nullptr, 0)) changes = true;
-		
+
 	} while(changes);
 }
 
@@ -769,7 +769,7 @@ void ListAction::DelayAndConsolidate()
 	{
 		action->DelayAndConsolidate();
 	}
-	
+
 	// Step through all actions, and find out if there are
 	// actions that can be delayed past literals
 	std::vector<Action *> delayList;
@@ -820,7 +820,7 @@ void ListAction::DelayAndConsolidate()
 		needConsolidate = true;
 		DelayActions(delayList, startDelayListIndex, (int) actionList.size(), delay);
 	}
-	
+
 	if(needConsolidate) ConsolidateLiteralActions();
 }
 
@@ -836,7 +836,7 @@ void ListAction::Group()
 		{
 			Action *other = actionList[j];
 			if(other->GetMinimumLength() != 0) break;
-			
+
 			if(action->CanGroup(other))
 			{
 				if(j == next) ++next;

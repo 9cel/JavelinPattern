@@ -38,7 +38,7 @@ JINLINE static uint8x16_t LoadNibbleMask(const void* data, size_t index)
 JINLINE static uint32_t Create32BitMask(uint8x16_t b0, uint8x16_t b1)
 {
 	static const uint8x16_t COLLAPSE_MASK = {1,2,4,8,16,32,64,128,1,2,4,8,16,32,64,128};
-	
+
 	b0 &= COLLAPSE_MASK;
 	b1 &= COLLAPSE_MASK;
 
@@ -146,11 +146,11 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindNibbleMask
 {
     int shift = int(size_t(pIn) & 0x1f);
     const uint8x16_t* p = (const uint8x16_t*) (intptr_t(pIn) & -32);
-    
+
 	const uint8x16_t nm0 = LoadNibbleMask(nibbleMasks, 0);
 	const uint8x16_t nm1 = LoadNibbleMask(nibbleMasks, 1);
     const uint8x16_t AND_MASK = {0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf};
-    
+
     uint8x16_t b0 = *p++;
     uint8x16_t b1 = *p++;
     __builtin_prefetch(p+8);
@@ -158,17 +158,17 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindNibbleMask
     uint8x16_t b0l = b0 & AND_MASK;
     uint8x16_t b1h = vshrq_n_u8(b1, 4);
     uint8x16_t b1l = b1 & AND_MASK;
-    
+
     b0 = vtstq_u8(vtblq(nm0, b0l), vtblq(nm1, b0h));
     b1 = vtstq_u8(vtblq(nm0, b1l), vtblq(nm1, b1h));
-	
+
     uint32_t mask = Create32BitMask(b0, b1) >> shift;
     if(JUNLIKELY(mask != 0))
     {
         const uint8_t* result = (const uint8_t*) pIn + __builtin_ctz(mask);
         return result < pEnd ? result : nullptr;
     }
-    
+
     while(p < pEnd)
     {
         b0 = *p++;
@@ -178,10 +178,10 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindNibbleMask
         b0l = b0 & AND_MASK;
         b1h = vshrq_n_u8(b1, 4);
         b1l = b1 & AND_MASK;
-        
+
         b0 = vtstq_u8(vtblq(nm0, b0l), vtblq(nm1, b0h));
         b1 = vtstq_u8(vtblq(nm0, b1l), vtblq(nm1, b1h));
-        
+
         if(JUNLIKELY(IsNotZero(b0|b1)))
         {
             mask = Create32BitMask(b0, b1);
@@ -189,7 +189,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindNibbleMask
             return result < pEnd ? result : nullptr;
         }
     }
-    
+
     return nullptr;
 }
 
@@ -198,14 +198,14 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 {
     int shift = int(size_t(pIn) & 0x1f);
 	const uint8x16_t* p = (const uint8x16_t*) (intptr_t(pIn) & -32);
-	
+
 	const uint8x16_t nm0 = LoadNibbleMask(nibbleMasks, 0);
 	const uint8x16_t nm1 = LoadNibbleMask(nibbleMasks, 1);
 	const uint8x16_t nm2 = LoadNibbleMask(nibbleMasks, 2);
 	const uint8x16_t nm3 = LoadNibbleMask(nibbleMasks, 3);
 	const uint8x16_t AND_MASK = {0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf};
 	uint8x16_t last = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-	
+
 	uint8x16_t b0 = *p++;
 	uint8x16_t b1 = *p++;
 	__builtin_prefetch(p+8);
@@ -223,7 +223,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 	uint8x16_t m0 = vextq_u8(last, x0, 15) & y0;
 	uint8x16_t m1 = vextq_u8(x0, x1, 15) & y1;
 	last = x1;
-	
+
 	uint32_t mask = Create32BitMask(m0, m1) >> shift;
 	mask >>= 1;
 	if(JUNLIKELY(mask != 0))
@@ -231,7 +231,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 		const uint8_t* result = (const uint8_t*) pIn + __builtin_ctz(mask);
 		return result < pEnd ? result : nullptr;
 	}
-	
+
 	while(p < pEnd)
 	{
 		b0 = *p++;
@@ -241,17 +241,17 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 		b0l = b0 & AND_MASK;
 		b1h = vshrq_n_u8(b1, 4);
 		b1l = b1 & AND_MASK;
-		
+
         x0 = vtstq_u8(vtblq(nm0, b0l), vtblq(nm1, b0h));
         x1 = vtstq_u8(vtblq(nm0, b1l), vtblq(nm1, b1h));
-        
+
         y0 = vtstq_u8(vtblq(nm2, b0l), vtblq(nm3, b0h));
         y1 = vtstq_u8(vtblq(nm2, b1l), vtblq(nm3, b1h));
-		
+
 		m0 = vextq_u8(last, x0, 15) & y0;
 		m1 = vextq_u8(x0, x1, 15) & y1;
 		last = x1;
-		
+
 		if(JUNLIKELY(IsNotZero(m0|m1)))
 		{
 			mask = Create32BitMask(m0, m1);
@@ -259,7 +259,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 			return result < pEnd ? result : nullptr;
 		}
 	}
-	
+
 	return nullptr;
 }
 
@@ -268,14 +268,14 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 {
     int shift = int(size_t(pIn) & 0x1f);
 	const uint8x16_t* p = (const uint8x16_t*) (intptr_t(pIn) & -32);
-	
+
 	const uint8x16_t nm0 = LoadNibbleMask(nibbleMasks, 0);
 	const uint8x16_t nm1 = LoadNibbleMask(nibbleMasks, 1);
 	const uint8x16_t nm2 = LoadNibbleMask(nibbleMasks, 2);
 	const uint8x16_t nm3 = LoadNibbleMask(nibbleMasks, 3);
 	const uint8x16_t AND_MASK = {0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf};
 	uint8x16_t last = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-	
+
 	uint8x16_t b0 = *p++;
 	uint8x16_t b1 = *p++;
 	__builtin_prefetch(p+8);
@@ -283,17 +283,17 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 	uint8x16_t b0l = b0 & AND_MASK;
 	uint8x16_t b1h = vshrq_n_u8(b1, 4);
 	uint8x16_t b1l = b1 & AND_MASK;
-	
+
     uint8x16_t x0 = vtblq(nm0, b0l) & vtblq(nm1, b0h);
 	uint8x16_t x1 = vtblq(nm0, b1l) & vtblq(nm1, b1h);
-	
+
 	uint8x16_t y0 = vtblq(nm2, b0l) & vtblq(nm3, b0h);
     uint8x16_t y1 = vtblq(nm2, b1l) & vtblq(nm3, b1h);
-	
+
 	uint8x16_t mm0 = vtstq_u8(vextq_u8(last, x0, 15), y0);
 	uint8x16_t mm1 = vtstq_u8(vextq_u8(x0, x1, 15), y1);
 	last = x1;
-	
+
 	uint32_t mask = Create32BitMask(mm0, mm1) >> shift;
 	mask >>= 1;
 	if(JUNLIKELY(mask != 0))
@@ -301,7 +301,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 		const uint8_t* result = (const uint8_t*) pIn + __builtin_ctz(mask);
 		return result < pEnd ? result : nullptr;
 	}
-	
+
 	while(p < pEnd)
 	{
 		b0 = *p++;
@@ -311,17 +311,17 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 		b0l = b0 & AND_MASK;
 		b1h = vshrq_n_u8(b1, 4);
 		b1l = b1 & AND_MASK;
-		
+
         x0 = vtblq(nm0, b0l) & vtblq(nm1, b0h);
         x1 = vtblq(nm0, b1l) & vtblq(nm1, b1h);
-        
+
         y0 = vtblq(nm2, b0l) & vtblq(nm3, b0h);
         y1 = vtblq(nm2, b1l) & vtblq(nm3, b1h);
-		
+
 		mm0 = vtstq_u8(vextq_u8(last, x0, 15), y0);
 		mm1 = vtstq_u8(vextq_u8(x0, x1, 15), y1);
 		last = x1;
-		
+
 		if(JUNLIKELY(IsNotZero(mm0|mm1)))
 		{
 			mask = Create32BitMask(mm0, mm1);
@@ -329,7 +329,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 			return result < pEnd ? result : nullptr;
 		}
 	}
-	
+
 	return nullptr;
 }
 
@@ -339,7 +339,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
     if (static_cast<const uint8_t*>(pEnd) - static_cast<const uint8_t*>(pIn) < 3) return nullptr;
     int shift = int(size_t(pIn) & 0x1f);
     const uint8x16_t* p = (const uint8x16_t*) (intptr_t(pIn) & -32);
-    
+
     const uint8x16_t nm0 = LoadNibbleMask(nibbleMasks, 0);
     const uint8x16_t nm1 = LoadNibbleMask(nibbleMasks, 1);
     const uint8x16_t nm2 = LoadNibbleMask(nibbleMasks, 2);
@@ -349,11 +349,11 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
     const uint8x16_t AND_MASK = {0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf};
     uint8x16_t lastX = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     uint8x16_t lastY = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-    
+
     uint8x16_t b0 = *p++;
     uint8x16_t b1 = *p++;
     __builtin_prefetch(p+8);
-    
+
     uint8x16_t b0h = vshrq_n_u8(b0, 4);
     uint8x16_t b0l = b0 & AND_MASK;
     uint8x16_t b1h = vshrq_n_u8(b1, 4);
@@ -381,7 +381,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
         const uint8_t* result = (const uint8_t*) pIn + __builtin_ctz(mask);
         return result < pEnd && static_cast<const uint8_t*>(pEnd) - result >= 3 ? result : nullptr;
     }
-    
+
     while(p < pEnd)
     {
         b0 = *p++;
@@ -391,10 +391,10 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
         b0l = b0 & AND_MASK;
         b1h = vshrq_n_u8(b1, 4);
         b1l = b1 & AND_MASK;
-        
+
         x0 = vtstq_u8(vtblq(nm0, b0l), vtblq(nm1, b0h));
         x1 = vtstq_u8(vtblq(nm0, b1l), vtblq(nm1, b1h));
-        
+
         y0 = vtstq_u8(vtblq(nm2, b0l), vtblq(nm3, b0h));
         y1 = vtstq_u8(vtblq(nm2, b1l), vtblq(nm3, b1h));
 
@@ -403,7 +403,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
 
         m0 = vextq_u8(lastX, x0, 14) & vextq_u8(lastY, y0, 15) & z0;
         m1 = vextq_u8(x0, x1, 14) & vextq_u8(y0, y1, 15) & z1;
-        
+
         lastX = x1;
         lastY = y1;
 
@@ -418,7 +418,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
             return result < pEnd && static_cast<const uint8_t*>(pEnd) - result >= 3 ? result : nullptr;
         }
     }
-    
+
     return nullptr;
 }
 
@@ -428,7 +428,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
     if (static_cast<const uint8_t*>(pEnd) - static_cast<const uint8_t*>(pIn) < 3) return nullptr;
     int shift = int(size_t(pIn) & 0x1f);
     const uint8x16_t* p = (const uint8x16_t*) (intptr_t(pIn) & -32);
-    
+
     const uint8x16_t nm0 = LoadNibbleMask(nibbleMasks, 0);
     const uint8x16_t nm1 = LoadNibbleMask(nibbleMasks, 1);
     const uint8x16_t nm2 = LoadNibbleMask(nibbleMasks, 2);
@@ -446,19 +446,19 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
     uint8x16_t b0l = b0 & AND_MASK;
     uint8x16_t b1h = vshrq_n_u8(b1, 4);
     uint8x16_t b1l = b1 & AND_MASK;
-    
+
     uint8x16_t x0 = vtblq(nm0, b0l) & vtblq(nm1, b0h);
     uint8x16_t x1 = vtblq(nm0, b1l) & vtblq(nm1, b1h);
-    
+
     uint8x16_t y0 = vtblq(nm2, b0l) & vtblq(nm3, b0h);
     uint8x16_t y1 = vtblq(nm2, b1l) & vtblq(nm3, b1h);
-    
+
     uint8x16_t z0 = vtblq(nm4, b0l) & vtblq(nm5, b0h);
     uint8x16_t z1 = vtblq(nm4, b1l) & vtblq(nm5, b1h);
-    
+
     uint8x16_t mm0 = vtstq_u8(vextq_u8(lastX, x0, 14) & vextq_u8(lastY, y0, 15), z0);
     uint8x16_t mm1 = vtstq_u8(vextq_u8(x0, x1, 14) & vextq_u8(y0, y1, 15), z1);
-    
+
     lastX = x1;
     lastY = y1;
 
@@ -469,7 +469,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
         const uint8_t* result = (const uint8_t*) pIn + __builtin_ctz(mask);
         return result < pEnd && static_cast<const uint8_t*>(pEnd) - result >= 3 ? result : nullptr;
     }
-    
+
     while(p < pEnd)
     {
         b0 = *p++;
@@ -479,10 +479,10 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
         b0l = b0 & AND_MASK;
         b1h = vshrq_n_u8(b1, 4);
         b1l = b1 & AND_MASK;
-        
+
         x0 = vtblq(nm0, b0l) & vtblq(nm1, b0h);
         x1 = vtblq(nm0, b1l) & vtblq(nm1, b1h);
-        
+
         y0 = vtblq(nm2, b0l) & vtblq(nm3, b0h);
         y1 = vtblq(nm2, b1l) & vtblq(nm3, b1h);
 
@@ -505,7 +505,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
             return result < pEnd && static_cast<const uint8_t*>(pEnd) - result >= 3 ? result : nullptr;
         }
     }
-    
+
     return nullptr;
 }
 

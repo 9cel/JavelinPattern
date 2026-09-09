@@ -25,20 +25,20 @@ class ThompsonNfaReverseProcessor final : public ReverseProcessor
 {
 public:
 	ThompsonNfaReverseProcessor(const void* data, size_t length);
-	
+
 	virtual const void* Match(const void* data, size_t length, size_t startOffset, const void* matchEnd, const char **captures, bool matchIsAnchored) const;
-	
+
 private:
 	PatternData			patternData;
 	uint32_t			numberOfInstructions;
 	uint32_t			startingInstruction;
 	ExpandedJumpTables	expandedJumpTables;
-	
+
 	void Set(const void* data, size_t length);
-	
+
 	struct State;
 	struct ProcessData;
-	
+
 	void ProcessState(const State* currentState, State* nextState, const unsigned char* &p, ProcessData& processData) const;
 	const void* Process(const unsigned char* pIn, ProcessData& processData) const;
 };
@@ -55,7 +55,7 @@ struct ThompsonNfaReverseProcessor::ProcessData
 	const PatternData			patternData;
 	State*						currentState;
 	const ExpandedJumpTables&	expandedJumpTables;
-	
+
 	ProcessData(bool aMatchIsAnchored, const void* data, size_t length, size_t stop, const ThompsonNfaReverseProcessor& processor)
 	: matchIsAnchored(aMatchIsAnchored),
 	  pStart((const unsigned char*) data),
@@ -82,7 +82,7 @@ struct ThompsonNfaReverseProcessor::State
 
 	void Dump(ICharacterWriter& output) const;
 	bool HasNoThreads() const 											{ return numberOfThreads == 0;	}
-	
+
 	void ResetThreads()
 	{
 		numberOfStates  = 0;
@@ -134,19 +134,19 @@ Loop:
 	case InstructionType::AssertStartOfInput:
 		if(p == processData.pStart)	goto ProcessNextInstruction;
 		break;
-		
+
 	case InstructionType::AssertEndOfInput:
 		if(p == processData.pEnd) goto ProcessNextInstruction;
 		break;
-		
+
 	case InstructionType::AssertStartOfLine:
 		if(p == processData.pStart || p[-1] == '\n') goto ProcessNextInstruction;
 		break;
-		
+
 	case InstructionType::AssertEndOfLine:
 		if(p == processData.pEnd || *p == '\n') goto ProcessNextInstruction;
 		break;
-		
+
 	case InstructionType::AssertWordBoundary:
 		if(Character::IsWordCharacter(*p))
 		{
@@ -159,7 +159,7 @@ Loop:
 			   && Character::IsWordCharacter(p[-1])) goto ProcessNextInstruction;
 		}
 		break;
-		
+
 	case InstructionType::AssertNotWordBoundary:
 		if(Character::IsWordCharacter(*p))
 		{
@@ -172,7 +172,7 @@ Loop:
 			if(!Character::IsWordCharacter(p[-1])) goto ProcessNextInstruction;
 		}
 		break;
-		
+
 	case InstructionType::AssertStartOfSearch:
 		if(p != processData.pStop) break;
 		goto ProcessNextInstruction;
@@ -190,7 +190,7 @@ Loop:
 		}
 		if(pc != TypeData<uint32_t>::Maximum()) goto Loop;
 		break;
-		
+
 	case InstructionType::DispatchMask:
 		if(p == processData.pStop)
 		{
@@ -204,7 +204,7 @@ Loop:
 		}
 		if(pc != TypeData<uint32_t>::Maximum()) goto Loop;
 		break;
-		
+
 	case InstructionType::DispatchRange:
 		{
 			const ByteCodeJumpRangeData* data = processData.patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
@@ -219,24 +219,24 @@ Loop:
 			if(pc != TypeData<uint32_t>::Maximum()) goto Loop;
 			break;
 		}
-			
+
 	case InstructionType::Fail:
 		break;
-		
+
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
-		
+
 	case InstructionType::Match:
 		if(processData.matchIsAnchored && p != processData.pStop) break;
 		processData.match = p;
 		return;
-		
-			
+
+
 	case InstructionType::Split:
 		{
 			const ByteCodeSplitData* splitData = processData.patternData.GetData<ByteCodeSplitData>(instruction.data);
-			
+
 			uint32_t numberOfTargets = splitData->numberOfTargets;
 			for(uint32_t i = 0; i < numberOfTargets-1; ++i)
 			{
@@ -245,7 +245,7 @@ Loop:
 			pc = splitData->targetList[numberOfTargets-1];
 			goto Loop;
 		}
-		
+
 	case InstructionType::SplitMatch:
 		{
 			const uint32_t* splitData = processData.patternData.GetData<uint32_t>(instruction.data);
@@ -253,18 +253,18 @@ Loop:
 			pc = splitData[1];
 			goto Loop;
 		}
-			
+
 	case InstructionType::SplitNextN:
 	case InstructionType::SplitNextMatchN:
 		AddThread(pc+1, p, processData);
 		pc = instruction.data;
 		goto Loop;
-		
+
 	case InstructionType::SplitNNext:
 	case InstructionType::SplitNMatchNext:
 		AddThread(instruction.data, p, processData);
 		goto ProcessNextInstruction;
-		
+
 	case InstructionType::ProgressCheck:
 	ProcessNextInstruction:
 		++pc;
@@ -273,7 +273,7 @@ Loop:
 	default:
 		AddThread(pc);
 		break;
-			
+
 	case InstructionType::AssertRecurseValue:
 	case InstructionType::BackReference:
 	case InstructionType::Call:
@@ -341,31 +341,31 @@ void ThompsonNfaReverseProcessor::ProcessState(const State* currentState, State*
 	StandardOutput.PrintF("\nProcessing byte: '%c'\n", p[-1]);
 	currentState->Dump(StandardOutput);
 #endif
-	
+
 	for(uint32_t pcIndex = 0; pcIndex < currentState->numberOfThreads; ++pcIndex)
 	{
 		uint32_t pc = currentState->threadList[pcIndex];
-		
+
 #if VERBOSE_DEBUG_PATTERN
 		StandardOutput.PrintF("Processing pc: %u\n", pc);
 #endif
 	Loop:
 		const ByteCodeInstruction instruction = patternData[pc];
-		
+
 		switch(instruction.type)
 		{
 		case InstructionType::AdvanceByte:
 		case InstructionType::AnyByte:
 			nextState->AddThread(pc+1, p-1, processData);
 			break;
-			
+
 		case InstructionType::Byte:
 			if(instruction.data == p[-1])
 			{
 				nextState->AddThread(pc+1, p-1, processData);
 			}
 			break;
-			
+
 		case InstructionType::ByteEitherOf2:
 			if((instruction.data & 0xff) == p[-1] ||
 			   ((instruction.data >> 8) & 0xff) == p[-1])
@@ -373,7 +373,7 @@ void ThompsonNfaReverseProcessor::ProcessState(const State* currentState, State*
 				nextState->AddThread(pc+1, p-1, processData);
 			}
 			break;
-			
+
 		case InstructionType::ByteEitherOf3:
 			if((instruction.data & 0xff) == p[-1] ||
 			   ((instruction.data >> 8) & 0xff) == p[-1] ||
@@ -382,7 +382,7 @@ void ThompsonNfaReverseProcessor::ProcessState(const State* currentState, State*
 				nextState->AddThread(pc+1, p-1, processData);
 			}
 			break;
-			
+
 		case InstructionType::ByteRange:
 			{
 				unsigned char low = instruction.data & 0xff;
@@ -394,7 +394,7 @@ void ThompsonNfaReverseProcessor::ProcessState(const State* currentState, State*
 				}
 			}
 			break;
-			
+
 		case InstructionType::ByteBitMask:
 			{
 				const StaticBitTable<256>& data = *patternData.GetData<StaticBitTable<256>>(instruction.data);
@@ -427,14 +427,14 @@ void ThompsonNfaReverseProcessor::ProcessState(const State* currentState, State*
 				}
 			}
 			break;
-				
+
 		case InstructionType::ByteNot:
 			if(instruction.data != p[-1])
 			{
 				nextState->AddThread(pc+1, p-1, processData);
 			}
 			break;
-			
+
 		case InstructionType::ByteNotEitherOf2:
 			if((instruction.data & 0xff) != p[-1] &&
 			   ((instruction.data >> 8) & 0xff) != p[-1])
@@ -442,7 +442,7 @@ void ThompsonNfaReverseProcessor::ProcessState(const State* currentState, State*
 				nextState->AddThread(pc+1, p-1, processData);
 			}
 			break;
-			
+
 		case InstructionType::ByteNotEitherOf3:
 			if((instruction.data & 0xff) != p[-1] &&
 			   ((instruction.data >> 8) & 0xff) != p[-1] &&
@@ -451,7 +451,7 @@ void ThompsonNfaReverseProcessor::ProcessState(const State* currentState, State*
 				nextState->AddThread(pc+1, p-1, processData);
 			}
 			break;
-			
+
 		case InstructionType::ByteNotRange:
 			{
 				unsigned char low = instruction.data & 0xff;
@@ -462,7 +462,7 @@ void ThompsonNfaReverseProcessor::ProcessState(const State* currentState, State*
 				}
 			}
 			break;
-				
+
 		case InstructionType::FindByte:
 			if(nextState->HasNoThreads()
 			   && currentState->numberOfThreads == 1)
@@ -478,7 +478,7 @@ void ThompsonNfaReverseProcessor::ProcessState(const State* currentState, State*
 				nextState->AddThread((p[-1] == c) ? instruction.data>>8 : pc, p-1, processData);
 			}
 			break;
-				
+
 		case InstructionType::AssertStartOfInput:
 		case InstructionType::AssertEndOfInput:
 		case InstructionType::AssertStartOfLine:
@@ -542,7 +542,7 @@ const void* ThompsonNfaReverseProcessor::Process(const unsigned char* pIn, Proce
 		State* currentState = (State*) pBuffer;
 		State* nextState = (State*) (pBuffer + processSize);
 		uint32_t* updateCache = (uint32_t*) (pBuffer + 2*processSize);
-		
+
 		currentState->Prepare(updateCache, numberOfInstructions);
 		nextState->Prepare(updateCache, numberOfInstructions);
 
@@ -551,7 +551,7 @@ const void* ThompsonNfaReverseProcessor::Process(const unsigned char* pIn, Proce
 
 		processData.currentState = currentState;
 		nextState->AddThread(startingInstruction, pIn, processData);
-		
+
 		for(; p > pStop; --p)
 		{
 			if(nextState->HasNoThreads()) return processData.match;

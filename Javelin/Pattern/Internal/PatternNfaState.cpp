@@ -33,7 +33,7 @@ static uint32_t TrimRangeForDispatch(CharacterRange& range, const Interval<unsig
 bool NfaState::AddEntry(uint32_t pc, UpdateCache &updateCache)
 {
 	if((stateFlags & Flag::IS_MATCH) == Flag::IS_MATCH) return false;
-	
+
 	uint32_t possibleIndex = updateCache.possibleIndex[pc];
 	if(possibleIndex >= numberOfStates || stateList[possibleIndex] != pc)
 	{
@@ -82,7 +82,7 @@ Loop:
 		nextFlags |= Flag::IS_START_OF_INPUT_MASK;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertStartOfLine:
 		nextFlags |= Flag::WAS_END_OF_LINE_MASK;
 		{
@@ -91,15 +91,15 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfInput:
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfLine:
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertWordBoundary:
 	case InstructionType::AssertNotWordBoundary:
 		nextFlags |= Flag::WAS_WORD_CHARACTER_MASK;
@@ -124,7 +124,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::DispatchMask:
 		{
 			const ByteCodeJumpMaskData* jumpMask = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
@@ -137,7 +137,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::DispatchTable:
 		{
 			const ByteCodeJumpTableData* jumpTable = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
@@ -150,11 +150,11 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
-		
+
 	case InstructionType::ProgressCheck:
 		if(!progressCheckSet.Contains(pc))
 		{
@@ -169,7 +169,7 @@ Loop:
 	case InstructionType::SaveNoRecurse:
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::Split:
 		{
 			const ByteCodeSplitData* data = patternData.GetData<ByteCodeSplitData>(instruction.data);
@@ -194,13 +194,13 @@ Loop:
 		ProcessNextStateFlags(progressCheckSet, patternData, pc+1, range, updateCache, nextFlags);
 		pc = instruction.data;
 		goto Loop;
-			
+
 	case InstructionType::SplitNNext:
 	case InstructionType::SplitNMatchNext:
 		ProcessNextStateFlags(progressCheckSet, patternData, instruction.data, range, updateCache, nextFlags);
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AdvanceByte:
 	case InstructionType::AnyByte:
 	case InstructionType::Byte:
@@ -241,7 +241,7 @@ Loop:
 		stateFlags |= nextFlags;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::Fail:
 		break;
 
@@ -266,7 +266,7 @@ Loop:
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
-		
+
 	case InstructionType::ProgressCheck:
 		if(AddEntryNoMatchCheck(pc, updateCache))
 		{
@@ -277,13 +277,13 @@ Loop:
 		{
 			return;
 		}
-			
+
 	case InstructionType::PropagateBackwards:
 	case InstructionType::Save:
 	case InstructionType::SaveNoRecurse:
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::FindByte:
 	case InstructionType::SearchByte:
 	case InstructionType::SearchByteEitherOf2:
@@ -317,7 +317,7 @@ Loop:
 			pc = data->targetList[data->numberOfTargets-1];
 		}
 		goto Loop;
-		
+
 	case InstructionType::SplitMatch:
 		{
 			const uint32_t* data = patternData.GetData<uint32_t>(instruction.data);
@@ -325,19 +325,19 @@ Loop:
 			pc = data[1];
 		}
 		goto Loop;
-			
+
 	case InstructionType::SplitNextN:
 	case InstructionType::SplitNextMatchN:
 		AddNextState(patternData, pc+1, range, updateCache, nextFlags);
 		pc = instruction.data;
 		goto Loop;
-			
+
 	case InstructionType::SplitNNext:
 	case InstructionType::SplitNMatchNext:
 		AddNextState(patternData, instruction.data, range, updateCache, nextFlags);
 		++pc;
 		goto Loop;
-		
+
 	default:
 		break;
 	}
@@ -366,7 +366,7 @@ void NfaState::Process(NfaState& outResult, const PatternData& patternData, Char
 	outResult.numberOfStates = 0;
 	outResult.stateFlags = flags;
 	OpenHashSet<uint32_t> progressCheckSet;
-	
+
 	for(uint32_t i = 0; i < numberOfStates; ++i)
 	{
 		uint32_t pc = stateList[i];
@@ -385,7 +385,7 @@ Loop:
 	case InstructionType::AdvanceByte:
 		outResult.AddNextState(patternData, pc+1, range, updateCache, ConvertFlagsToNextFlags(flags));
 		break;
-		
+
 	case InstructionType::AnyByte:
 		if(range.min < 256)
 		{
@@ -393,17 +393,17 @@ Loop:
 			outResult.AddNextState(patternData, pc+1, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;
-		
+
 	case InstructionType::AssertStartOfInput:
 		if((stateFlags & Flag::IS_START_OF_INPUT) == 0) break;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertStartOfLine:
 		if((stateFlags & Flag::WAS_END_OF_LINE) == 0) break;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfInput:
 		if(range.min < 256)
 		{
@@ -412,7 +412,7 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfLine:
 		if(range.min == '\n' || range.min == END_OF_INPUT)
 		{
@@ -431,24 +431,24 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertStartOfSearch:
 		if((stateFlags & Flag::IS_START_OF_SEARCH) == 0) break;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertWordBoundary:
 		CharacterRangeList::WORD_CHARACTERS.TrimRelevancyInterval(range);
 		if(((stateFlags ^ ConvertFlagsToNextFlags(flags)) & Flag::WAS_WORD_CHARACTER) == 0) break;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertNotWordBoundary:
 		CharacterRangeList::WORD_CHARACTERS.TrimRelevancyInterval(range);
 		if((stateFlags ^ ConvertFlagsToNextFlags(flags)) & Flag::WAS_WORD_CHARACTER) break;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::Byte:
 		if(range.min == instruction.data)
 		{
@@ -464,7 +464,7 @@ Loop:
 			if(range.max > 255) range.max = 255;
 		}
 		break;
-		
+
 	case InstructionType::ByteEitherOf2:
 		if(range.min < 256)
 		{
@@ -480,7 +480,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::ByteEitherOf3:
 		if(range.min < 256)
 		{
@@ -498,7 +498,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::ByteRange:
 		if(range.min < 256)
 		{
@@ -519,7 +519,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::ByteBitMask:
 		if(range.min < 256)
 		{
@@ -528,14 +528,14 @@ Loop:
 			{
 				outResult.AddNextState(patternData, pc+1, range, updateCache, ConvertFlagsToNextFlags(flags));
 			}
-			
+
 			int high = range.min+1;
 			int maxTest = Minimum(255u, (uint32_t) range.max);
 			while(high <= maxTest && data[high] == data[range.min]) ++high;
 			range.max = high-1;
 		}
 		break;
-		
+
 	case InstructionType::ByteJumpRange:
 		if(range.min < 256)
 		{
@@ -543,7 +543,7 @@ Loop:
 			const CharacterRange jumpRange{data->range.min, data->range.max};
 			jumpRange.TrimRelevancyInterval(range);
 			if(range.max > 255) range.max = 255;
-			
+
 			uint32_t newPc = data->pcData[data->range.Contains(range.min)];
 			if(newPc != TypeData<uint32_t>::Maximum())
 			{
@@ -551,7 +551,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::ByteJumpMask:
 		if(range.min < 256)
 		{
@@ -567,7 +567,7 @@ Loop:
 			range.max = high-1;
 		}
 		break;
-		
+
 	case InstructionType::ByteJumpTable:
 		if(range.min < 256)
 		{
@@ -583,7 +583,7 @@ Loop:
 			range.max = high-1;
 		}
 		break;
-		
+
 	case InstructionType::ByteNot:
 		if(range.min < 256)
 		{
@@ -603,7 +603,7 @@ Loop:
 			if(range.min != c0) outResult.AddNextState(patternData, pc+1, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;
-			
+
 	case InstructionType::ByteNotEitherOf2:
 		if(range.min < 256)
 		{
@@ -619,7 +619,7 @@ Loop:
 			}
 		}
 		break;
-			
+
 	case InstructionType::ByteNotEitherOf3:
 		if(range.min < 256)
 		{
@@ -637,7 +637,7 @@ Loop:
 			}
 		}
 		break;
-			
+
 	case InstructionType::ByteNotRange:
 		if(range.min < 256)
 		{
@@ -659,7 +659,7 @@ Loop:
 			}
 		}
 		break;
-			
+
 	case InstructionType::DispatchRange:
 		{
 			const ByteCodeJumpRangeData* data = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
@@ -667,10 +667,10 @@ Loop:
 			if(pc == TypeData<uint32_t>::Maximum()) return;
 		}
 		goto Loop;
-		
+
 	case InstructionType::DispatchMask:
 		{
-			
+
 			const ByteCodeJumpMaskData* data = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
 			int high = range.min+1;
 			int maxTest = Minimum(255u, (uint32_t) range.max);
@@ -680,7 +680,7 @@ Loop:
 			if(pc == TypeData<uint32_t>::Maximum()) return;
 		}
 		goto Loop;
-		
+
 	case InstructionType::DispatchTable:
 		{
 			const ByteCodeJumpTableData* data = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
@@ -692,10 +692,10 @@ Loop:
 			if(pc == TypeData<uint32_t>::Maximum()) return;
 		}
 		goto Loop;
-		
+
 	case InstructionType::Fail:
 		break;
-		
+
 	case InstructionType::FindByte:
 		if(range.min < 256)
 		{
@@ -712,11 +712,11 @@ Loop:
 			{
 				if(range.max > 255) range.max = 255;
 			}
-			
+
 			outResult.AddNextState(patternData, range.min == c0 ? instruction.data >> 8 : pc, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;
-			
+
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
@@ -733,7 +733,7 @@ Loop:
 	case InstructionType::SaveNoRecurse:
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::Match:
 		if((stateFlags & PARTIAL_MATCH_IS_ALLOWED) || range.min == END_OF_INPUT)
 		{
@@ -744,7 +744,7 @@ Loop:
 			if(range.max > 255) range.max = 255;
 		}
 		break;
-		
+
 	case InstructionType::Split:
 		{
 			const ByteCodeSplitData* data = patternData.GetData<ByteCodeSplitData>(instruction.data);
@@ -763,19 +763,19 @@ Loop:
 			pc = data[1];
 		}
 		goto Loop;
-			
+
 	case InstructionType::SplitNextN:
 	case InstructionType::SplitNextMatchN:
 		ProcessCurrentState(outResult, patternData, pc+1, range, flags, updateCache, progressCheckSet);
 		pc = instruction.data;
 		goto Loop;
-		
+
 	case InstructionType::SplitNNext:
 	case InstructionType::SplitNMatchNext:
 		ProcessCurrentState(outResult, patternData, instruction.data, range, flags, updateCache, progressCheckSet);
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::SearchByte:
 		{
 			int offset = (instruction.data >> 8);
@@ -806,7 +806,7 @@ Loop:
 			goto Loop;
 		}
 		break;
-			
+
 	case InstructionType::SearchBytePair:
 	case InstructionType::SearchByteTriplet:
 	case InstructionType::SearchByteEitherOf2:
@@ -823,7 +823,7 @@ Loop:
 		if(range.min < 256)
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			if(data->offset == 0)
 			{
 				int numberOfBytes = instruction.type >= InstructionType::SearchByteTriplet ?
@@ -849,7 +849,7 @@ Loop:
 			goto Loop;
 		}
 		break;
-			
+
 	case InstructionType::SearchByteRange:
 	case InstructionType::SearchByteRangePair:
 		{
@@ -868,7 +868,7 @@ Loop:
 			goto Loop;
 		}
 		break;
-			
+
 	case InstructionType::SearchShiftOr:
 		if(range.min < 256)
 		{
@@ -877,7 +877,7 @@ Loop:
 			int maxTest = Minimum(255u, (uint32_t) range.max);
 			while(high <= maxTest && ((data->data[high] ^ data->data[range.min]) & 1) == 0) ++high;
 			range.max = high-1;
-			
+
 			if((data->data[range.min] & 1) != 0)
 			{
 				outResult.AddNextState(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
@@ -887,7 +887,7 @@ Loop:
 			goto Loop;
 		}
 		break;
-		
+
 	case InstructionType::SearchBoyerMoore:
 		if(range.min < 256)
 		{
@@ -895,7 +895,7 @@ Loop:
 			outResult.AddNextState(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;
-			
+
 	case InstructionType::AssertRecurseValue:
 	case InstructionType::BackReference:
 	case InstructionType::Call:
@@ -919,16 +919,16 @@ Loop:
 	case InstructionType::AssertStartOfInput:
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertStartOfLine:
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfInput:
 		nextFlags |= Flag::IS_END_OF_INPUT_MASK;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfLine:
 		nextFlags |= Flag::WAS_END_OF_LINE_MASK;
 		{
@@ -937,7 +937,7 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertWordBoundary:
 	case InstructionType::AssertNotWordBoundary:
 		nextFlags |= Flag::WAS_WORD_CHARACTER_MASK;
@@ -966,7 +966,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::DispatchMask:
 		{
 			const ByteCodeJumpMaskData* jumpMask = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
@@ -983,7 +983,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::DispatchTable:
 		{
 			const ByteCodeJumpTableData* jumpTable = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
@@ -1000,11 +1000,11 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
-		
+
 	case InstructionType::ProgressCheck:
 		if(!progressCheckSet.Contains(pc))
 		{
@@ -1018,7 +1018,7 @@ Loop:
 	case InstructionType::SaveNoRecurse:
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::Split:
 		{
 			const ByteCodeSplitData* data = patternData.GetData<ByteCodeSplitData>(instruction.data);
@@ -1043,13 +1043,13 @@ Loop:
 		ProcessNextStateFlagsReverse(progressCheckSet, patternData, pc+1, range, updateCache, nextFlags);
 		pc = instruction.data;
 		goto Loop;
-			
+
 	case InstructionType::SplitNNext:
 	case InstructionType::SplitNMatchNext:
 		ProcessNextStateFlagsReverse(progressCheckSet, patternData, instruction.data, range, updateCache, nextFlags);
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AdvanceByte:
 	case InstructionType::AnyByte:
 	case InstructionType::Byte:
@@ -1090,7 +1090,7 @@ Loop:
 		stateFlags |= nextFlags;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::Fail:
 		break;
 
@@ -1115,7 +1115,7 @@ Loop:
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
-		
+
 	case InstructionType::ProgressCheck:
 		if(AddEntryNoMatchCheck(pc, updateCache))
 		{
@@ -1126,13 +1126,13 @@ Loop:
 		{
 			return;
 		}
-			
+
 	case InstructionType::PropagateBackwards:
 	case InstructionType::Save:
 	case InstructionType::SaveNoRecurse:
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::FindByte:
 	case InstructionType::SearchByte:
 	case InstructionType::SearchByteEitherOf2:
@@ -1165,7 +1165,7 @@ Loop:
 			pc = data->targetList[data->numberOfTargets-1];
 		}
 		goto Loop;
-		
+
 	case InstructionType::SplitMatch:
 		{
 			const uint32_t* data = patternData.GetData<uint32_t>(instruction.data);
@@ -1173,19 +1173,19 @@ Loop:
 			pc = data[1];
 		}
 		goto Loop;
-			
+
 	case InstructionType::SplitNextN:
 	case InstructionType::SplitNextMatchN:
 		AddNextStateReverse(patternData, pc+1, range, updateCache, nextFlags);
 		pc = instruction.data;
 		goto Loop;
-			
+
 	case InstructionType::SplitNNext:
 	case InstructionType::SplitNMatchNext:
 		AddNextStateReverse(patternData, instruction.data, range, updateCache, nextFlags);
 		++pc;
 		goto Loop;
-		
+
 	default:
 		break;
 	}
@@ -1201,7 +1201,7 @@ void NfaState::ProcessReverse(NfaState& outResult, const PatternData& patternDat
 	outResult.numberOfStates = 0;
 	outResult.stateFlags = flags;
 	OpenHashSet<uint32_t> progressCheckSet;
-	
+
 	for(uint32_t i = 0; i < numberOfStates; ++i)
 	{
 		uint32_t pc = stateList[i];
@@ -1220,7 +1220,7 @@ Loop:
 	case InstructionType::AdvanceByte:
 		outResult.AddNextStateReverse(patternData, pc+1, range, updateCache, ConvertFlagsToNextFlags(flags));
 		break;
-		
+
 	case InstructionType::AnyByte:
 		if(range.min < 256)
 		{
@@ -1228,7 +1228,7 @@ Loop:
 			outResult.AddNextStateReverse(patternData, pc+1, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;
-		
+
 	case InstructionType::AssertStartOfInput:
 		if(range.min < 256)
 		{
@@ -1238,7 +1238,7 @@ Loop:
 		JASSERT(range.max == range.min);
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertStartOfLine:
 		if(range.min < '\n')
 		{
@@ -1256,34 +1256,34 @@ Loop:
 		}
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfInput:
 		if((stateFlags & Flag::IS_END_OF_INPUT) == 0) break;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertEndOfLine:
 		if((stateFlags & (Flag::IS_END_OF_INPUT | Flag::WAS_END_OF_LINE)) == 0) break;
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::AssertStartOfSearch:
 		if((stateFlags & Flag::IS_START_OF_SEARCH) == 0) break;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertWordBoundary:
 		CharacterRangeList::WORD_CHARACTERS.TrimRelevancyInterval(range);
 		if(((stateFlags ^ ConvertFlagsToNextFlags(flags)) & Flag::WAS_WORD_CHARACTER) == 0) break;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::AssertNotWordBoundary:
 		CharacterRangeList::WORD_CHARACTERS.TrimRelevancyInterval(range);
 		if((stateFlags ^ ConvertFlagsToNextFlags(flags)) & Flag::WAS_WORD_CHARACTER) break;
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::Byte:
 		if(range.min == instruction.data)
 		{
@@ -1299,7 +1299,7 @@ Loop:
 			if(range.max > 255) range.max = 255;
 		}
 		break;
-		
+
 	case InstructionType::ByteEitherOf2:
 		if(range.min < 256)
 		{
@@ -1315,7 +1315,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::ByteEitherOf3:
 		if(range.min < 256)
 		{
@@ -1333,7 +1333,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::ByteRange:
 		if(range.min < 256)
 		{
@@ -1354,7 +1354,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::ByteBitMask:
 		if(range.min < 256)
 		{
@@ -1363,14 +1363,14 @@ Loop:
 			{
 				outResult.AddNextStateReverse(patternData, pc+1, range, updateCache, ConvertFlagsToNextFlags(flags));
 			}
-			
+
 			int high = range.min+1;
 			int maxTest = Minimum(255u, (uint32_t) range.max);
 			while(high <= maxTest && data[high] == data[range.min]) ++high;
 			range.max = high-1;
 		}
 		break;
-		
+
 	case InstructionType::ByteJumpRange:
 		if(range.min < 256)
 		{
@@ -1378,7 +1378,7 @@ Loop:
 			const CharacterRange jumpRange{data->range.min, data->range.max};
 			jumpRange.TrimRelevancyInterval(range);
 			if(range.max > 255) range.max = 255;
-			
+
 			uint32_t newPc = data->pcData[data->range.Contains(range.min)];
 			if(newPc != TypeData<uint32_t>::Maximum())
 			{
@@ -1386,7 +1386,7 @@ Loop:
 			}
 		}
 		break;
-		
+
 	case InstructionType::ByteJumpMask:
 		if(range.min < 256)
 		{
@@ -1402,7 +1402,7 @@ Loop:
 			range.max = high-1;
 		}
 		break;
-		
+
 	case InstructionType::ByteJumpTable:
 		if(range.min < 256)
 		{
@@ -1418,7 +1418,7 @@ Loop:
 			range.max = high-1;
 		}
 		break;
-		
+
 	case InstructionType::ByteNot:
 		if(range.min < 256)
 		{
@@ -1438,7 +1438,7 @@ Loop:
 			if(range.min != c0) outResult.AddNextStateReverse(patternData, pc+1, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;
-			
+
 	case InstructionType::ByteNotEitherOf2:
 		if(range.min < 256)
 		{
@@ -1454,7 +1454,7 @@ Loop:
 			}
 		}
 		break;
-			
+
 	case InstructionType::ByteNotEitherOf3:
 		if(range.min < 256)
 		{
@@ -1472,13 +1472,13 @@ Loop:
 			}
 		}
 		break;
-			
+
 	case InstructionType::ByteNotRange:
 		if(range.min < 256)
 		{
 			unsigned char low = instruction.data & 0xff;
 			unsigned char high = (instruction.data >> 8) & 0xff;
-			
+
 			if(range.min < low)
 			{
 				if(range.max >= low) range.max = low-1;
@@ -1495,7 +1495,7 @@ Loop:
 			}
 		}
 		break;
-			
+
 	case InstructionType::DispatchRange:
 		{
 			const ByteCodeJumpRangeData* data = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
@@ -1503,10 +1503,10 @@ Loop:
 			if(pc == TypeData<uint32_t>::Maximum()) return;
 		}
 		goto Loop;
-		
+
 	case InstructionType::DispatchMask:
 		{
-			
+
 			const ByteCodeJumpMaskData* data = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
 			if(stateFlags & Flag::IS_START_OF_SEARCH)
 			{
@@ -1523,7 +1523,7 @@ Loop:
 			if(pc == TypeData<uint32_t>::Maximum()) return;
 		}
 		goto Loop;
-		
+
 	case InstructionType::DispatchTable:
 		{
 			const ByteCodeJumpTableData* data = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
@@ -1542,10 +1542,10 @@ Loop:
 			if(pc == TypeData<uint32_t>::Maximum()) return;
 		}
 		goto Loop;
-		
+
 	case InstructionType::Fail:
 		break;
-		
+
 	case InstructionType::FindByte:
 		if(range.min < 256)
 		{
@@ -1562,11 +1562,11 @@ Loop:
 			{
 				if(range.max > 255) range.max = 255;
 			}
-			
+
 			outResult.AddNextStateReverse(patternData, range.min == c0 ? instruction.data >> 8 : pc, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;
-			
+
 	case InstructionType::Jump:
 		pc = instruction.data;
 		goto Loop;
@@ -1583,7 +1583,7 @@ Loop:
 	case InstructionType::SaveNoRecurse:
 		++pc;
 		goto Loop;
-			
+
 	case InstructionType::Match:
 		if((stateFlags & PARTIAL_MATCH_IS_ALLOWED) || range.min >= 256)
 		{
@@ -1594,7 +1594,7 @@ Loop:
 			if(range.max > 255) range.max = 255;
 		}
 		break;
-		
+
 	case InstructionType::Split:
 		{
 			const ByteCodeSplitData* data = patternData.GetData<ByteCodeSplitData>(instruction.data);
@@ -1613,19 +1613,19 @@ Loop:
 			pc = data[1];
 		}
 		goto Loop;
-			
+
 	case InstructionType::SplitNextN:
 	case InstructionType::SplitNextMatchN:
 		ProcessCurrentStateReverse(outResult, patternData, pc+1, range, flags, updateCache, progressCheckSet);
 		pc = instruction.data;
 		goto Loop;
-		
+
 	case InstructionType::SplitNNext:
 	case InstructionType::SplitNMatchNext:
 		ProcessCurrentStateReverse(outResult, patternData, instruction.data, range, flags, updateCache, progressCheckSet);
 		++pc;
 		goto Loop;
-		
+
 	case InstructionType::SearchByte:
 		{
 			int offset = (instruction.data >> 8);
@@ -1654,7 +1654,7 @@ Loop:
 			goto Loop;
 		}
 		break;
-			
+
 	case InstructionType::SearchBytePair:
 	case InstructionType::SearchByteTriplet:
 	case InstructionType::SearchByteEitherOf2:
@@ -1670,7 +1670,7 @@ Loop:
 	case InstructionType::SearchByteEitherOf8:
 		{
 			const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-			
+
 			if(data->offset == 0)
 			{
 				int numberOfBytes = instruction.type >= InstructionType::SearchByteTriplet ?
@@ -1694,7 +1694,7 @@ Loop:
 			++pc;
 			goto Loop;
 		}
-			
+
 	case InstructionType::SearchByteRange:
 	case InstructionType::SearchByteRangePair:
 		{
@@ -1712,7 +1712,7 @@ Loop:
 			goto Loop;
 		}
 		break;
-			
+
 	case InstructionType::SearchShiftOr:
 		if(range.min < 256)
 		{
@@ -1721,7 +1721,7 @@ Loop:
 			int maxTest = Minimum(255u, (uint32_t) range.max);
 			while(high <= maxTest && ((data->data[high] ^ data->data[range.min]) & 1) == 0) ++high;
 			range.max = high-1;
-			
+
 			if((data->data[range.min] & 1) != 0)
 			{
 				outResult.AddNextStateReverse(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
@@ -1730,7 +1730,7 @@ Loop:
 			goto Loop;
 		}
 		break;
-		
+
 	case InstructionType::SearchBoyerMoore:
 		if(range.min < 256)
 		{
@@ -1738,7 +1738,7 @@ Loop:
 			outResult.AddNextStateReverse(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;
-			
+
 	case InstructionType::AssertRecurseValue:
 	case InstructionType::BackReference:
 	case InstructionType::Call:

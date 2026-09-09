@@ -9,16 +9,16 @@
 namespace Javelin
 {
 //===========================================================================
-	
+
 	class Utf8Character
 	{
 	public:
 		Utf8Character()						{ buffer[0] = 0; }
 		explicit Utf8Character(Character c)	{ Set(c); }
-		
+
 		operator Character() const			{ return AsCharacter(); }
 		void operator=(Character c) 		{ Set(c); }
-		
+
 		const char*		GetData() 			const		{ return (const char*) buffer;	}
 		size_t			GetNumberOfBytes()	const		{ return Data::UTF8_DECODE_TABLE[buffer[0]]; }
 
@@ -35,17 +35,17 @@ namespace Javelin
 		JINLINE bool    	JCALL IsUpper()			const	{ return AsCharacter().IsUpper();			}
 
 		JINLINE bool		JCALL operator==(char c) const	{ return AsCharacter() == c;				}
-		
+
 	protected:
 		void		Set(unsigned c);
-		
+
 		// Utf8Pointer uses Utf8Character to decode data. This MUST be the first element in the structure for this to work.
 		// Utf8 characters can encode to 6 bytes long max.
 		unsigned char buffer[7];
 
 		Character AsCharacter() const;
 	};
-	
+
 //===========================================================================
 } // namespace Javelin
 //===========================================================================

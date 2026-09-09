@@ -23,13 +23,13 @@ namespace Javelin
 			{
 				return (T*) Allocator::operator new(sizeof(T));
 			}
-		
+
 		template<typename T, typename Allocator>
 			JINLINE static T* NewCount(size_t count)
 			{
 				return (T*) Allocator::operator new[](count*sizeof(T));
 			}
-		
+
 		template<typename T, typename Allocator>
 			JINLINE static T* NewCount(const T* source, size_t count)
 			{
@@ -37,19 +37,19 @@ namespace Javelin
 				CopyMemory(p, source, count);
 				return p;
 			}
-		
+
 		template<typename T, typename Allocator>
 			JINLINE static void Delete(T* p)
 			{
 				Allocator::operator delete(p);
 			}
-		
+
 		template<typename T, typename Allocator>
 			JINLINE static void DeleteCount(T* p, size_t count)
 			{
 				Allocator::operator delete[](p);
 			}
-		
+
 		template<typename T>
 			JINLINE static void Create(T* p)
 			{
@@ -113,7 +113,7 @@ namespace Javelin
 //============================================================================
 
 	// Objects that need to be constructed and destructed, but can be memcpy to a new location
-#pragma clang diagnostic push			
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
 	class DataIntegrityPolicy_BitwiseCopyObject : public DataIntegrityPolicy_BitwiseCopyPODType
 	{
@@ -126,7 +126,7 @@ namespace Javelin
 				Create(p);
 				return p;
 			}
-		
+
 		template<typename T, typename Allocator>
 			JINLINE static T* NewCount(size_t count)
 			{
@@ -142,21 +142,21 @@ namespace Javelin
 				for(size_t i : Range(count)) new(Placement(p+i)) T(source[i]);
 				return p;
 			}
-			
+
 		template<typename T, typename Allocator>
 			JINLINE static void Delete(T* p)
 			{
 				p->~T();
 				Allocator::operator delete(p);
 			}
-		
+
 		template<typename T, typename Allocator>
 			JINLINE static void DeleteCount(T* p, size_t count)
 			{
 				Destroy(p, count);
 				Allocator::operator delete[](p);
 			}
-		
+
 		template<typename T>
 			JINLINE static void Create(T* p)
 			{
@@ -174,7 +174,7 @@ namespace Javelin
 			{
 				new(Placement(p)) T((U&&) a);
 			}
-		
+
 		template<typename T, typename U>
 			JINLINE static void CreateOnZombie(T* p, U &&a)
 			{
@@ -224,7 +224,7 @@ namespace Javelin
 				new(Placement(destination+i)) T(source[i]);
 			}
 		}
-		
+
 		template<typename T>
 			JINLINE static void Destroy(T* p)
 			{

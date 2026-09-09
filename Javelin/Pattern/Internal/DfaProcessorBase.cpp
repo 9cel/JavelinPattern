@@ -54,9 +54,9 @@ class DfaProcessorBase::NfaStateKey
 {
 public:
 	NfaStateKey(const NfaState* aP) : p(aP) { }
-	
+
 	const NfaState*	p;
-	
+
 	bool operator==(const NfaStateKey& a) const
 	{
 		if(p->numberOfStates != a.p->numberOfStates) return false;
@@ -325,8 +325,8 @@ DfaProcessorBase::State* DfaProcessorBase::GetStateForNfaState(NfaState& nfaStat
 			return (State*) &State::EMPTY_MATCH_STATE;
 		}
 	}
-	if(!nfaState.IsSearch()) nfaState.stateFlags &= ~NfaState::Flag::IS_SEARCH;	
-	
+	if(!nfaState.IsSearch()) nfaState.stateFlags &= ~NfaState::Flag::IS_SEARCH;
+
 	NfaStateKey key{&nfaState};
 	NfaToDfaMap::Iterator it = nfaToDfaMap.Find(key);
 	if(it != nfaToDfaMap.End())
@@ -341,13 +341,13 @@ DfaProcessorBase::State* DfaProcessorBase::GetStateForNfaState(NfaState& nfaStat
 	{
 		State* state = new(nfaState.numberOfStates, *(DfaProcessorBase*) this) State;
 		memcpy(&state->nfaState, &nfaState, NfaState::GetSizeRequiredForNumberOfStates(nfaState.numberOfStates));
-		
+
 		state->stateFlags = nfaState.stateFlags | NfaState::Flag::DFA_NEEDS_POPULATING;
 		state->minimumRemainingLength = UINT32_MAX;
 		for(uint32_t i = 0; i < nfaState.numberOfStates; ++i)
 			state->minimumRemainingLength = std::min(state->minimumRemainingLength, minimumRemainingLengths[nfaState.stateList[i]]);
 		nfaToDfaMap.Insert(NfaStateKey{&state->nfaState}, state);
-		
+
 		state->searchHandler = &NoSearchHandler;
 		// Setup processor if it's a search state
 		if(state->stateFlags & NfaState::Flag::IS_SEARCH)
@@ -364,14 +364,14 @@ DfaProcessorBase::State* DfaProcessorBase::GetStateForNfaState(NfaState& nfaStat
 				state->localSearchData.bytes[0] = instruction.data & 0xff;
 				state->searchData = &state->localSearchData;
 				break;
-				
+
 			case InstructionType::SearchByte:
 				handlerValue = SearchHandlerEnum::SearchByte;
 				state->localSearchData.offset = instruction.data >> 8;
 				state->localSearchData.bytes[0] = instruction.data & 0xff;
 				state->searchData = &state->localSearchData;
 				break;
-					
+
 			case InstructionType::SearchByteEitherOf2:		handlerValue = SearchHandlerEnum::SearchByteEitherOf2;		break;
 			case InstructionType::SearchByteEitherOf3:		handlerValue = SearchHandlerEnum::SearchByteEitherOf3;		break;
 			case InstructionType::SearchByteEitherOf4:		handlerValue = SearchHandlerEnum::SearchByteEitherOf4;		break;
@@ -390,24 +390,24 @@ DfaProcessorBase::State* DfaProcessorBase::GetStateForNfaState(NfaState& nfaStat
 			case InstructionType::SearchBoyerMoore:			handlerValue = SearchHandlerEnum::SearchBoyerMoore;			break;
 			case InstructionType::SearchShiftOr:			handlerValue = SearchHandlerEnum::SearchShiftOr;			break;
 				break;
-				
+
 			default:
 				JERROR("Unexpected search state");
 			}
-			
+
 			if(state->stateFlags & NfaState::Flag::ASSERT_MASK)
 			{
 				// Extra care required!
 				handlerValue = SearchHandlerEnum(uint32_t(handlerValue) + (uint32_t(SearchHandlerEnum::SearchByte0WithAssert) - uint32_t(SearchHandlerEnum::SearchByte0)));
 			}
-			
+
 			state->searchHandler = GetSearchHandler(handlerValue, state);
 			if(state->searchHandler == &NoSearchHandler)
 			{
 				state->stateFlags &= ~NfaState::Flag::IS_SEARCH;
 			}
 		}
-		
+
 #if DEBUG_PATTERN
 		state->Dump("Created state");
 #endif
@@ -421,10 +421,10 @@ void DfaProcessorBase::PopulateState(State* state) const
 {
 	const int MAXIMUM_CHARACTER = 256;
 	const uint8_t *const FLAGS = GetCharacterFlags();
-	
+
 	state->activeCounter++;
 	BeginPopulate();
-	
+
 	// Check again after lock has been acquired
 	if(state->stateFlags & NfaState::Flag::DFA_NEEDS_POPULATING)
 	{
@@ -432,17 +432,17 @@ void DfaProcessorBase::PopulateState(State* state) const
 
 		unsigned char updateCacheBacking[NfaState::UpdateCache::GetSizeRequiredForNumberOfStates(numberOfInstructions)];
 		NfaState::UpdateCache* updateCache = (NfaState::UpdateCache*) updateCacheBacking;
-		
+
 #if VERBOSE_DEBUG_PATTERN
 		state->Dump("Populating state");
 #endif
-		
+
 		int c = 0;
 		int numberOfRepeatStates = 0;
 		while(c <= MAXIMUM_CHARACTER)
 		{
 			CharacterRange relevancyInterval(c, MAXIMUM_CHARACTER);
-			
+
 			unsigned char nfaStateBacking[NfaState::GetSizeRequiredForNumberOfStates(numberOfInstructions)];
 			NfaState* nfaState = (NfaState*) nfaStateBacking;
 
@@ -450,17 +450,17 @@ void DfaProcessorBase::PopulateState(State* state) const
 			ProcessNfaState(*nfaState, state->nfaState, patternData, relevancyInterval, flags, updateCache);
 			JASSERT(relevancyInterval.Contains(c));
 			State* nextState = GetStateForNfaState(*nfaState);
-			
+
 #if VERBOSE_DEBUG_PATTERN
 			StandardOutput.PrintF("Populating range: {%C, %C}\n", relevancyInterval.min, relevancyInterval.max);
 #endif
-			
+
 			state->nextStates[c++] = nextState;
 			while(c <= relevancyInterval.max)
 			{
 				state->nextStates[c++] = nextState;
 			}
-			
+
 			// Count self-loop transitions.
 			if(nextState == state)
 			{
@@ -471,7 +471,7 @@ void DfaProcessorBase::PopulateState(State* state) const
 				}
 			}
 		}
-		
+
 		// Create a shell state for start of search mask if requried.
 		if((state->stateFlags & (NfaState::Flag::IS_START_OF_SEARCH_MASK | NfaState::Flag::IS_START_OF_SEARCH)) == NfaState::Flag::IS_START_OF_SEARCH_MASK)
 		{
@@ -481,16 +481,16 @@ void DfaProcessorBase::PopulateState(State* state) const
 			nfaState->stateFlags |= NfaState::Flag::IS_START_OF_SEARCH;
 			state->nextStates[State::START_OF_SEARCH_INDEX] = GetStateForNfaState(*nfaState);
 		}
-		
+
 		if((state->stateFlags & NfaState::Flag::IS_SEARCH) == 0 && numberOfRepeatStates >= 256-32)
 		{
 			StaticBitTable<256> exitBits;
 			int numberOfExitStates = 256-numberOfRepeatStates;
-			
+
 #if DEBUG_PATTERN
 			StandardOutput.PrintF("Repeat states: %d, exit states: %d\n", numberOfRepeatStates, numberOfExitStates);
 #endif
-			
+
 			for(int i = 0; i < 256; ++i)
 			{
 				if(state->nextStates[i] != state)
@@ -498,14 +498,14 @@ void DfaProcessorBase::PopulateState(State* state) const
 					exitBits.SetBit(i);
 				}
 			}
-			
+
 			if(exitBits.IsContiguous() && numberOfExitStates < 32 && numberOfExitStates > 1)
 			{
 				Interval<size_t> range = exitBits.GetContiguousRange();
 				state->searchData = &state->localSearchData;
 				state->localSearchData.bytes[0] = (uint8_t) range.min;
 				state->localSearchData.bytes[1] = (uint8_t) (range.max-1);
-				
+
 				SearchHandlerEnum handlerValue = (state->stateFlags & NfaState::Flag::ASSERT_MASK) ?
 													SearchHandlerEnum::SearchByteRangeWithAssert :
 													SearchHandlerEnum::SearchByteRange;
@@ -513,7 +513,7 @@ void DfaProcessorBase::PopulateState(State* state) const
 				if(state->searchHandler != &NoSearchHandler)
 				{
 					state->stateFlags |= NfaState::Flag::IS_SEARCH;
-					
+
 #if DEBUG_PATTERN
 					StandardOutput.PrintF("Converted to search range {'%C', '%C'}\n", state->localSearchData.bytes[0], state->localSearchData.bytes[1]);
 #endif
@@ -532,7 +532,7 @@ void DfaProcessorBase::PopulateState(State* state) const
 				SearchHandlerEnum handlerValue = (state->stateFlags & NfaState::Flag::ASSERT_MASK) ?
 													SearchHandlerEnum(uint8_t(SearchHandlerEnum::SearchByte0WithAssert) + numberOfExitStates) :
 													SearchHandlerEnum(uint8_t(SearchHandlerEnum::SearchByte0) + numberOfExitStates);
-			
+
 				state->searchHandler = GetSearchHandler(handlerValue, state);
 				if(state->searchHandler != &NoSearchHandler)
 				{
@@ -567,7 +567,7 @@ void DfaProcessorBase::PopulateState(State* state) const
 			JASSERT(state->nextStates[i] != nullptr);
 		}
 #endif
-		
+
 		if(!(state->stateFlags & NfaState::Flag::IS_SEARCH)) state->searchHandler = nullptr;
 		state->stateFlags &= ~(NfaState::Flag::DFA_NEEDS_POPULATING
 							   | NfaState::Flag::DFA_STATE_IS_POPULATING);
@@ -581,7 +581,7 @@ void DfaProcessorBase::ClearNfaToDfaMap()
 	for(NfaToDfaMap::Iterator it = nfaToDfaMap.Begin(); it != nfaToDfaMap.End(); ++it)
 	{
 		State* state = it->value;
-		
+
 		if(state->IsPopulating())
 		{
 			state->stateFlags &= ~NfaState::Flag::DFA_STATE_IS_RESETTING;
@@ -605,12 +605,12 @@ void DfaProcessorBase::ResetStates(bool selfOriginated)
 {
 	// Wait for all threads
 	int32_t localActiveCount;
-	
+
 	resetLock.Synchronize([&] {
 		if(resetCounter < 0) { localActiveCount = 0; ++resetCounter; }
 		else localActiveCount = (resetCounter += (int32_t) 0x80000000);
 	});
-	
+
 	// If we're already resetting, just wait for it
 	if(localActiveCount == 0)
 	{
@@ -627,7 +627,7 @@ void DfaProcessorBase::ResetStates(bool selfOriginated)
 			it.value->MarkAsResetting();
 		}
 	});
-	
+
 	// Wait for all threads to reach safe points.
 	waitForResetBeginSemaphore.Wait(localActiveCount & 0x7fffffff);
 
@@ -647,7 +647,7 @@ void DfaProcessorBase::ResetStates(bool selfOriginated)
 				state->TagForRelease();
 			}
 		}
-		
+
 		// If the states are used by a currently-populating state, then do not let them be released
 		if(populatingState)
 		{
@@ -658,7 +658,7 @@ void DfaProcessorBase::ResetStates(bool selfOriginated)
 				if(nextState && nextState->ShouldRelease()) nextState->RemoveTagForRelease();
 			}
 		}
-	
+
 #if DEBUG_PATTERN
 		StandardError.PrintF("Reset called with %z states, %U bytes\n", nfaToDfaMap.GetCount(), bytesProcessedSinceReset);
 #endif
@@ -677,18 +677,18 @@ void DfaProcessorBase::ResetStates(bool selfOriginated)
 			numberOfSelfOriginatedResets = 0;
 		}
 		bytesProcessedSinceReset = 0;
-	
+
 		// Do reset!
 		ClearStartingStates();
 		ClearNfaToDfaMap();
 	});
-	
+
 	// Release other threads
 	resetLock.Synchronize([&] {
 		localActiveCount = (resetCounter -= (int32_t) 0x80000000);
 	});
 	JASSERT(localActiveCount >= 0);
-	
+
 	// Wait for all other threads to progress before exiting.
 	waitForResetEndSemaphore.Signal(localActiveCount);
 }

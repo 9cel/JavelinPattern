@@ -77,7 +77,7 @@ Character Character::ToLower(unsigned c)
 		224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
 		240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255
 	};
-	
+
 	if(c < 256) return LUT[c];
 	return c;
 }
@@ -109,7 +109,7 @@ Character Character::ToUpper(unsigned c)
 		224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
 		240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
 	};
-	
+
 	if(c < 256) return LUT[c];
 	return c;
 }
@@ -134,14 +134,14 @@ bool Character::IsWordCharacter(unsigned c)
 #else
 	static const bool lut[128] =
 	{
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, 
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, 
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, 
-		 true,  true,  true,  true,  true,  true,  true,  true,  true,  true, false, false, false, false, false, false, 
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		 true,  true,  true,  true,  true,  true,  true,  true,  true,  true, false, false, false, false, false, false,
 		false,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-		 true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, false, false, false, false,  true, 
+		 true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, false, false, false, false,  true,
 		false,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-		 true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, false, false, false, false, false, 
+		 true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true, false, false, false, false, false,
 	};
 
 	return lut[c < 128 ? c : 0];

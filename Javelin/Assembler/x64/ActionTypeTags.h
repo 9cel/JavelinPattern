@@ -30,7 +30,7 @@ TAG(Literal16)
  * literal bytes to copy.
  **/
 TAG(LiteralBlock)
-		
+
 /**
  * Alternate block
  * Followed by:
@@ -49,18 +49,18 @@ TAG(EndAlternate)
  * Unconditional jump in instruction stream.
  */
 TAG(Jump)
-		
+
 /**
  * Align expression, followed by byte representing the power of
  * 2 byte alignment.
  */
 TAG(Align)
-		
+
 /**
  * Unalign command.
  */
 TAG(Unalign)
-		
+
 /**
  * Expression.
  * Writes an expression value into the output.
