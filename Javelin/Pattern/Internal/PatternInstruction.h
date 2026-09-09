@@ -31,6 +31,15 @@ namespace Javelin
 		struct InstructionTable : public Table<Instruction*, TableStorage_Dynamic<DynamicTableAllocatePolicy_NewDeleteWithInlineStorage<8>::Policy>>
 		{
 		public:
+			friend size_t GetHash(const InstructionTable& table)
+			{
+				// The generic Table hash runs a CRC over every byte.
+				uint64_t hash = 0x9e3779b9;
+				for(Instruction* instruction : table)
+					hash = (hash ^ (reinterpret_cast<size_t>(instruction) >> 3)) * 0x100000001b3ULL;
+				return size_t(hash ^ (hash >> 32));
+			}
+
 			bool ContainsInstruction(InstructionType type) const;
 			bool HasStartAnchor() const;
 			

@@ -168,7 +168,6 @@ bool Instruction::LeadsToMatch(bool direct) const
 			continue;
 				
 		case InstructionType::Match:
-		case InstructionType::Success:
 			return true;
 				
 		default:
@@ -215,6 +214,11 @@ bool Instruction::CanLeadToMatch() const
 				
 		case InstructionType::Success:
 			return true;
+
+		case InstructionType::Possess:
+			// A nullable atomic body can return without consuming input.
+			p = ((const PossessInstruction*) p)->callTarget;
+			continue;
 
 		case InstructionType::Call:
 			{

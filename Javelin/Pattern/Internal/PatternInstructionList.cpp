@@ -13,6 +13,7 @@
 #include "Javelin/Stream/ICharacterWriter.h"
 #include "Javelin/Stream/StandardWriter.h"
 #include "Javelin/Type/ObjectWithHash.h"
+#include <unordered_set>
 
 //==========================================================================
 
@@ -77,18 +78,20 @@ struct InstructionList::StateMap
 	
 	InstructionTable MakeCanonicalStateList(Instruction* original, const InstructionTable& targetList) const;
 	InstructionTable MakeCanonicalStateList(SplitInstruction* split) const	{ return MakeCanonicalStateList(split, split->targetList); }
-	void RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target) const;
+	void RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target,
+						   std::unordered_set<Instruction*>& visited) const;
 };
 
-void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target) const
+void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target,
+												std::unordered_set<Instruction*>& visited) const
 {
-	if(target == original) return;
+	if(target == original || !visited.insert(target).second) return;
 	InstructionToStatesMap::ConstIterator it = instructionToStatesMap.Find(target);
 	if(it != instructionToStatesMap.End())
 	{
 		for(Instruction* state : it->value)
 		{
-			RecurseAddTargets(result, original, state);
+			RecurseAddTargets(result, original, state, visited);
 		}
 	}
 	else
@@ -98,12 +101,12 @@ void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Inst
 		case InstructionType::Split:
 			for(Instruction* splitTarget : ((SplitInstruction*) target)->targetList)
 			{
-				RecurseAddTargets(result, original, splitTarget);
+				RecurseAddTargets(result, original, splitTarget, visited);
 			}
 			break;
 			
 		case InstructionType::Jump:
-			RecurseAddTargets(result, original, ((JumpInstruction*) target)->target);
+			RecurseAddTargets(result, original, ((JumpInstruction*) target)->target, visited);
 			break;
 		
 		case InstructionType::ProgressCheck:
@@ -127,9 +130,10 @@ void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Inst
 InstructionTable InstructionList::StateMap::MakeCanonicalStateList(Instruction* original, const InstructionTable& targetList) const
 {
 	InstructionTable result;
+	std::unordered_set<Instruction*> visited;
 	for(Instruction* target : targetList)
 	{
-		RecurseAddTargets(result, original, target);
+		RecurseAddTargets(result, original, target, visited);
 	}
 	return result;
 }
@@ -638,12 +642,14 @@ void InstructionList::Optimize_SimplifyWordBoundaryAsserts()
 		if(it->referenceList.GetCount() != 1) continue;
 		
 		Instruction* beforeBoundary = it->referenceList[0].GetInstruction(assertInstruction);
-		while(beforeBoundary->referenceList.GetCount() == 1
+		while(beforeBoundary && beforeBoundary->referenceList.GetCount() == 1
 			  && BEFORE_SKIP_INSTRUCTIONS.Contains(beforeBoundary->type)
 			  && beforeBoundary != assertInstruction)
 		{
 			beforeBoundary = beforeBoundary->referenceList[0].GetInstruction(beforeBoundary);
 		}
+		// Entry points have no predecessor. A partial search can start mid-input.
+		if(!beforeBoundary) continue;
 		
 		bool beforeIsWordCharacter = false;
 		bool beforeIsNotWordCharacter = false;
@@ -1029,16 +1035,14 @@ void InstructionList::Optimize_SplitToMatchReorder()
 			if(instruction.type != InstructionType::Split) continue;
 			
 			SplitInstruction* split = (SplitInstruction*) &instruction;
-			InstructionTable targets = split->targetList;
-			for(size_t i = 0; i < targets.GetCount(); ++i)
+			InstructionTable targets, remaining;
+			for(Instruction* target : split->targetList)
 			{
-				Instruction* instruction = targets[i];
-				if(instruction->LeadsToMatch(scanDirection == Reverse))
-				{
-					targets.RemoveIndex(i);
-					targets.InsertAtIndex(0, instruction);
-				}
+				if(target->LeadsToMatch(scanDirection == Reverse)) targets.Append(target);
+				else remaining.Append(target);
 			}
+			// Keep the relative priority of accepting branches.
+			for(Instruction* target : remaining) targets.Append(target);
 			
 			if(split->targetList == targets) continue;
 
@@ -1063,6 +1067,8 @@ void InstructionList::Optimize_SplitToSplit()
 void InstructionList::Optimize_LeftFactor()
 {
 	// eg: "abc|abd" -> "ab(?:c|d)"
+	// Cyclic alternatives can expose new common prefixes forever.
+	size_t remainingFactorings = instructionList.GetCount();
 	for(LinkedInstructionList::Iterator it = instructionList.Begin(); it != instructionList.End(); ++it)
 	{
 	Repeat:
@@ -1132,6 +1138,7 @@ void InstructionList::Optimize_LeftFactor()
 			//
 			// The second case is important for the CollapseSplit optimization
 			
+			if(end-start > 1 && remainingFactorings-- == 0) return;
 			if(start == 0 && end == split->targetList.GetCount())
 			{
 				Instruction* commonTarget = startTarget->Clone();
@@ -1235,6 +1242,8 @@ void InstructionList::Optimize_RightFactor()
 			if(targetPrevious == nullptr) continue;
 			if(targetPrevious->type == InstructionType::Jump)
 			{
+				// The list head has no previous instruction.
+				if(targetPrevious == &instructionList.Front()) continue;
 				targetPrevious = targetPrevious->GetPrevious();
 			}
 			if(targetPrevious->index <= jump->index) continue;
@@ -1770,6 +1779,9 @@ void InstructionList::Optimize_CollapseSplit()
 		++instructionIterator;
 		if(instruction->type == InstructionType::Save)
 		{
+			// Cached state sets are stale once a save moves.
+			stateMap.statesToInstructionMap.Reset();
+			stateMap.instructionToStatesMap.Reset();
 			Optimize_DelaySave((SaveInstruction*) instruction, true);
 		}
 		else if(instruction->type == InstructionType::Split)
@@ -1914,11 +1926,11 @@ void InstructionList::Optimize_SimpleByteConsumersToAdvanceByte()
 				else
 				{
 					JumpInstruction* jump = new JumpInstruction(jumpTable->targetList[0]);
-					jumpTable->TransferReferencesTo(anyByte);
 					jump->referenceList.Append(InstructionReference::PREVIOUS);
 					InsertAfterInstruction(jumpTable, jump);
 				}
 				
+				jumpTable->TransferReferencesTo(anyByte);
 				ReplaceInstruction(jumpTable, anyByte);
 				jumpTable->Unlink();
 				delete jumpTable;
@@ -1979,7 +1991,6 @@ Instruction* InstructionList::GetMatchStartingFrom(Instruction* instruction) con
 			}
 				
 		case InstructionType::Match:
-		case InstructionType::Success:
 			return instruction;
 				
 		default:
@@ -3028,9 +3039,14 @@ void InstructionList::Optimize_AccelerateSearch()
 			uint32_t bestIndex = TypeData<uint32_t>::Maximum();
 			uint32_t bestSearchByteScanSpeed = 0;
 			bool isFail = false;
+			size_t highByteRun = 0;
+			bool hasMultibyteText = false;
 			for(size_t p = 0; p < optimizer.instructionWalker.GetPresenceListCount(); ++p)
 			{
 				const StaticBitTable<256>& presenceBits = optimizer.instructionWalker.GetPresenceBits(p);
+				highByteRun = presenceBits.CountTrailingZeros() >= 128 ? highByteRun + 1 : 0;
+				// A run of more than four high bytes spans several UTF-8 characters.
+				hasMultibyteText |= highByteRun > 4;
 				Optional<Interval<size_t>> contiguousRangeOptional = presenceBits.GetContiguousRange();
 				SearchData data = { false, 0, 0 };
 				if(contiguousRangeOptional.HasValue())
@@ -3294,6 +3310,12 @@ void InstructionList::Optimize_AccelerateSearch()
 												FIND_BYTE_RANGE_SCAN_SPEED :
 												FIND_BYTE_SCAN_SPEED[searchDataList[i].count-1];
 					float probability = searchDataList[i].score * (PROBABILITY_SCALER / 16777216.0f);
+					// The frequency table is ASCII. High bytes are common in UTF-8 text.
+					if(hasMultibyteText && (options & Pattern::UTF8) && !(options & Pattern::IGNORE_CASE)
+					   && optimizer.instructionWalker.GetPresenceBits(i).CountTrailingZeros() >= 128)
+					{
+						probability = Maximum(probability, searchDataList[i].count / 64.0f);
+					}
 					if(probability < 1.0)
 					{
 						uint32_t scanSpeed = ScaleBaseSpeedForProbability(baseScanSpeed, probability);
@@ -3525,6 +3547,8 @@ void InstructionList::Build(uint32_t aOptions, ScanDirection aScanDirection, ICo
 	bool isAnchored = (options & Pattern::ANCHORED) != 0;
 	hasStartAnchor = isAnchored || instructionList.Front().HasStartAnchor();
 	hasEndAnchor = isAnchored || headComponent->HasEndAnchor();
+	// Set before optimization: fixed-length anchored searches omit the scan loop.
+	matchRequiresEndOfInput = IsForwards() ? hasEndAnchor : hasStartAnchor;
 	
 	fullMatchInstruction = &instructionList.Front();
 	partialMatchInstruction = (scanDirection == Forwards) ? fullMatchInstruction : nullptr;
@@ -3550,7 +3574,8 @@ void InstructionList::InsertPartialMatchAnyByteMinimal()
 {
 	StateMap map;
 	InstructionTable targetList;
-	map.RecurseAddTargets(targetList, nullptr, fullMatchInstruction);
+	std::unordered_set<Instruction*> visited;
+	map.RecurseAddTargets(targetList, nullptr, fullMatchInstruction, visited);
 	
 	Instruction* splitTarget = fullMatchInstruction;
 	Instruction** anyByteInsertionPoint = &partialMatchInstruction;
