@@ -110,6 +110,7 @@ PATTERN_SOURCES = \
         Javelin/Pattern/Internal/PatternInstruction.cpp \
         Javelin/Pattern/Internal/PatternInstructionList.cpp \
         Javelin/Pattern/Internal/PatternInstructionWalker.cpp \
+        Javelin/Pattern/Internal/PatternLiteralPrefilter.cpp \
         Javelin/Pattern/Internal/PatternNfaState.cpp \
         Javelin/Pattern/Internal/PatternNibbleMask.cpp \
         Javelin/Pattern/Internal/PatternProcessor.cpp \

@@ -57,6 +57,8 @@ void Compiler::Compile(int options)
 	JPATTERN_VERIFY(tokenizer->PeekCurrentTokenType() == TokenType::End, UnexpectedToken, tokenizer->GetExceptionData());
 
 	ResolveRecurseComponents();
+	if (!(options & (Pattern::NO_OPTIMIZE | Pattern::ANCHORED)) && !usesBacktrackingComponents)
+		literalPrefilter = BuildLiteralPrefilter(component);
 	
 	if(options & Pattern::AUTO_CLUSTER)
 	{
@@ -108,6 +110,33 @@ void Compiler::Compile(int options)
 	}
 
 	byteCode = (DataBlock&&) byteCodeWriter.GetBuffer();
+	// The one-pass processor already fuses short masked prefixes into its search loop.
+	if(!literalPrefilter.prefixBytes.empty()
+	   && ((const ByteCodeHeader*) byteCode.GetData())->flags.partialMatchProcessorType == PatternProcessorType::OnePass)
+	{
+		for(const auto& prefix : literalPrefilter.prefixBytes)
+		{
+			if(prefix.size() <= 3) { literalPrefilter = {}; break; }
+		}
+	}
+	if(!literalPrefilter.completeMatch && !literalPrefilter.prefixBytes.empty() && numberOfCaptures > 1)
+	{
+		const auto* compiled = (const ByteCodeHeader*) byteCode.GetData();
+		switch(compiled->GetForwardProgram()[compiled->partialMatchStartingInstruction].type)
+		{
+		case InstructionType::SearchBytePair:
+		case InstructionType::SearchBytePair2:
+		case InstructionType::SearchBytePair3:
+		case InstructionType::SearchBytePair4:
+		case InstructionType::SearchByteTriplet:
+		case InstructionType::SearchByteTriplet2:
+			// A paired prefix search is already selective.
+			literalPrefilter = {};
+			break;
+		default:
+			break;
+		}
+	}
 	
 #if JDUMP_PATTERN_INFORMATION
 	StandardOutput.PrintF("ByteCode\n");
