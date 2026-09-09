@@ -16,6 +16,7 @@
 #include "Javelin/Container/EnumSet.h"
 #include "Javelin/Pattern/Internal/ArmNeonPatternProcessorsFindMethods.h"
 #include "Javelin/Pattern/Internal/PatternNibbleMask.h"
+#include "Javelin/Pattern/Pattern.h"
 
 //============================================================================
 
@@ -85,6 +86,16 @@ constexpr size_t MAXIMUM_BITS = 32768;
 
 namespace
 {
+	void* AllocatePatternStack(const Pattern::StackGrowthHandler* handler)
+	{
+		return handler->Allocate(STACK_GROWTH_SIZE);
+	}
+
+	void FreePatternStack(const Pattern::StackGrowthHandler* handler, void* allocation)
+	{
+		handler->Free(allocation);
+	}
+
 	struct AssemblerContext
 	{
 		bool needsRecurseValue	= false;
@@ -92,6 +103,7 @@ namespace
 		bool needsSearchStart	= false;
 		bool hasByteJumpToByteJump = false;
 		bool hasExternalFunctionCall = false;
+		bool useStackGuard;
 		bool allowPartialMatch;
 		int captureRegisterIndex;
 		int searchStartRegisterIndex;
@@ -123,7 +135,7 @@ namespace
 		void CheckSufficientData(int pc);
 
 		RegistersToSave GetRegistersToSave() const;
-		void EmitProlog(bool partialMatch, bool hasOffset) const;
+		void EmitProlog(bool partialMatch, bool hasOffset, bool fullProgram = false) const;
 		void EmitEpilog() const;
 		void EmitCallToSearch(int offset, uint64_t searchData, const void *searchFunction);
         void EmitCallToSearchDataLabel(int offset, uint32_t dataLabel, const void *searchFunction);
@@ -141,6 +153,8 @@ AssemblerContext::AssemblerContext(Assembler &aAssembler,
   header(aHeader),
   type(aType)
 {
+	useStackGuard = header->flags.useStackGuard && type == PatternProcessorType::BackTracking;
+	hasExternalFunctionCall = useStackGuard;
 	for(uint32_t pc = 0; pc < header->numberOfInstructions; ++pc)
 	{
 		ByteCodeInstruction instruction = patternData[pc];
@@ -321,11 +335,12 @@ AssemblerContext::RegistersToSave AssemblerContext::GetRegistersToSave() const
 	{
 		result.registers[result.numberOfRegisters++] = bitStateRegisterIndex;
 	}
+	if(useStackGuard) result.registers[result.numberOfRegisters++] = 29;
 
 	return result;
 }
 
-void AssemblerContext::EmitProlog(bool partialMatch, bool hasOffset) const
+void AssemblerContext::EmitProlog(bool partialMatch, bool hasOffset, bool fullProgram) const
 {
 	if(!ShouldDirectBranchToStartingInstruction())
 	{
@@ -348,6 +363,11 @@ void AssemblerContext::EmitProlog(bool partialMatch, bool hasOffset) const
 		}
 	}
 
+	if(useStackGuard)
+	{
+		» sub x29, sp, #{INITIAL_STACK_USAGE_LIMIT >> 12}, lsl #12
+	}
+
 	if(!header->flags.matchRequiresEndOfInput)
 	{
 		» movz reg64{isPartialMatchRegisterIndex}, #{partialMatch}
@@ -367,14 +387,14 @@ void AssemblerContext::EmitProlog(bool partialMatch, bool hasOffset) const
 
 		if(header->numberOfProgressChecks > 4)
 		{
-			int progressCheckOffset = 16 + 8*((registersToSave.numberOfRegisters+1) & -2);
+			int progressCheckOffset = 8*((registersToSave.numberOfRegisters+1) & -2);
 			int stackSlots = header->numberOfProgressChecks - 4;
 
 			for(int i = 0; i < stackSlots; i += 2)
 			{
-				» stp wzr, wzr, [sp, #{8*i + progressCheckOffset}]
+				» stp xzr, xzr, [sp, #{8*i + progressCheckOffset}]
 			}
-			» mov reg64{progressCheckRegisterIndex}, sp
+			» add reg64{progressCheckRegisterIndex}, sp, #{progressCheckOffset}
 		}
 	}
 
@@ -403,6 +423,13 @@ void AssemblerContext::EmitProlog(bool partialMatch, bool hasOffset) const
 			»  madd x11, x2, x10, x10
 		}
 
+		if(fullProgram && header->maximumMatchLength != UINT16_MAX)
+		{
+			uint64_t maximumBytes = (uint64_t(header->maximumMatchLength) + 1) * (numberOfBitStateInstructions / 8);
+			» mov64 x10, maximumBytes
+			» cmp x11, x10
+			» csel x11, x11, x10, lo
+		}
 		»  add x11, x11, #15
 		»  mov x10, sp
 		»  lsr x11, x11, #4
@@ -508,7 +535,7 @@ void AssemblerContext::EmitCallToSearchDataLabel(int offset, uint32_t dataLabel,
         » str p, [sp, #-16]!
     }
 
-    »   adr x1, {dataLabel}f // searchData
+    »   adrl x1, {dataLabel}f
     »   stp pEnd, lr, [sp, #-16]!
     » .if delta26x4{searchFunctionPtr}
     »   bl {searchFunctionPtr}
@@ -581,7 +608,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 		» *canUsePartialMatchProgram:
 	}
 	if(type == PatternProcessorType::BitState
-	   && (header->maximumMatchLength+1) * context.numberOfBitStateInstructions <= MAXIMUM_BITS)
+	   && (uint64_t(header->maximumMatchLength)+1) * context.numberOfBitStateInstructions <= MAXIMUM_BITS)
 	{
 		» *canUseFullMatchProgram:
 	}
@@ -593,7 +620,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 	{
 		// Need: (length+1) * context.numberOfBitStateInstructions <= MAXIMUM_BITS
 		int maximumLength = MAXIMUM_BITS / context.numberOfBitStateInstructions - 1;
-		if((header->maximumMatchLength+1) * context.numberOfBitStateInstructions > MAXIMUM_BITS)
+		if((uint64_t(header->maximumMatchLength)+1) * context.numberOfBitStateInstructions > MAXIMUM_BITS)
 		{
 			» *canUseFullMatchProgram:		// inputLength
 		}
@@ -601,14 +628,14 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 
 		if(maximumLength < (1 << 12))
 		{
-			» cmp w1, #{maximumLength}
+			» cmp x1, #{maximumLength}
 			» cset w0, ls
 			» ret
 		}
 		else
 		{
 			» mov w0, #{maximumLength}
-			» cmp w1, w0
+			» cmp x1, x0
 			» cset w0, ls
 			» ret
 		}
@@ -621,7 +648,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 	}
 	else
 	{
-		context.EmitProlog(false, false);
+		context.EmitProlog(false, false, true);
 		» add pEnd, x1, x2
 		» mov captures, #0
 		» setSearchStart x1
@@ -630,7 +657,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 	}
 
 	» *fullMatchWithCaptures:						// data, length, captures
-	context.EmitProlog(false, false);
+	context.EmitProlog(false, false, true);
 	»   add pEnd, x1, x2
 	if(context.captureRegisterIndex != 3)
 	{
@@ -680,13 +707,51 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 	»   ret
 
 	» *populateCaptures:							// data, length, offset, captures
-	context.EmitProlog(true, true);
+	context.EmitProlog(true, true, true);
 	»   add pEnd, x1, x2
 	»   add p, x1, x3
 	»   mov captures, x4
 	»   setSearchStart p
 	»   startSearch {header->fullMatchStartingInstruction}f
 	context.EmitEpilog();
+
+	if(useStackGuard)
+	{
+		const Pattern::StackGrowthHandler* handler = Pattern::GetStackGrowthHandler();
+		void* (*allocate)(const Pattern::StackGrowthHandler*) = &AllocatePatternStack;
+		void (*release)(const Pattern::StackGrowthHandler*, void*) = &FreePatternStack;
+		// x16: continuation. x19-x28 survive the allocator calls.
+		» *growStack:
+		» stp p, pEnd, [sp, #-48]!
+		» stp x16, lr, [sp, #16]
+		» str x29, [sp, #32]
+		» mov64 x0, handler
+		» mov64 x9, allocate
+		» blr x9
+		» cbz x0, stackAllocationFailed
+		» mov x9, sp
+		» ldp p, pEnd, [x9]
+		» ldr x16, [x9, #16]
+		» add x29, x0, #{STACK_GUARD_BAND >> 12}, lsl #12
+		» add x10, x0, #{STACK_GROWTH_SIZE >> 12}, lsl #12
+		» and x10, x10, #-16
+		» sub x10, x10, #16
+		» stp x9, x0, [x10]
+		» mov sp, x10
+		» blr x16
+		» ldp x9, x1, [sp]
+		» mov sp, x9
+		» str x0, [sp, #40]
+		» mov64 x0, handler
+		» mov64 x9, release
+		» blr x9
+		» ldr x0, [sp, #40]
+		» stackAllocationFailed:
+		» ldr x29, [sp, #32]
+		» ldr lr, [sp, #24]
+		» ldp p, pEnd, [sp], #48
+		» ret
+	}
 
 	» markStartOfInstruction TypeData<uint32_t>::Maximum()
 	» *fail:
@@ -744,6 +809,32 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 				» *done:
 				»  ret
 				» 1:
+			}
+		}
+
+		if(useStackGuard)
+		{
+			switch(instruction.type)
+			{
+			case InstructionType::Call:
+			case InstructionType::Possess:
+			case InstructionType::Recurse:
+			case InstructionType::ProgressCheck:
+			case InstructionType::Save:
+			case InstructionType::Split:
+			case InstructionType::SplitNextN:
+			case InstructionType::SplitNNext:
+			case InstructionType::SplitNextMatchN:
+			case InstructionType::SplitNMatchNext:
+				» mov x9, sp
+				» cmp x9, x29
+				» b.hi stackReady
+				» adr x16, stackReady
+				» b *growStack
+				» stackReady:
+				break;
+			default:
+				break;
 			}
 		}
 
@@ -940,7 +1031,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			break;
 		case InstructionType::ByteBitMask:
 			{
-				» adr x9, {pc+0x10000}f
+				» adrl x9, {pc+0x10000}f
 
 				int numberOfConsecutiveByteBitMaskInstructions =
 					1 + patternData.CountSingleReferenceInstructions(pc+1,
@@ -992,7 +1083,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 				   && patternData.HasLookupTableTarget(*data)
 				   && type != PatternProcessorType::BitState)
 				{
-					»  adr x9, {0x10000+pc}f
+					»  adrl x9, {0x10000+pc}f
 					»  cmp p, pEnd
 					»  b.hs fail
 					» 1:
@@ -1010,7 +1101,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 				}
 				else
 				{
-					» adr x9, {0x10000+pc}f
+					» adrl x9, {0x10000+pc}f
 					» cmp p, pEnd
 					» b.hs *fail
 					» ldrb w0, [p], #1
@@ -1024,7 +1115,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			{
 				const ByteCodeJumpMaskData* data = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
 
-				» adr x9, {0x10000+pc}f
+				» adrl x9, {0x10000+pc}f
 				» cmp p, pEnd
 				» b.hs *fail
 				» ldrb w0, [p], #1
@@ -1220,7 +1311,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 					» mov x10, p
 				}
 
-				»  adr x11, {0x10000+pc}f
+				»  adrl x11, {0x10000+pc}f
 				»  add p, p, #{searchData->length}
 				» repeat:
 				»  cmp p, pEnd
@@ -1300,7 +1391,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			break;
 		case InstructionType::PropagateBackwards:
 			»   cbz captures, {pc+1}f
-			»   adr x9, {0x10000+pc}f
+			»   adrl x9, {0x10000+pc}f
 
 			if(type == PatternProcessorType::BitState)
 			{
@@ -1332,7 +1423,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			{
 				const ByteCodeJumpTableData* data = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
 
-				» adr x9, {0x10000+pc}f
+				» adrl x9, {0x10000+pc}f
 				» cmp p, pEnd
 				» b.hs {data->pcData[0]}bf
 				» ldrb w0, [p]
@@ -1344,7 +1435,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			{
 				const ByteCodeJumpMaskData* data = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
 
-				» adr x9, {0x10000+pc}f
+				» adrl x9, {0x10000+pc}f
 				» cmp p, pEnd
 				» b.hs {data->pcData[0]}bf
 				» ldrb w0, [p]
@@ -1407,6 +1498,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			{
 				uint32_t index = instruction.data*2;
 				»  ldp x0, x9, [captures, #{index*8}]
+				»  cbz x0, *fail
 				»  subs x9, x9, x0				// x9 = length
 				»  add x11, p, x9
 				»  ccmp x11, pEnd, #2, hs
@@ -1473,7 +1565,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 					{
 						» str p, [captures, #{saveIndex}]
 					}
-					else if(pc > 0
+					else if(pc > 0 && instruction.isSingleReference && !useStackGuard
 							&& patternData[pc-1].IsSave()
 							&& (patternData[pc-1].data >> 8) == saveOffset)
 					{
@@ -1592,11 +1684,10 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 				»  mov reg64{PROGRESS_CHECK_BASE+instruction.data}, p
 				»  bl next
 				»  ldp x9, lr, [sp], #16
-				»  cbnz x0, done
 				»  mov reg64{PROGRESS_CHECK_BASE+instruction.data}, x9
+				»  ret
 				» fail:
 				»  mov x0, #0
-				» done:
 				»  ret
 				» next:
 			}
@@ -1609,11 +1700,10 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 				»  str p, [pProgressCheck, #{(instruction.data-4)*8}]
 				»  bl next
 				»  ldp x9, lr, [sp], #16
-				»  cbnz x0, done
 				»  str x9, [pProgressCheck, #{(instruction.data-4)*8}]
+				»  ret
 				» fail:
 				»  mov x0, #0
-				» done:
 				»  ret
 				» next:
 			}
@@ -1685,7 +1775,14 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			}
 			break;
 		case InstructionType::SplitNextMatchN:
-			if(header->flags.matchRequiresEndOfInput)
+			if(header->flags.matchRequiresEndOfInput
+			   && type != PatternProcessorType::BitState
+			   && pc > 0 && instruction.data == pc-1
+			   && patternData[pc-1].type == InstructionType::AnyByte)
+			{
+				» mov p, pEnd
+			}
+			else if(header->flags.matchRequiresEndOfInput)
 			{
 				» cmp p, pEnd
 				» b.ne {instruction.data}bf
@@ -1753,7 +1850,8 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 				{
 					pc += patternData.CountSingleReferenceInstructions(pc+1,
 																	   InstructionType::ByteBitMask,
-																	   instruction.data);
+																	   instruction.data,
+																	   numberOfInstructions);
 				}
 			}
 			break;

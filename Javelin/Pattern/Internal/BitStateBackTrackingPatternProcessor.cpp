@@ -25,7 +25,7 @@ public:
 	~BitStateBackTrackingPatternProcessor();
 	
 	virtual bool CanUseFullMatchProgram(size_t inputLength) const 					{ return fullMatchAlwaysFits || CanUsePartialMatchProgram(inputLength); }
-	virtual bool CanUsePartialMatchProgram(size_t inputLength) const final 			{ return (inputLength+1) * numberOfBitStateInstructions <= MAXIMUM_BITS; }
+	virtual bool CanUsePartialMatchProgram(size_t inputLength) const final 			{ return !numberOfBitStateInstructions || inputLength < MAXIMUM_BITS/numberOfBitStateInstructions; }
 	
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
@@ -70,7 +70,7 @@ struct BitStateBackTrackingPatternProcessor::ProcessData
 		pSearchStart	= pStart + offset;
 		pEnd			= pStart + length;
 		captures		= aCaptures;
-		stateTracker.ClearFirstNBits(numberOfBitStateInstructions*(length-offset+1));
+		stateTracker.ClearFirstNBits(Minimum((Minimum(length-offset, MAXIMUM_BITS) + 1) * size_t(numberOfBitStateInstructions), MAXIMUM_BITS));
 	}
 };
 
@@ -112,7 +112,7 @@ void BitStateBackTrackingPatternProcessor::Set(const void* data, size_t length)
 		}
 	}
 
-	fullMatchAlwaysFits = (header->maximumMatchLength+1) * numberOfBitStateInstructions <= MAXIMUM_BITS;
+	fullMatchAlwaysFits = (uint64_t(header->maximumMatchLength)+1) * numberOfBitStateInstructions <= MAXIMUM_BITS;
 }
 
 BitStateBackTrackingPatternProcessor::~BitStateBackTrackingPatternProcessor()

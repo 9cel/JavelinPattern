@@ -317,8 +317,7 @@ int AssemblerContext::DataOffsetForPc(int pc)
 AssemblerContext::RegistersToSave AssemblerContext::GetRegistersToSave() const
 {
 	RegistersToSave result;
-	if(type == PatternProcessorType::BackTracking
-	   && header->numberOfProgressChecks > 0)
+	if(header->numberOfProgressChecks > 0)
 	{
 		result.needsStackFrame = true;
 	}
@@ -339,8 +338,7 @@ void AssemblerContext::EmitProlog() const
 		{
 			for(int i = 0; i < header->numberOfProgressChecks; ++i)
 			{
-				// Push matchEnd repeatedly
-				» push r8
+				» push -1
 			}
 		}
 	}
@@ -537,7 +535,8 @@ static ReverseProcessor *CreateAmd64ReverseProcessor(const void* data, size_t le
 
 				int repeat = 1;
 				RepeatType repeatType = RepeatType::Byte;
-				while(pc+repeat < numberOfInstructions
+				while((instruction.type != InstructionType::ByteEitherOf2 || instruction.IsEitherOf2AndBitMaskIdentifiable())
+					  && pc+repeat < numberOfInstructions
 					  && patternData[pc+repeat].isSingleReference)
 				{
 					switch(patternData[pc+repeat].type)
@@ -577,20 +576,22 @@ static ReverseProcessor *CreateAmd64ReverseProcessor(const void* data, size_t le
 
 					for(int i = 0; i < bytes; ++i)
 					{
+						// Reverse programs consume the highest-addressed byte first.
+						const int shift = 8 * (bytes - 1 - i);
 						const ByteCodeInstruction &instr = patternData[pc+currentOffset+i];
 						switch(instr.type)
 						{
 						case InstructionType::Byte:
-							data |= instr.data << (8*i);
+							data |= instr.data << shift;
 							break;
 
 						case InstructionType::ByteEitherOf2:
 							{
-								int valueA = instr.value      & 0xff;
-								int valueB = instr.value >> 8 & 0xff;
+								int valueA = instr.data      & 0xff;
+								int valueB = instr.data >> 8 & 0xff;
 								int xorValue = valueA ^ valueB;
-								data |= (valueA | xorValue) << (8*i);
-								mask |= xorValue << (8*i);
+								data |= (valueA | xorValue) << shift;
+								mask |= xorValue << shift;
 							}
 							break;
 
@@ -781,7 +782,7 @@ static ReverseProcessor *CreateAmd64ReverseProcessor(const void* data, size_t le
 				const ByteCodeJumpRangeData* jumpRangeData = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
 
 				» cmp p, pStop
-				» jb *fail
+				» jbe *fail
 				» mov al, [p - 1]
 				» dec p
 
@@ -893,7 +894,9 @@ static ReverseProcessor *CreateAmd64ReverseProcessor(const void* data, size_t le
 				»  dec p
 				»  mov eax, {c * 0x1010101}
 				»  movd xmm0, eax
+				»  push pStart
 				»  call [addr]
+				»  pop pStart
 				»  mov rsi, rax
 				»  test rax, rax
 				»  jnz {nextPc}bf

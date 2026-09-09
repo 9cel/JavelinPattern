@@ -175,6 +175,7 @@ Loop:
 	case InstructionType::BackReference:
 		{
 			uint32_t index = instruction.data*2;
+			if(!processData.captures[index]) return nullptr;
 			ssize_t length = processData.captures[index+1] - processData.captures[index];
 			if(length >= 0
 			   && p+length <= processData.pEnd
@@ -660,9 +661,8 @@ Loop:
 			const unsigned char* old = processData.progressCheck[instruction.data];
 			processData.progressCheck[instruction.data] = p;
 			const void* result = Process(pc+1, p, processData);
-			if(result) return result;
 			processData.progressCheck[instruction.data] = old;
-			return nullptr;
+			return result;
 		}
 			
 	case InstructionType::SaveNoRecurse:

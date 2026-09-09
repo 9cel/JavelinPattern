@@ -20,3 +20,9 @@
 »   .endif
 » .endif
 » .endm
+
+// Lookup tables can be beyond ADR's 1 MB reach.
+» .macro adrl D, L
+»   adrp D, L
+»   add D, D, L[11:0]
+» .endm

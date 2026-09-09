@@ -527,7 +527,7 @@ public:
 	BitStateAmd64PatternProcessor(DataBlock&& dataBlock) : BitStateAmd64PatternProcessor((DataBlock&&) dataBlock, GetBytesForBitState(dataBlock.GetData())) 	{ }
 	
 	virtual bool CanUseFullMatchProgram(size_t inputLength) const 					{ return fullMatchAlwaysFits || CanUsePartialMatchProgram(inputLength); }
-	virtual bool CanUsePartialMatchProgram(size_t inputLength) const final 			{ return (inputLength+1) * numberOfBitStateBytes <= MAXIMUM_BITS/8; }
+	virtual bool CanUsePartialMatchProgram(size_t inputLength) const final 			{ return !numberOfBitStateBytes || inputLength < MAXIMUM_BITS/8/numberOfBitStateBytes; }
 
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
@@ -561,7 +561,7 @@ private:
 			isPartialMatch	= aIsPartialMatch;
 			pStart 			= (const unsigned char*) data;
 			pSearchStart	= pStart + offset;
-			stateTracker.ClearFirstNBits(numberOfBitStateBytes*(length+1)*8);
+			stateTracker.ClearFirstNBits(Minimum((Minimum(length, MAXIMUM_BITS) + 1) * size_t(numberOfBitStateBytes) * 8, MAXIMUM_BITS));
 		}
 	};
 	typedef const void* (*ProgramType)(ProcessData& processData, const void* p, const unsigned char* pEnd, const char** captures, void* bitStateTable, uint32_t numberOfBitStateBytes);
@@ -3441,9 +3441,9 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				//		{
 				//			const unsigned char* old = progressCheck[instruction.data];
 				//			progressCheck[instruction.data] = p;
-				//			if(Process(pc+1, p)) return true;
+				//			const void* result = Process(pc+1, p);
 				//			progressCheck[instruction.data] = old;
-				//			return nullptr;
+				//			return result;
 				//		}
 				uint32_t offset = 0x28 + 8*instruction.data;
 				if(offset < 0x80)
@@ -3473,7 +3473,6 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				uint32_t callLocation = uint32_t(program.GetCount());
 				program.PopP();
 				program.Append(0x41, 0x5a);												// popq   %r10
-				program.ExitIfNot0();
 				
 				if(offset < 0x80)
 				{
@@ -3483,7 +3482,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				{
 					program.Append(0x4c, 0x89, 0x97); program.AppendData(&offset, 4);	// movq   %r10, 0x1234(%rdi)
 				}
-				program.Fail();
+				program.Return();
 				program.PatchLong(callLocation);
 			}
 			break;
@@ -3862,7 +3861,7 @@ void BitStateAmd64PatternProcessor::Set(const void* data, int bytesForBackTracki
 {
 	const ByteCodeHeader* header = (const ByteCodeHeader*) data;
 	numberOfBitStateBytes = bytesForBackTracking;
-	fullMatchAlwaysFits = (header->maximumMatchLength+1) * numberOfBitStateBytes <= MAXIMUM_BITS/8;
+	fullMatchAlwaysFits = (uint64_t(header->maximumMatchLength)+1) * numberOfBitStateBytes <= MAXIMUM_BITS/8;
 }
 
 const void* BitStateAmd64PatternProcessor::FullMatch(const void* data, size_t length) const
@@ -3985,6 +3984,3 @@ PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(const void* data
 //============================================================================
 #endif
 //============================================================================
-
-
-
