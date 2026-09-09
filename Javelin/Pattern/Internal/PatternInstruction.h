@@ -69,7 +69,18 @@ namespace Javelin
 			static const InstructionReference PREVIOUS;
 		};
 		
-		typedef Table<InstructionReference, TableStorage_Dynamic<DynamicTableAllocatePolicy_NewDeleteWithInlineStorage<8>::Policy>> ReferenceTable;
+		struct ReferenceTable : public Table<InstructionReference, TableStorage_Dynamic<DynamicTableAllocatePolicy_NewDeleteWithInlineStorage<8>::Policy>>
+		{
+			using Table::Remove;
+			
+			// References are usually unlinked in reverse order of linking.
+			void Remove(Instruction** storage)
+			{
+				size_t index = GetCount();
+				while(!((*this)[--index] == storage)) { }
+				RemoveIndex(index);
+			}
+		};
 		
 //==========================================================================
 
@@ -78,7 +89,9 @@ namespace Javelin
 			InstructionType			type;
 			uint8_t					startReachable;
 			bool					splitReachable;
+			bool					hasStates = false;
 			uint32_t 				index;
+			uint32_t				visitMark = 0;
 			ReferenceTable			referenceList;
 			IntrusiveListNode		listNode;
 			

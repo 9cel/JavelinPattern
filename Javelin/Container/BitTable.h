@@ -133,6 +133,17 @@ namespace Javelin
 		// Count the number of 1 bits
 		size_t GetPopulationCount() const					{ return Private::BitTableBase::CountBitsInTable(data, GetNumberOfWords()); }
 		
+		template<typename F> void ForEachSetBit(F&& f) const
+		{
+			for(size_t word = 0; word < GetNumberOfWords(); ++word)
+			{
+				for(unsigned bits = data[word]; bits != 0; bits &= bits-1)
+				{
+					f(word*32 + BitUtility::DetermineHighestNonZeroBit32(bits & ~(bits-1)));
+				}
+			}
+		}
+		
 		bool operator[](size_t bitIndex) const				{ JASSERT(bitIndex < N); return BitUtility::IsBitSet(data, bitIndex); 	}
 		BitUtility::BitProxy operator[](size_t bitIndex)	{ JASSERT(bitIndex < N); return BitUtility::BitProxy(data, bitIndex);	}
 		

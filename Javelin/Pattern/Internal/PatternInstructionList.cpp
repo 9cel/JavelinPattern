@@ -13,7 +13,6 @@
 #include "Javelin/Stream/ICharacterWriter.h"
 #include "Javelin/Stream/StandardWriter.h"
 #include "Javelin/Type/ObjectWithHash.h"
-#include <unordered_set>
 
 //==========================================================================
 
@@ -51,17 +50,22 @@ struct InstructionList::StateMap
 	
 	StatesToInstructionMap statesToInstructionMap;
 	InstructionToStatesMap instructionToStatesMap;
+	uint32_t& visitMark;
 	
-	StateMap()
+	StateMap(uint32_t& aVisitMark)
 	: statesToInstructionMap(4),
-	  instructionToStatesMap(4)
+	  instructionToStatesMap(4),
+	  visitMark(aVisitMark)
 	{
 	}
+	
+	~StateMap() { Reset(); }
 	
 	void Insert(const ObjectWithHash<InstructionTable&> &state, Instruction* instruction)
 	{
 		statesToInstructionMap.Insert(state, instruction);
 		instructionToStatesMap.Insert(instruction, state);
+		instruction->hasStates = true;
 	}
 	
 	void Remove(const ObjectWithHash<InstructionTable&> &state, Instruction* split)
@@ -70,6 +74,14 @@ struct InstructionList::StateMap
 		JASSERT(statesToInstructionMap[state] == split);
 		statesToInstructionMap.Remove(state);
 		instructionToStatesMap.Remove(split);
+		split->hasStates = false;
+	}
+	
+	void Reset()
+	{
+		for(const auto& entry : instructionToStatesMap) entry.key->hasStates = false;
+		statesToInstructionMap.Reset();
+		instructionToStatesMap.Reset();
 	}
 	
 	StatesToInstructionMap::ConstIterator Find(const ObjectWithHash<InstructionTable&> &lookup) const 	{ return statesToInstructionMap.Find(lookup); }
@@ -78,62 +90,63 @@ struct InstructionList::StateMap
 	
 	InstructionTable MakeCanonicalStateList(Instruction* original, const InstructionTable& targetList) const;
 	InstructionTable MakeCanonicalStateList(SplitInstruction* split) const	{ return MakeCanonicalStateList(split, split->targetList); }
-	void RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target,
-						   std::unordered_set<Instruction*>& visited) const;
+	void RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target, uint32_t mark) const;
+	uint32_t NextMark() const { return visitMark += 2; }
 };
 
-void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target,
-												std::unordered_set<Instruction*>& visited) const
+// Visited instructions carry mark, instructions in the result carry mark+1.
+void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target, uint32_t mark) const
 {
-	if(target == original || !visited.insert(target).second) return;
-	InstructionToStatesMap::ConstIterator it = instructionToStatesMap.Find(target);
-	if(it != instructionToStatesMap.End())
+	if(target == original || target->visitMark >= mark) return;
+	target->visitMark = mark;
+	if(target->hasStates)
 	{
-		for(Instruction* state : it->value)
+		for(Instruction* state : instructionToStatesMap.Find(target)->value)
 		{
-			RecurseAddTargets(result, original, state, visited);
+			RecurseAddTargets(result, original, state, mark);
 		}
+		return;
 	}
-	else
+	
+	switch(target->type)
 	{
-		switch(target->type)
+	case InstructionType::Split:
+		for(Instruction* splitTarget : ((SplitInstruction*) target)->targetList)
 		{
-		case InstructionType::Split:
-			for(Instruction* splitTarget : ((SplitInstruction*) target)->targetList)
-			{
-				RecurseAddTargets(result, original, splitTarget, visited);
-			}
-			break;
-			
-		case InstructionType::Jump:
-			RecurseAddTargets(result, original, ((JumpInstruction*) target)->target, visited);
-			break;
+			RecurseAddTargets(result, original, splitTarget, mark);
+		}
+		break;
 		
-		case InstructionType::ProgressCheck:
-			{
-				Instruction* next = target->GetNext();
-				if(next == original || result.Contains(next)) break;
-				result.AppendUnique(target);
-				break;
-			}
-				
-		case InstructionType::Fail:
-			break;
-			
-		default:
-			result.AppendUnique(target);
+	case InstructionType::Jump:
+		RecurseAddTargets(result, original, ((JumpInstruction*) target)->target, mark);
+		break;
+	
+	case InstructionType::ProgressCheck:
+		{
+			Instruction* next = target->GetNext();
+			if(next == original || next->visitMark == mark+1) break;
+			target->visitMark = mark+1;
+			result.Append(target);
 			break;
 		}
+			
+	case InstructionType::Fail:
+		break;
+		
+	default:
+		target->visitMark = mark+1;
+		result.Append(target);
+		break;
 	}
 }
 
 InstructionTable InstructionList::StateMap::MakeCanonicalStateList(Instruction* original, const InstructionTable& targetList) const
 {
 	InstructionTable result;
-	std::unordered_set<Instruction*> visited;
+	uint32_t mark = NextMark();
 	for(Instruction* target : targetList)
 	{
-		RecurseAddTargets(result, original, target, visited);
+		RecurseAddTargets(result, original, target, mark);
 	}
 	return result;
 }
@@ -1077,7 +1090,7 @@ void InstructionList::Optimize_LeftFactor()
 		SplitInstruction* split = (SplitInstruction*) &*it;
 		Optimize_SplitToSplit(split);
 		LinkedInstructionList::Iterator insertAfter(it);
-		StateMap emptyStateMap;
+		StateMap emptyStateMap(visitMark);
 		Optimize_SplitToByteConsumers(insertAfter, split, emptyStateMap);
 		if(split->targetList.GetCount() < 2)
 		{
@@ -1602,10 +1615,7 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 						jumpTableInstruction->targetList.Append(newTarget);
 						newTarget->referenceList.Append(InstructionReference{&jumpTableInstruction->targetList[index], jumpTableInstruction});
 					}
-					for(uint32_t k = 0; k < 256; ++k)
-					{
-						if(bitMask[k]) jumpTableInstruction->targetTable[k] = index;
-					}
+					bitMask.ForEachSetBit([&](size_t k) { jumpTableInstruction->targetTable[k] = index; });
 				}
 			}
 			
@@ -1649,10 +1659,7 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 				
 				Instruction* afterTargetInstruction = GetAfterTargetInstruction(target->GetTargetForPlane(p));
 				Instruction* newTarget = (afterTargetInstruction == split) ? jumpTableInstruction : afterTargetInstruction;
-				for(uint32_t x = 0; x < 256; ++x)
-				{
-					if(targetBitMask[x]) targetList[x].Append(newTarget);
-				}
+				targetBitMask.ForEachSetBit([&](size_t x) { targetList[x].Append(newTarget); });
 			}
 		}
 		
@@ -1741,7 +1748,7 @@ void InstructionList::Optimize_CollapseSplit(StateMap& stateMap, StateSet* growt
 
 void InstructionList::Optimize_CollapseSplit()
 {
-	StateMap stateMap;
+	StateMap stateMap(visitMark);
 	StateSet growthStateList[AVOID_STATES_REQUIRE_CONSECUTIVE_GROWTH_COUNT];
 	
 	// Looking for two cases here
@@ -1780,8 +1787,7 @@ void InstructionList::Optimize_CollapseSplit()
 		if(instruction->type == InstructionType::Save)
 		{
 			// Cached state sets are stale once a save moves.
-			stateMap.statesToInstructionMap.Reset();
-			stateMap.instructionToStatesMap.Reset();
+			stateMap.Reset();
 			Optimize_DelaySave((SaveInstruction*) instruction, true);
 		}
 		else if(instruction->type == InstructionType::Split)
@@ -3572,10 +3578,9 @@ void InstructionList::Build(uint32_t aOptions, ScanDirection aScanDirection, ICo
 
 void InstructionList::InsertPartialMatchAnyByteMinimal()
 {
-	StateMap map;
+	StateMap map(visitMark);
 	InstructionTable targetList;
-	std::unordered_set<Instruction*> visited;
-	map.RecurseAddTargets(targetList, nullptr, fullMatchInstruction, visited);
+	map.RecurseAddTargets(targetList, nullptr, fullMatchInstruction, map.NextMark());
 	
 	Instruction* splitTarget = fullMatchInstruction;
 	Instruction** anyByteInsertionPoint = &partialMatchInstruction;
