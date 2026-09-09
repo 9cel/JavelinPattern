@@ -36,7 +36,6 @@ void DfaProcessorBase::State::operator delete(void* p, uint32_t numberOfStates, 
 {
 	size_t numberOfBytes = sizeof(State) - sizeof(NfaState) + NfaState::GetSizeRequiredForNumberOfStates(numberOfStates);
 	DfaMemoryManager::Release(p, numberOfBytes, processor);
-	::operator delete(p);
 }
 
 void DfaProcessorBase::State::operator delete(void* p)

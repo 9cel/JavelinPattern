@@ -49,6 +49,7 @@ namespace Javelin::PatternInternal
 			mutable State *volatile		partialMatchStartingStates[StartingIndex::Count] = { nullptr, nullptr, nullptr, nullptr };
 			
 			void ClearStartingStates() override;
+			JNOINLINE State* CreatePartialStartingState(size_t startingIndex) const;
 			void ProcessNfaState(NfaState& result, const NfaState& state, const PatternData& patternData, CharacterRange& relevancyInterval, int flags, void* updateCache) const override;
 			const uint8_t* GetCharacterFlags() const override;
 

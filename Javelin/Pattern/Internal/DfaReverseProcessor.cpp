@@ -76,6 +76,7 @@ DfaReverseProcessor::SearchHandler DfaReverseProcessor::GetSearchHandler(SearchH
 	switch(value)
 	{
 	case SearchHandlerEnum::Normal: 						return &NoSearchHandler;
+	case SearchHandlerEnum::SearchByteNotRange:			return &FindByteNotRangeReverse;
 	case SearchHandlerEnum::SearchByte0:					return &SearchByte0Handler;
 	case SearchHandlerEnum::SearchByte:						return &FindByteForwarder<FindByteReverse>;
 	case SearchHandlerEnum::SearchByteEitherOf2:			return &NoSearchHandler;
@@ -168,9 +169,23 @@ template<DfaReverseProcessor::SearchMode SEARCH_MODE> const void* DfaReverseProc
 	const volatile unsigned char* p = pIn;
 	const unsigned char* pLastByteRecord = pIn;
 	const unsigned char* result = (const unsigned char*) (intptr_t) -1;
+	constexpr uint32_t special = NfaState::Flag::IS_MATCH | NfaState::Flag::HAS_EMPTY_STATES |
+		NfaState::Flag::DFA_NEEDS_POPULATING | NfaState::Flag::IS_SEARCH | NfaState::Flag::DFA_STATE_IS_RESETTING;
 
 	while(p > pStop)
 	{
+		while(size_t(p - pStop) >= 4)
+		{
+			if(state->stateFlags & special) break;
+			state = state->nextStates[*--p];
+			if(state->stateFlags & special) break;
+			state = state->nextStates[*--p];
+			if(state->stateFlags & special) break;
+			state = state->nextStates[*--p];
+			if(state->stateFlags & special) break;
+			state = state->nextStates[*--p];
+		}
+		if(p == pStop) break;
 #if VERBOSE_DEBUG_PATTERN
 		state->Dump("Current state");
 #endif
@@ -230,6 +245,8 @@ template<DfaReverseProcessor::SearchMode SEARCH_MODE> const void* DfaReverseProc
 			{
 				p = (*state->searchHandler)((const unsigned char*) p, state->searchData, pStop);
 				if(p == nullptr) goto ProcessEOF;
+				if constexpr(SEARCH_MODE == SearchMode::Partial)
+					if(state->stateFlags & NfaState::Flag::IS_MATCH) result = (const unsigned char*) p;
 				c = p[-1];
 			}
 		}
@@ -326,22 +343,9 @@ ProcessEOF:
 
 //============================================================================
 
-const void* DfaReverseProcessor::Match(const void* data, size_t length, size_t startOffset, const void* matchEnd, const char **captures, bool matchIsAnchored) const
+DfaReverseProcessor::State* DfaReverseProcessor::CreateStartingState(size_t startingIndex, bool matchIsAnchored) const
 {
 	State *volatile *const startingStatesSet = matchIsAnchored ? anchoredStartingStates : unanchoredStartingStates;
-	
-	BeginMatch();
-	
-	size_t startingIndex; 
-	if((const unsigned char*) data + length == matchEnd) startingIndex = StartingIndex::EndOfInput;
-	else
-	{
-		unsigned char c = *(const unsigned char*) matchEnd;
-		if(c == '\n') startingIndex = StartingIndex::EndOfLine;
-		else if(WORD_MASK[c]) startingIndex = StartingIndex::WordAfter;
-		else startingIndex = StartingIndex::NotWordAfter;
-	}
-	
 	State* startingState = startingStatesSet[startingIndex];
 	if(startingState == nullptr)
 	{
@@ -359,11 +363,12 @@ const void* DfaReverseProcessor::Match(const void* data, size_t length, size_t s
 			
 			static const int STARTING_FLAGS[] =
 			{
-				NfaState::Flag::IS_END_OF_INPUT | NfaState::Flag::WAS_END_OF_LINE | NfaState::Flag::IS_START_OF_SEARCH,
-				NfaState::Flag::WAS_END_OF_LINE | NfaState::Flag::IS_START_OF_SEARCH,
-				NfaState::Flag::WAS_WORD_CHARACTER | NfaState::Flag::IS_START_OF_SEARCH,
-				NfaState::Flag::IS_START_OF_SEARCH
+				NfaState::Flag::IS_END_OF_INPUT | NfaState::Flag::WAS_END_OF_LINE,
+				NfaState::Flag::WAS_END_OF_LINE,
+				NfaState::Flag::WAS_WORD_CHARACTER,
+				0
 			};
+			// ProcessEOF supplies IS_START_OF_SEARCH at the search boundary.
 			int startingFlags = matchIsAnchored ? STARTING_FLAGS[startingIndex] : STARTING_FLAGS[startingIndex] | NfaState::Flag::PARTIAL_MATCH_IS_ALLOWED;
 			CharacterRange dummyRange(0, 256);
 			nfaState->AddNextStateReverse(patternData, startingInstruction, dummyRange, *updateCache, startingFlags);
@@ -379,6 +384,27 @@ const void* DfaReverseProcessor::Match(const void* data, size_t length, size_t s
 		{
 			EndPopulate();
 		}
+	}
+	return startingState;
+}
+
+const void* DfaReverseProcessor::Match(const void* data, size_t length, size_t startOffset, const void* matchEnd, const char **captures, bool matchIsAnchored) const
+{
+	BeginMatch();
+	size_t startingIndex;
+	if((const unsigned char*) data + length == matchEnd) startingIndex = StartingIndex::EndOfInput;
+	else
+	{
+		unsigned char c = *(const unsigned char*) matchEnd;
+		if(c == '\n') startingIndex = StartingIndex::EndOfLine;
+		else if(WORD_MASK[c]) startingIndex = StartingIndex::WordAfter;
+		else startingIndex = StartingIndex::NotWordAfter;
+	}
+	State *volatile *const startingStatesSet = matchIsAnchored ? anchoredStartingStates : unanchoredStartingStates;
+	State* startingState = startingStatesSet[startingIndex];
+	if(!startingState)
+	{
+		startingState = CreateStartingState(startingIndex, matchIsAnchored);
 		if(startingState->stateFlags & NfaState::Flag::DFA_FAILED)
 		{
 			EndMatch();

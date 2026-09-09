@@ -141,6 +141,7 @@ DfaPatternProcessor::SearchHandler DfaPatternProcessor::GetSearchHandler(SearchH
 	switch(value)
 	{
 	case SearchHandlerEnum::Normal: 						return &NoSearchHandler;
+	case SearchHandlerEnum::SearchByteNotRange:			return &FindByteNotRangeForward;
 	case SearchHandlerEnum::SearchByte0:					return &SearchByte0Handler;
 	case SearchHandlerEnum::SearchByte:						return &FindByteForwarder<FindByte>;
 	case SearchHandlerEnum::SearchByteEitherOf2:			return &FindByteForwarder<FindByteEitherOf2>;
@@ -200,9 +201,24 @@ template<DfaPatternProcessor::SearchMode SEARCH_MODE> const void* DfaPatternProc
 	const volatile unsigned char* p = pIn;
 	const unsigned char* pLastByteRecord = pIn;
 	const unsigned char* result = (const unsigned char*) 1;
+	constexpr uint32_t special = NfaState::Flag::IS_MATCH | NfaState::Flag::HAS_EMPTY_STATES |
+		NfaState::Flag::DFA_NEEDS_POPULATING | NfaState::Flag::IS_SEARCH | NfaState::Flag::DFA_STATE_IS_RESETTING;
 
 	while(p < pEnd)
 	{
+		// Four ordinary transitions per iteration.
+		while(size_t(pEnd - p) >= 4)
+		{
+			if(state->stateFlags & special) break;
+			state = state->nextStates[*p++];
+			if(state->stateFlags & special) break;
+			state = state->nextStates[*p++];
+			if(state->stateFlags & special) break;
+			state = state->nextStates[*p++];
+			if(state->stateFlags & special) break;
+			state = state->nextStates[*p++];
+		}
+		if(p == pEnd) break;
 #if VERBOSE_DEBUG_PATTERN
 		state->Dump("Current state");
 #endif
@@ -240,6 +256,14 @@ template<DfaPatternProcessor::SearchMode SEARCH_MODE> const void* DfaPatternProc
 				}
 			}
 			
+			if constexpr(SEARCH_MODE == SearchMode::Partial)
+			{
+				if((state->stateFlags & NfaState::Flag::IS_MATCH) && state->minimumRemainingLength > size_t(pEnd - p))
+				{
+					bytesProcessedSinceReset += uint64_t(p - pLastByteRecord);
+					return result - 1;
+				}
+			}
 			if(JUNLIKELY(state->stateFlags & (NfaState::Flag::DFA_STATE_IS_RESETTING|NfaState::Flag::DFA_NEEDS_POPULATING)))
 			{
 				bytesProcessedSinceReset += uint64_t(p - pLastByteRecord);
@@ -261,6 +285,8 @@ template<DfaPatternProcessor::SearchMode SEARCH_MODE> const void* DfaPatternProc
 			{
 				p = (*state->searchHandler)((const unsigned char*) p, state->searchData, pEnd);
 				if(!p) goto ProcessEOF;
+				if constexpr(SEARCH_MODE == SearchMode::Partial)
+					if(state->stateFlags & NfaState::Flag::IS_MATCH) result = (const unsigned char*) p;
 				c = *p;
 			}
 		}
@@ -388,20 +414,8 @@ const void* DfaPatternProcessor::FullMatch(const void* data, size_t length, cons
 	return nullptr;
 }
 
-const void* DfaPatternProcessor::PartialMatch(const void* data, size_t length, size_t offset) const
+DfaPatternProcessor::State* DfaPatternProcessor::CreatePartialStartingState(size_t startingIndex) const
 {
-	BeginMatch();
-	
-	size_t startingIndex; 
-	if(offset == 0) startingIndex = StartingIndex::StartOfInput;
-	else
-	{
-		unsigned char c = ((const unsigned char*) data)[offset-1];
-		if(c == '\n') startingIndex = StartingIndex::StartOfLine;
-		else if(WORD_MASK[c]) startingIndex = StartingIndex::WordPrior;
-		else startingIndex = StartingIndex::NotWordPrior;
-	}
-	
 	State* startingState = partialMatchStartingStates[startingIndex];
 	if(startingState == nullptr)
 	{
@@ -439,6 +453,26 @@ const void* DfaPatternProcessor::PartialMatch(const void* data, size_t length, s
 		{
 			EndPopulate();
 		}
+	}
+	return startingState;
+}
+
+const void* DfaPatternProcessor::PartialMatch(const void* data, size_t length, size_t offset) const
+{
+	BeginMatch();
+	size_t startingIndex;
+	if(offset == 0) startingIndex = StartingIndex::StartOfInput;
+	else
+	{
+		unsigned char c = ((const unsigned char*) data)[offset-1];
+		if(c == '\n') startingIndex = StartingIndex::StartOfLine;
+		else if(WORD_MASK[c]) startingIndex = StartingIndex::WordPrior;
+		else startingIndex = StartingIndex::NotWordPrior;
+	}
+	State* startingState = partialMatchStartingStates[startingIndex];
+	if(!startingState)
+	{
+		startingState = CreatePartialStartingState(startingIndex);
 		if(startingState->stateFlags & NfaState::Flag::DFA_FAILED)
 		{
 			EndMatch();

@@ -23,6 +23,13 @@
 #include "Javelin/Pattern/Internal/PatternDfaMemoryManager.h"
 #include "Javelin/Pattern/Internal/PatternDfaState.h"
 #include "Javelin/Pattern/Internal/PatternNfaState.h"
+#include <algorithm>
+#include <deque>
+#if defined(__aarch64__)
+#include <arm_neon.h>
+#elif defined(__SSE2__)
+#include <emmintrin.h>
+#endif
 
 //============================================================================
 
@@ -52,11 +59,7 @@ public:
 	
 	bool operator==(const NfaStateKey& a) const
 	{
-		#if defined(__has_feature)
-			#if __has_feature(address_sanitizer)
-				if(p->numberOfStates != a.p->numberOfStates) return false;
-			#endif
-		#endif
+		if(p->numberOfStates != a.p->numberOfStates) return false;
 		return memcmp(p, a.p, NfaState::GetSizeRequiredForNumberOfStates(p->numberOfStates)) == 0;
 	}
 };
@@ -76,7 +79,114 @@ DfaProcessorBase::DfaProcessorBase(const void* aPatternData, uint32_t aNumberOfI
 {
 	numberOfInstructions    = aNumberOfInstructions;
 	patternData.p           = (const unsigned char*) aPatternData;
+	CalculateMinimumRemainingLengths();
 	DfaMemoryManager::AddProcessor(*this);
+}
+
+void DfaProcessorBase::CalculateMinimumRemainingLengths()
+{
+	// Assertions only reject paths, so shortest paths are safe lower bounds.
+	struct Edge { uint32_t source, next; uint8_t cost; };
+	const uint32_t infinity = UINT32_MAX;
+	std::vector<uint32_t> heads(numberOfInstructions, infinity);
+	std::vector<Edge> edges;
+	std::deque<uint32_t> pending;
+	minimumRemainingLengths.assign(numberOfInstructions, infinity);
+	for(uint32_t pc = 0; pc < numberOfInstructions; ++pc)
+	{
+		const ByteCodeInstruction instruction = patternData[pc];
+		auto edge = [&](uint32_t target, uint8_t cost) {
+			if(target < numberOfInstructions) {
+				edges.push_back({pc, heads[target], cost});
+				heads[target] = uint32_t(edges.size() - 1);
+			}
+		};
+		switch(instruction.type)
+		{
+		case InstructionType::AnyByte:
+		case InstructionType::Byte:
+		case InstructionType::ByteEitherOf2:
+		case InstructionType::ByteEitherOf3:
+		case InstructionType::ByteRange:
+		case InstructionType::ByteBitMask:
+		case InstructionType::ByteNot:
+		case InstructionType::ByteNotEitherOf2:
+		case InstructionType::ByteNotEitherOf3:
+		case InstructionType::ByteNotRange:
+			edge(pc + 1, 1); break;
+		case InstructionType::Save:
+		case InstructionType::SaveNoRecurse:
+		case InstructionType::ProgressCheck:
+		case InstructionType::AssertStartOfInput:
+		case InstructionType::AssertEndOfInput:
+		case InstructionType::AssertStartOfLine:
+		case InstructionType::AssertEndOfLine:
+		case InstructionType::AssertWordBoundary:
+		case InstructionType::AssertNotWordBoundary:
+		case InstructionType::AssertStartOfSearch:
+			edge(pc + 1, 0); break;
+		case InstructionType::Jump:
+			edge(instruction.data, 0); break;
+		case InstructionType::Split:
+		{
+			const auto* split = patternData.GetData<ByteCodeSplitData>(instruction.data);
+			for(uint32_t i = 0; i < split->numberOfTargets; ++i) edge(split->targetList[i], 0);
+			break;
+		}
+		case InstructionType::SplitMatch:
+		{
+			const auto* targets = patternData.GetData<uint32_t>(instruction.data);
+			edge(targets[0], 0); edge(targets[1], 0); break;
+		}
+		case InstructionType::SplitNextN:
+		case InstructionType::SplitNNext:
+		case InstructionType::SplitNextMatchN:
+		case InstructionType::SplitNMatchNext:
+			edge(pc + 1, 0); edge(instruction.data, 0); break;
+		case InstructionType::ByteJumpTable:
+		case InstructionType::DispatchTable:
+		{
+			const auto* table = patternData.GetData<ByteCodeJumpTableData>(instruction.data);
+			for(uint32_t i = 0; i < table->numberOfTargets; ++i)
+				edge(table->pcData[i], instruction.type == InstructionType::ByteJumpTable);
+			break;
+		}
+		case InstructionType::ByteJumpMask:
+		case InstructionType::DispatchMask:
+		{
+			const auto* table = patternData.GetData<ByteCodeJumpMaskData>(instruction.data);
+			for(unsigned i = 0; i < 2; ++i) edge(table->pcData[i], instruction.type == InstructionType::ByteJumpMask);
+			break;
+		}
+		case InstructionType::ByteJumpRange:
+		case InstructionType::DispatchRange:
+		{
+			const auto* table = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
+			for(unsigned i = 0; i < 2; ++i) edge(table->pcData[i], instruction.type == InstructionType::ByteJumpRange);
+			break;
+		}
+		case InstructionType::Fail: break;
+		default:
+			minimumRemainingLengths[pc] = 0;
+			pending.push_back(pc);
+			break;
+		}
+	}
+	while(!pending.empty())
+	{
+		uint32_t target = pending.front();
+		pending.pop_front();
+		for(uint32_t i = heads[target]; i != infinity; i = edges[i].next)
+		{
+			const Edge& edge = edges[i];
+			uint32_t distance = minimumRemainingLengths[target] + edge.cost;
+			if(distance < minimumRemainingLengths[edge.source]) {
+				minimumRemainingLengths[edge.source] = distance;
+				if(edge.cost) pending.push_back(edge.source);
+				else pending.push_front(edge.source);
+			}
+		}
+	}
 }
 
 DfaProcessorBase::~DfaProcessorBase()
@@ -105,6 +215,79 @@ const unsigned char* DfaProcessorBase::NoSearchHandler(const unsigned char* p, c
 const unsigned char* DfaProcessorBase::SearchByte0Handler(const unsigned char* p, const void* data, const unsigned char* pStop)
 {
 	return nullptr;
+}
+
+namespace {
+template<bool reverse>
+const unsigned char* FindOutsideRange(const unsigned char* p, const unsigned char* bound, const unsigned char* range)
+{
+	const unsigned low = range[0], width = unsigned(range[1]) - low;
+	// Most runs are short. Avoid the SIMD setup for them.
+	for(unsigned i = 0; i < 2; ++i)
+	{
+		if(p == bound) return nullptr;
+		if constexpr(reverse) {
+			if(unsigned(p[-1]) - low > width) return p;
+			--p;
+		} else {
+			if(unsigned(*p) - low > width) return p;
+			++p;
+		}
+	}
+#if defined(__aarch64__)
+	const uint8x16_t lo = vdupq_n_u8(low), span = vdupq_n_u8(width);
+	auto outside = [&](const unsigned char* at) {
+		return vcgtq_u8(vsubq_u8(vld1q_u8(at), lo), span);
+	};
+	auto positions = [](uint8x16_t mask) {
+		return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(mask), 4)), 0);
+	};
+	while((reverse ? p - bound : bound - p) >= 32)
+	{
+		const unsigned char* block = reverse ? p - 32 : p;
+		uint8x16_t a = outside(block), b = outside(block + 16);
+		if(vmaxvq_u8(vorrq_u8(a, b)))
+		{
+			uint64_t bits = positions(reverse ? b : a);
+			if(bits) return reverse ? block + 32 - __builtin_clzll(bits) / 4 : block + __builtin_ctzll(bits) / 4;
+			bits = positions(reverse ? a : b);
+			return reverse ? block + 16 - __builtin_clzll(bits) / 4 : block + 16 + __builtin_ctzll(bits) / 4;
+		}
+		p += reverse ? -32 : 32;
+	}
+#elif defined(__SSE2__)
+	const __m128i lo = _mm_set1_epi8(low), span = _mm_set1_epi8(width), zero = _mm_setzero_si128();
+	while((reverse ? p - bound : bound - p) >= 16)
+	{
+		const unsigned char* block = reverse ? p - 16 : p;
+		__m128i delta = _mm_sub_epi8(_mm_loadu_si128((const __m128i*)block), lo);
+		unsigned bits = unsigned(_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_subs_epu8(delta, span), zero))) ^ 65535;
+		if(bits) return reverse ? block + 32 - __builtin_clz(bits) : block + __builtin_ctz(bits);
+		p += reverse ? -16 : 16;
+	}
+#endif
+	while(p != bound)
+	{
+		if constexpr(reverse) {
+			if(unsigned(p[-1]) - low > width) return p;
+			--p;
+		} else {
+			if(unsigned(*p) - low > width) return p;
+			++p;
+		}
+	}
+	return nullptr;
+}
+}
+
+const unsigned char* DfaProcessorBase::FindByteNotRangeForward(const unsigned char* p, const void* data, const unsigned char* end)
+{
+	return FindOutsideRange<false>(p, end, ((const ByteCodeSearchByteData*)data)->bytes);
+}
+
+const unsigned char* DfaProcessorBase::FindByteNotRangeReverse(const unsigned char* p, const void* data, const unsigned char* stop)
+{
+	return FindOutsideRange<true>(p, stop, ((const ByteCodeSearchByteData*)data)->bytes);
 }
 
 //============================================================================
@@ -160,6 +343,9 @@ DfaProcessorBase::State* DfaProcessorBase::GetStateForNfaState(NfaState& nfaStat
 		memcpy(&state->nfaState, &nfaState, NfaState::GetSizeRequiredForNumberOfStates(nfaState.numberOfStates));
 		
 		state->stateFlags = nfaState.stateFlags | NfaState::Flag::DFA_NEEDS_POPULATING;
+		state->minimumRemainingLength = UINT32_MAX;
+		for(uint32_t i = 0; i < nfaState.numberOfStates; ++i)
+			state->minimumRemainingLength = std::min(state->minimumRemainingLength, minimumRemainingLengths[nfaState.stateList[i]]);
 		nfaToDfaMap.Insert(NfaStateKey{&state->nfaState}, state);
 		
 		state->searchHandler = &NoSearchHandler;
@@ -275,7 +461,7 @@ void DfaProcessorBase::PopulateState(State* state) const
 				state->nextStates[c++] = nextState;
 			}
 			
-			// Update repeat state cunt
+			// Count self-loop transitions.
 			if(nextState == state)
 			{
 				if(relevancyInterval.max > 255) relevancyInterval.max = 255;
@@ -358,6 +544,23 @@ void DfaProcessorBase::PopulateState(State* state) const
 			}
 		}
 
+		// Small alphabets produce short runs that cost more to skip than to step.
+		if((state->stateFlags & NfaState::Flag::IS_SEARCH) == 0
+		   && numberOfRepeatStates >= 16 && numberOfRepeatStates < 256)
+		{
+			StaticBitTable<256> repeatBits;
+			for(unsigned i = 0; i < 256; ++i) if(state->nextStates[i] == state) repeatBits.SetBit(i);
+			if(repeatBits.IsContiguous())
+			{
+				Interval<size_t> range = repeatBits.GetContiguousRange();
+				state->localSearchData.bytes[0] = range.min;
+				state->localSearchData.bytes[1] = range.max - 1;
+				state->searchData = &state->localSearchData;
+				state->searchHandler = GetSearchHandler(SearchHandlerEnum::SearchByteNotRange, state);
+				state->stateFlags |= NfaState::Flag::IS_SEARCH;
+			}
+		}
+
 #if defined(JBUILDCONFIG_DEBUG)
 		for(int i = 0; i <= MAXIMUM_CHARACTER; ++i)
 		{
@@ -365,6 +568,7 @@ void DfaProcessorBase::PopulateState(State* state) const
 		}
 #endif
 		
+		if(!(state->stateFlags & NfaState::Flag::IS_SEARCH)) state->searchHandler = nullptr;
 		state->stateFlags &= ~(NfaState::Flag::DFA_NEEDS_POPULATING
 							   | NfaState::Flag::DFA_STATE_IS_POPULATING);
 	}

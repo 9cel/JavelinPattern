@@ -87,10 +87,10 @@ namespace Javelin::PatternInternal
 		bool AddEntryNoMatchCheck(uint32_t pc, UpdateCache &updateCache);
 		void AddEntryNoCheck(uint32_t pc);
 
-		void ProcessCurrentState(NfaState& outResult, const PatternData& patternData, uint32_t pc, CharacterRange& range, uint32_t flags, UpdateCache &updateCache) const;
+		void ProcessCurrentState(NfaState& outResult, const PatternData& patternData, uint32_t pc, CharacterRange& range, uint32_t flags, UpdateCache &updateCache, OpenHashSet<uint32_t>& progressCheckSet) const;
 		void ProcessNextStateFlags(OpenHashSet<uint32_t>& progressCheckSet, const PatternData& patternData, uint32_t pc, CharacterRange& range, UpdateCache &updateCache, int nextFlags);
 
-		void ProcessCurrentStateReverse(NfaState& outResult, const PatternData& patternData, uint32_t pc, CharacterRange& range, uint32_t flags, UpdateCache &updateCache) const;
+		void ProcessCurrentStateReverse(NfaState& outResult, const PatternData& patternData, uint32_t pc, CharacterRange& range, uint32_t flags, UpdateCache &updateCache, OpenHashSet<uint32_t>& progressCheckSet) const;
 		void ProcessNextStateFlagsReverse(OpenHashSet<uint32_t>& progressCheckSet, const PatternData& patternData, uint32_t pc, CharacterRange& range, UpdateCache &updateCache, int nextFlags);
 	};
 

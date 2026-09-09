@@ -11,6 +11,25 @@ using namespace Javelin::PatternInternal;
 
 //============================================================================
 
+static uint32_t TrimRangeForDispatch(CharacterRange& range, const Interval<unsigned char, true>& dispatchRange)
+{
+	if(range.min >= NfaState::END_OF_INPUT) return 0;
+	if(range.min < dispatchRange.min)
+	{
+		if(range.max >= dispatchRange.min) range.max = dispatchRange.min-1;
+		return 0;
+	}
+	if(dispatchRange.Contains(range.min))
+	{
+		if(range.max > dispatchRange.max) range.max = dispatchRange.max;
+		return 1;
+	}
+	if(range.max > 255) range.max = 255;
+	return 0;
+}
+
+//============================================================================
+
 bool NfaState::AddEntry(uint32_t pc, UpdateCache &updateCache)
 {
 	if((stateFlags & Flag::IS_MATCH) == Flag::IS_MATCH) return false;
@@ -46,6 +65,8 @@ void NfaState::AddEntryNoCheck(uint32_t pc)
 bool NfaState::IsSearch() const
 {
 	if((stateFlags & Flag::IS_SEARCH) == 0) return false;
+	// Skipping input would carry the recorded match forward.
+	if(stateFlags & Flag::IS_MATCH) return false;
 	return numberOfStates == 1;
 }
 
@@ -344,17 +365,18 @@ void NfaState::Process(NfaState& outResult, const PatternData& patternData, Char
 {
 	outResult.numberOfStates = 0;
 	outResult.stateFlags = flags;
+	OpenHashSet<uint32_t> progressCheckSet;
 	
 	for(uint32_t i = 0; i < numberOfStates; ++i)
 	{
 		uint32_t pc = stateList[i];
 		if(patternData[pc].type == InstructionType::ProgressCheck) continue;
-		ProcessCurrentState(outResult, patternData, pc, range, flags, updateCache);
+		ProcessCurrentState(outResult, patternData, pc, range, flags, updateCache, progressCheckSet);
 	}
 	outResult.ClearIrrelevantFlags();
 }
 
-void NfaState::ProcessCurrentState(NfaState& outResult, const PatternData& patternData, uint32_t pc, CharacterRange& range, uint32_t flags, UpdateCache &updateCache) const
+void NfaState::ProcessCurrentState(NfaState& outResult, const PatternData& patternData, uint32_t pc, CharacterRange& range, uint32_t flags, UpdateCache &updateCache, OpenHashSet<uint32_t>& progressCheckSet) const
 {
 Loop:
 	const ByteCodeInstruction instruction = patternData[pc];
@@ -641,18 +663,7 @@ Loop:
 	case InstructionType::DispatchRange:
 		{
 			const ByteCodeJumpRangeData* data = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
-			if(range.min < data->range.min)
-			{
-				if(range.max >= data->range.min) range.max = data->range.min-1;
-			}
-			else
-			{
-				if(data->range.Contains(range.min))
-				{
-					if(range.max >= data->range.max) range.max = data->range.max;
-				}
-			}
-			pc = data->pcData[data->range.Contains(range.min)];
+			pc = data->pcData[TrimRangeForDispatch(range, data->range)];
 			if(pc == TypeData<uint32_t>::Maximum()) return;
 		}
 		goto Loop;
@@ -711,12 +722,11 @@ Loop:
 		goto Loop;
 
 	case InstructionType::ProgressCheck:
-		if(outResult.AddEntryNoMatchCheck(pc, updateCache))
-		{
-			++pc;
-			goto Loop;
-		}
-		break;
+		// Per traversal, not per state: the loop re-enters after consuming a byte.
+		if(progressCheckSet.Contains(pc)) break;
+		progressCheckSet.Put(pc);
+		++pc;
+		goto Loop;
 
 	case InstructionType::PropagateBackwards:
 	case InstructionType::Save:
@@ -740,7 +750,7 @@ Loop:
 			const ByteCodeSplitData* data = patternData.GetData<ByteCodeSplitData>(instruction.data);
 			for(uint32_t i = 0; i < data->numberOfTargets-1; ++i)
 			{
-				ProcessCurrentState(outResult, patternData, data->targetList[i], range, flags, updateCache);
+				ProcessCurrentState(outResult, patternData, data->targetList[i], range, flags, updateCache, progressCheckSet);
 			}
 			pc = data->targetList[data->numberOfTargets-1];
 		}
@@ -749,20 +759,20 @@ Loop:
 	case InstructionType::SplitMatch:
 		{
 			const uint32_t* data = patternData.GetData<uint32_t>(instruction.data);
-			ProcessCurrentState(outResult, patternData, data[0], range, flags, updateCache);
+			ProcessCurrentState(outResult, patternData, data[0], range, flags, updateCache, progressCheckSet);
 			pc = data[1];
 		}
 		goto Loop;
 			
 	case InstructionType::SplitNextN:
 	case InstructionType::SplitNextMatchN:
-		ProcessCurrentState(outResult, patternData, pc+1, range, flags, updateCache);
+		ProcessCurrentState(outResult, patternData, pc+1, range, flags, updateCache, progressCheckSet);
 		pc = instruction.data;
 		goto Loop;
 		
 	case InstructionType::SplitNNext:
 	case InstructionType::SplitNMatchNext:
-		ProcessCurrentState(outResult, patternData, instruction.data, range, flags, updateCache);
+		ProcessCurrentState(outResult, patternData, instruction.data, range, flags, updateCache, progressCheckSet);
 		++pc;
 		goto Loop;
 		
@@ -788,6 +798,8 @@ Loop:
 				if(range.min != c)
 				{
 					outResult.AddNextState(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
+					// The matched branch's first byte check may have become AdvanceByte.
+					return;
 				}
 			}
 			++pc;
@@ -830,6 +842,7 @@ Loop:
 				if(!match)
 				{
 					outResult.AddNextState(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
+					return;
 				}
 			}
 			++pc;
@@ -848,6 +861,7 @@ Loop:
 				if(!searchRange.Contains(range.min))
 				{
 					outResult.AddNextState(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
+					return;
 				}
 			}
 			++pc;
@@ -867,6 +881,7 @@ Loop:
 			if((data->data[range.min] & 1) != 0)
 			{
 				outResult.AddNextState(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
+				return;
 			}
 			++pc;
 			goto Loop;
@@ -876,7 +891,7 @@ Loop:
 	case InstructionType::SearchBoyerMoore:
 		if(range.min < 256)
 		{
-			ProcessCurrentState(outResult, patternData, pc+1, range, flags, updateCache);
+			ProcessCurrentState(outResult, patternData, pc+1, range, flags, updateCache, progressCheckSet);
 			outResult.AddNextState(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;
@@ -1185,17 +1200,18 @@ void NfaState::ProcessReverse(NfaState& outResult, const PatternData& patternDat
 {
 	outResult.numberOfStates = 0;
 	outResult.stateFlags = flags;
+	OpenHashSet<uint32_t> progressCheckSet;
 	
 	for(uint32_t i = 0; i < numberOfStates; ++i)
 	{
 		uint32_t pc = stateList[i];
 		if(patternData[pc].type == InstructionType::ProgressCheck) continue;
-		ProcessCurrentStateReverse(outResult, patternData, pc, range, flags, updateCache);
+		ProcessCurrentStateReverse(outResult, patternData, pc, range, flags, updateCache, progressCheckSet);
 	}
 	outResult.ClearIrrelevantFlags();
 }
 
-void NfaState::ProcessCurrentStateReverse(NfaState& outResult, const PatternData& patternData, uint32_t pc, CharacterRange& range, uint32_t flags, UpdateCache &updateCache) const
+void NfaState::ProcessCurrentStateReverse(NfaState& outResult, const PatternData& patternData, uint32_t pc, CharacterRange& range, uint32_t flags, UpdateCache &updateCache, OpenHashSet<uint32_t>& progressCheckSet) const
 {
 Loop:
 	const ByteCodeInstruction instruction = patternData[pc];
@@ -1483,25 +1499,7 @@ Loop:
 	case InstructionType::DispatchRange:
 		{
 			const ByteCodeJumpRangeData* data = patternData.GetData<ByteCodeJumpRangeData>(instruction.data);
-			if(stateFlags & Flag::IS_START_OF_SEARCH)
-			{
-				pc = data->pcData[0];
-			}
-			else
-			{
-				if(range.min < data->range.min)
-				{
-					if(range.max >= data->range.min) range.max = data->range.min-1;
-				}
-				else
-				{
-					if(data->range.Contains(range.min))
-					{
-						if(range.max >= data->range.max) range.max = data->range.max;
-					}
-				}
-				pc = data->pcData[data->range.Contains(range.min)];
-			}
+			pc = data->pcData[(stateFlags & Flag::IS_START_OF_SEARCH) ? 0 : TrimRangeForDispatch(range, data->range)];
 			if(pc == TypeData<uint32_t>::Maximum()) return;
 		}
 		goto Loop;
@@ -1574,12 +1572,11 @@ Loop:
 		goto Loop;
 
 	case InstructionType::ProgressCheck:
-		if(outResult.AddEntryNoMatchCheck(pc, updateCache))
-		{
-			++pc;
-			goto Loop;
-		}
-		break;
+		// Per traversal, not per state: the loop re-enters after consuming a byte.
+		if(progressCheckSet.Contains(pc)) break;
+		progressCheckSet.Put(pc);
+		++pc;
+		goto Loop;
 
 	case InstructionType::PropagateBackwards:
 	case InstructionType::Save:
@@ -1603,7 +1600,7 @@ Loop:
 			const ByteCodeSplitData* data = patternData.GetData<ByteCodeSplitData>(instruction.data);
 			for(uint32_t i = 0; i < data->numberOfTargets-1; ++i)
 			{
-				ProcessCurrentStateReverse(outResult, patternData, data->targetList[i], range, flags, updateCache);
+				ProcessCurrentStateReverse(outResult, patternData, data->targetList[i], range, flags, updateCache, progressCheckSet);
 			}
 			pc = data->targetList[data->numberOfTargets-1];
 		}
@@ -1612,20 +1609,20 @@ Loop:
 	case InstructionType::SplitMatch:
 		{
 			const uint32_t* data = patternData.GetData<uint32_t>(instruction.data);
-			ProcessCurrentStateReverse(outResult, patternData, data[0], range, flags, updateCache);
+			ProcessCurrentStateReverse(outResult, patternData, data[0], range, flags, updateCache, progressCheckSet);
 			pc = data[1];
 		}
 		goto Loop;
 			
 	case InstructionType::SplitNextN:
 	case InstructionType::SplitNextMatchN:
-		ProcessCurrentStateReverse(outResult, patternData, pc+1, range, flags, updateCache);
+		ProcessCurrentStateReverse(outResult, patternData, pc+1, range, flags, updateCache, progressCheckSet);
 		pc = instruction.data;
 		goto Loop;
 		
 	case InstructionType::SplitNNext:
 	case InstructionType::SplitNMatchNext:
-		ProcessCurrentStateReverse(outResult, patternData, instruction.data, range, flags, updateCache);
+		ProcessCurrentStateReverse(outResult, patternData, instruction.data, range, flags, updateCache, progressCheckSet);
 		++pc;
 		goto Loop;
 		
@@ -1737,7 +1734,7 @@ Loop:
 	case InstructionType::SearchBoyerMoore:
 		if(range.min < 256)
 		{
-			ProcessCurrentStateReverse(outResult, patternData, pc+1, range, flags, updateCache);
+			ProcessCurrentStateReverse(outResult, patternData, pc+1, range, flags, updateCache, progressCheckSet);
 			outResult.AddNextStateReverse(patternData, pc, range, updateCache, ConvertFlagsToNextFlags(flags));
 		}
 		break;

@@ -261,7 +261,7 @@ namespace Javelin
 		static const StackGrowthHandler* GetStackGrowthHandler() 		{ return stackGrowthHandler; }
 		static void SetStackGrowthHandler(const StackGrowthHandler* a) 	{ stackGrowthHandler = a; }
 		
-		static void SetDfaMemoryModeConfiguration(DfaMemoryManagerMode mode, size_t limit=1024*1024);
+		static void SetDfaMemoryModeConfiguration(DfaMemoryManagerMode mode, size_t limit=4*1024*1024);
 		
 	private:
 		JDISABLE_COPY_AND_ASSIGNMENT(Pattern);

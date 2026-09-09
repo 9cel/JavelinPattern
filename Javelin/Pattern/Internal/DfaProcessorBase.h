@@ -8,6 +8,7 @@
 #include "Javelin/Thread/Semaphore.h"
 #include "Javelin/Thread/SpinLock.h"
 #include "Javelin/Type/Atomic.h"
+#include <vector>
 
 //============================================================================
 
@@ -72,6 +73,7 @@ namespace Javelin::PatternInternal
 			SearchByteRangePairWithAssert,
 			SearchBoyerMooreWithAssert,
 			SearchShiftOrWithAssert,
+			SearchByteNotRange,
 		};
 		
 		// Reset counter replaces a SpinLock, bool isResetting and uint32_t activeThreadCount
@@ -86,6 +88,8 @@ namespace Javelin::PatternInternal
 		
 		PatternData					patternData;
 		uint32_t					numberOfInstructions;
+		std::vector<uint32_t>	minimumRemainingLengths;
+		void CalculateMinimumRemainingLengths();
 		
 		RecursiveMutex				populateLock;
 		Semaphore					waitForResetBeginSemaphore;
@@ -114,6 +118,8 @@ namespace Javelin::PatternInternal
 		
 		static const unsigned char* NoSearchHandler(const unsigned char* p, const void* data, const unsigned char* pStop);
 		static const unsigned char* SearchByte0Handler(const unsigned char* p, const void* data, const unsigned char* pStop);
+		static const unsigned char* FindByteNotRangeForward(const unsigned char* p, const void* data, const unsigned char* end);
+		static const unsigned char* FindByteNotRangeReverse(const unsigned char* p, const void* data, const unsigned char* stop);
 		
 		virtual SearchHandler GetSearchHandler(SearchHandlerEnum value, State* state) const = 0;
 		

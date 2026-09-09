@@ -37,6 +37,7 @@ namespace Javelin::PatternInternal
 		mutable State *volatile		unanchoredStartingStates[StartingIndex::Count] = { nullptr, nullptr, nullptr, nullptr };
 		
 		void ClearStartingStates() override;
+		JNOINLINE State* CreateStartingState(size_t startingIndex, bool matchIsAnchored) const;
 		void ProcessNfaState(NfaState& result, const NfaState& state, const PatternData& patternData, CharacterRange& relevancyInterval, int flags, void* updateCache) const override;
 		SearchHandler GetSearchHandler(SearchHandlerEnum value, State* state) const override;
 		const uint8_t* GetCharacterFlags() const override;

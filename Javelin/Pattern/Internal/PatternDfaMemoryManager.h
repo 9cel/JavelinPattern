@@ -25,7 +25,7 @@ namespace Javelin
 			static void AddProcessor(DfaProcessorBase& processor);
 			static void RemoveProcessor(DfaProcessorBase& processor);
 			
-			static void SetConfiguration(DfaMemoryManagerMode mode, size_t limit=1024*1024);
+			static void SetConfiguration(DfaMemoryManagerMode mode, size_t limit=4*1024*1024);
 			static void* Allocate(size_t numberOfBytes, DfaProcessorBase& dfaProcessor);
 			static void  Release(void* data, size_t numberOfBytes, DfaProcessorBase& dfaProcessor);
 			static void  OnReleaseAll(size_t numberOfBytes);
@@ -36,7 +36,7 @@ namespace Javelin
 			static DfaMemoryManager& GetInstance();
 			
 			DfaMemoryManagerMode 	mode;
-			size_t 					limit				= 1024*1024;
+			size_t 					limit				= 4*1024*1024;
 			size_t					totalAllocation		= 0;
 
 			typedef IntrusiveList<DfaProcessorBase, &DfaProcessorBase::listNode> ProcessorList;

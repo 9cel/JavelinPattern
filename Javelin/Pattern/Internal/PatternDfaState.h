@@ -13,6 +13,7 @@ namespace Javelin::PatternInternal
 		struct DfaProcessorBase::State
 		{
 			uint32_t				stateFlags;
+			uint32_t				minimumRemainingLength;
 			SearchHandler			searchHandler;
 			const void*				searchData;
 			union
