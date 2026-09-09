@@ -93,6 +93,7 @@ namespace Javelin
 	namespace PatternInternal
 	{
 		union ByteCodeInstruction;
+		struct ByteCodeHeader;
 		class Compiler;
 		class PatternProcessor;
 		enum class PatternProcessorType : uint16_t;
@@ -273,6 +274,8 @@ namespace Javelin
 		uint32_t							numberOfCaptures;
 		uint32_t							minimumMatchLength;
 		int32_t								maximumMatchLength;
+		uint8_t								anchoredByteMask = 0;
+		uint8_t								anchoredByteValue = 0;
 
 		static const StackGrowthHandler*	stackGrowthHandler;
 		
@@ -281,7 +284,13 @@ namespace Javelin
 		bool HasEndAnchor() const;
 		
 		void Set(const void* data, size_t length, bool makeCopy);
+		void SetAnchoredByteFilter(const PatternInternal::ByteCodeHeader* header);
 		size_t AdvanceAfterEmptyMatch(const void* data, size_t length, size_t offset) const;
+		JINLINE bool RejectsAnchoredByte(const void* data, size_t length) const
+		{
+			return anchoredByteMask && (length == 0 ||
+				(*(const unsigned char*)data & anchoredByteMask) != anchoredByteValue);
+		}
 		
         JEXPORT const void* JCALL InternalHasFullMatch(const void* data, size_t length) const;
         JEXPORT const void* JCALL InternalHasPartialMatch(const void* data, size_t length, size_t offset = 0) const;

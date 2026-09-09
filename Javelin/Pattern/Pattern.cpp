@@ -106,6 +106,7 @@ Pattern::Pattern(const String& pattern, int options) // Can throw PatternExcepti
 	const DataBlock& dataBlock = compiler.GetByteCode();
 	
 	const ByteCodeHeader* header = (ByteCodeHeader*) dataBlock.GetData();
+	SetAnchoredByteFilter(header);
 	flags = header->flags.value;
 	isUtf8 = (header->patternStringOptions & UTF8) != 0;
 	minimumMatchLength = header->minimumMatchLength;
@@ -169,6 +170,7 @@ void Pattern::Set(const void* data, size_t length, bool makeCopy)
 {
 	const ByteCodeHeader* header = (ByteCodeHeader*) data;
 	JVERIFY(header->IsValid());
+	SetAnchoredByteFilter(header);
 	
 	numberOfCaptures = header->numberOfCaptures;
 	flags = header->flags.value;
@@ -187,6 +189,47 @@ void Pattern::Set(const void* data, size_t length, bool makeCopy)
 	else
 	{
 		fullMatchProcessor = CreateProcessor(data, length, makeCopy, header->flags.fullMatchProcessorType);
+	}
+}
+
+void Pattern::SetAnchoredByteFilter(const ByteCodeHeader* header)
+{
+	// A necessary first byte, derived from bytecode so deserialized patterns agree.
+	if(!header->flags.hasStartAnchor || header->minimumMatchLength == 0
+	   || (header->patternStringOptions & NO_OPTIMIZE)) return;
+	const ByteCodeInstruction* program = header->GetForwardProgram();
+	uint32_t pc = header->partialMatchStartingInstruction;
+	for(size_t steps = 0; steps < header->numberOfInstructions && pc < header->numberOfInstructions; ++steps)
+	{
+		const ByteCodeInstruction instruction = program[pc++];
+		switch(instruction.type)
+		{
+		case InstructionType::Byte:
+			anchoredByteMask = 0xff;
+			anchoredByteValue = instruction.data;
+			return;
+		case InstructionType::ByteEitherOf2:
+			// Bits common to both alternatives.
+			anchoredByteMask = ~(instruction.data ^ (instruction.data >> 8));
+			anchoredByteValue = instruction.data & anchoredByteMask;
+			return;
+		case InstructionType::AssertStartOfInput:
+		case InstructionType::AssertEndOfInput:
+		case InstructionType::AssertStartOfLine:
+		case InstructionType::AssertEndOfLine:
+		case InstructionType::AssertWordBoundary:
+		case InstructionType::AssertNotWordBoundary:
+		case InstructionType::AssertStartOfSearch:
+		case InstructionType::Save:
+		case InstructionType::SaveNoRecurse:
+		case InstructionType::ProgressCheck:
+			break;
+		case InstructionType::Jump:
+			pc = instruction.data;
+			break;
+		default:
+			return;
+		}
 	}
 }
 
@@ -598,6 +641,7 @@ void Pattern::DumpInstructionList(IWriter& output, const ByteCodeInstruction* in
 
 const void* Pattern::InternalHasFullMatch(const void* data, size_t length) const
 {
+	if(RejectsAnchoredByte(data, length)) return nullptr;
 	size_t testLength = length - GetMinimumLength();
 	if(JUNLIKELY(testLength > GetMatchLengthCheck())) return nullptr;
 //	if(JUNLIKELY(length < GetMinimumLength() || length > GetMaximumMatchLength())) return false;
@@ -622,6 +666,7 @@ const void* Pattern::HasFullMatchWithCaptures(const void* data, size_t length) c
 const void* Pattern::InternalHasPartialMatch(const void* data, size_t length, size_t offset) const
 {
 	JASSERT(offset <= length);
+	if(RejectsAnchoredByte(data, length)) return nullptr;
 	
 	size_t remainingLength = length - offset;
 	if(HasEndAnchor() && remainingLength > GetMaximumLength())
@@ -651,6 +696,7 @@ const void *Pattern::HasPartialMatchWithCaptures(const void* data, size_t length
 
 bool Pattern::FullMatch(const void* data, size_t length, const void** captures) const
 {
+	if(RejectsAnchoredByte(data, length)) return false;
 	size_t testLength = length - GetMinimumLength();
 	if(JUNLIKELY(testLength > GetMatchLengthCheck())) return false;
 //	if(JUNLIKELY(length < GetMinimumLength() || length > GetMaximumMatchLength())) return false;
@@ -661,6 +707,7 @@ bool Pattern::FullMatch(const void* data, size_t length, const void** captures) 
 bool Pattern::PartialMatch(const void* data, size_t length, const void** captures, size_t offset) const
 {
 	JASSERT(offset <= length);
+	if(RejectsAnchoredByte(data, length)) return false;
 
 	size_t remainingLength = length - offset;
 	if(HasEndAnchor() && remainingLength > GetMaximumLength())
@@ -676,6 +723,7 @@ bool Pattern::PartialMatch(const void* data, size_t length, const void** capture
 
 bool Pattern::LocatePartialMatch(const void* data, size_t length, const void** bounds, size_t offset) const
 {
+	if(RejectsAnchoredByte(data, length)) return false;
 	if(offset > length) return false;
 	size_t remainingLength = length - offset;
 	if(HasEndAnchor() && remainingLength > GetMaximumLength()) offset = length - GetMaximumLength();
@@ -732,6 +780,7 @@ MatchResult Pattern::PartialMatch(const String& s, size_t offset) const
 
 size_t Pattern::CountPartialMatchBytes(const void* data, size_t length, size_t offset) const
 {
+	if(RejectsAnchoredByte(data, length)) return 0;
 	if(offset > length || length - offset < GetMinimumLength()) return 0;
 	if(HasEndAnchor() && length - offset > GetMaximumLength()) offset = length - GetMaximumLength();
 	const bool anchored = HasStartAnchor();
@@ -772,6 +821,7 @@ size_t Pattern::AdvanceAfterEmptyMatch(const void* data, size_t length, size_t o
 size_t Pattern::CountPartialMatches(const void* data, size_t length, size_t offset) const
 {
 	JASSERT(offset <= length);
+	if(RejectsAnchoredByte(data, length)) return 0;
 	
 	size_t remainingLength = length - offset;
 	if(HasEndAnchor() && remainingLength > GetMaximumLength())
