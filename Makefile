@@ -3,7 +3,7 @@ ODIR=build
 CPPFLAGS=-O3 -I. -std=c++17 -fomit-frame-pointer -DJBUILDCONFIG_FINAL -DNDEBUG
 
 ASSEMBLER_SOURCES = \
-		    Javelin/Assembler/BitUtilty.cpp \
+		    Javelin/Assembler/BitUtility.cpp \
 			 	Javelin/Assembler/JitForwardReferenceMap.cpp \
 		    Javelin/Assembler/JitLabelId.cpp \
 		    Javelin/Assembler/JitLabelMap.cpp \
@@ -71,9 +71,7 @@ PATTERN_JASM_SOURCES = \
 
 PATTERN_SOURCES = \
 				Javelin/JavelinStatics.cpp \
-        Javelin/Allocators/FreeListAllocator.cpp \
         Javelin/Container/BitTable.cpp \
-        Javelin/Container/ConcurrentQueue.cpp \
         Javelin/Container/List.cpp \
         Javelin/Cryptography/Crc32.cpp \
         Javelin/Cryptography/Crc64.cpp \
@@ -82,7 +80,6 @@ PATTERN_SOURCES = \
         Javelin/Pattern/JavelinPattern.cpp \
         Javelin/Pattern/Pattern.cpp \
         Javelin/Pattern/Internal/Amd64DfaPatternProcessor.cpp \
-        Javelin/Pattern/Internal/Amd64PatternProcessors.cpp \
         Javelin/Pattern/Internal/Amd64PatternProcessorsFindMethods.cpp \
         Javelin/Pattern/Internal/ArmNeonDfaPatternProcessor.cpp \
         Javelin/Pattern/Internal/ArmNeonPatternProcessorsFindMethods.cpp \
@@ -137,19 +134,19 @@ PATTERN_SOURCES = \
         Javelin/System/StackWalk.cpp \
         Javelin/Thread/RecursiveMutex.cpp \
         Javelin/Thread/Semaphore.cpp \
-        Javelin/Thread/Task.cpp \
         Javelin/Thread/Thread.cpp \
-        Javelin/Thread/ThreadPool.cpp \
         Javelin/Type/Character.cpp \
         Javelin/Type/DataBlock.cpp \
         Javelin/Type/Function.cpp \
         Javelin/Type/String.cpp \
-        Javelin/Type/Url.cpp \
         Javelin/Type/Utf8Character.cpp \
         Javelin/Type/Utf8Pointer.cpp \
         Javelin/Type/VariableName.cpp \
 				$(ASSEMBLER_SOURCES) \
 				$(patsubst %.cpp.jasm,$(ODIR)/DerivedSources/%.cpp,$(PATTERN_JASM_SOURCES))
+
+ASSEMBLER_SOURCES := $(sort $(ASSEMBLER_SOURCES))
+PATTERN_SOURCES := $(sort $(PATTERN_SOURCES))
 
 help:
 	@echo
@@ -162,10 +159,10 @@ help:
 	@echo "jasm              - Build jasm"
 	@echo
 
-.PHONY : all clean jasm assembler-library pattern-library example
+.PHONY : all clean jasm assembler-library pattern-library shared-library example
 .PRECIOUS: $(ODIR)/DerivedSources/%.cpp
 
-all: jasm assembler-library pattern-library example
+all: jasm assembler-library pattern-library shared-library example
 
 clean:
 	@echo "Removing [31;1m$(ODIR)[m"
@@ -174,12 +171,14 @@ clean:
 $(ODIR)/Objects/%.o: %.cpp
 	@echo "Compiling: [34;1m$<[m"
 	@mkdir -p $(dir $@)
-	@$(CC) -c -o $@ $< $(CPPFLAGS) 
+	@$(CC) -c -o $@ $< $(CPPFLAGS) -MMD -MP -fPIC
 
-$(ODIR)/Objects/%.o: $(patsubst %.cpp.jasm,$(ODIR)/DerivedSources/%.cpp,$(PATTERN_JASM_SOURCES))
+$(ODIR)/Objects/$(ODIR)/DerivedSources/%.o: $(ODIR)/DerivedSources/%.cpp
 	@echo "Compiling: [34;1m$<[m"
 	@mkdir -p $(dir $@)
-	@$(CC) -c -o $@ $< $(CPPFLAGS) 
+	@$(CC) -c -o $@ $< $(CPPFLAGS) -MMD -MP -fPIC
+
+-include $(shell find $(ODIR)/Objects -name '*.d' 2>/dev/null)
 
 $(ODIR)/DerivedSources/%.cpp: %.cpp.jasm $(ODIR)/jasm
 	@echo "jasm: [34;1m$<[m"
@@ -188,11 +187,18 @@ $(ODIR)/DerivedSources/%.cpp: %.cpp.jasm $(ODIR)/jasm
 
 $(ODIR)/libJavelinAssembler.a: $(patsubst %.cpp,$(ODIR)/Objects/%.o,$(ASSEMBLER_SOURCES))
 	@echo "Linking: [32;1m$@[m"
+	@rm -f "$@"
 	@ar rcs $@ $^ 
 
 $(ODIR)/libJavelinPattern.a: $(patsubst %.cpp,$(ODIR)/Objects/%.o,$(PATTERN_SOURCES))
 	@echo "Linking: [32;1m$@[m"
+	@rm -f "$@"
 	@ar rcs $@ $^ 
+
+$(ODIR)/libJavelinPattern.so: $(patsubst %.cpp,$(ODIR)/Objects/%.o,$(PATTERN_SOURCES))
+	@echo "Linking: [32;1m$@[m"
+	@rm -f "$@"
+	@$(CC) -shared -flto -o $@ $^ 
 
 $(ODIR)/jasm: $(patsubst %.cpp,$(ODIR)/Objects/%.o,$(JASM_SOURCES))
 	@echo "Linking: [32;1m$@[m"
@@ -203,6 +209,8 @@ jasm: $(ODIR)/jasm
 assembler-library: $(ODIR)/libJavelinAssembler.a
 
 pattern-library: $(ODIR)/libJavelinPattern.a
+
+shared-library: $(ODIR)/libJavelinPattern.so
 
 example: pattern-library
 	@echo "Creating: [32;1m$(ODIR)/example[m"

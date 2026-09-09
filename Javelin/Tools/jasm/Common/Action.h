@@ -3,6 +3,7 @@
 #pragma once
 #include "JumpType.h"
 #include <string>
+#include <typeinfo>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>

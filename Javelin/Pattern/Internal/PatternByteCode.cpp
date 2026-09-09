@@ -85,11 +85,11 @@ Interval<uint8_t> ByteCodeInstruction::GetRange() const	{
 	{
 	case InstructionType::Byte:
 	case InstructionType::ByteNot:
-		return {data, data};
+		return {uint8_t(data), uint8_t(data)};
 			
 	case InstructionType::ByteRange:
 	case InstructionType::ByteNotRange:
-		return { data & 0xff, data>>8 & 0xff};
+		return {uint8_t(data & 0xff), uint8_t(data>>8 & 0xff)};
 			
 	default:
 		JERROR("Invalid instruction type for GetRange call");
