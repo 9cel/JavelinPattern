@@ -412,9 +412,10 @@ void CharacterRangeListComponent::BuildInstructions(InstructionList &instruction
 		}
 		instructionList.AddInstruction(instruction);
 	}
-	else if(characterRangeList.GetCount() == 1 &&
+	else if(!instructionList.IsReverse() && characterRangeList.GetCount() == 1 &&
 	   characterRangeList[0] == CharacterRange{0, Character::Maximum()})
 	{
+		// Forwards only. The general case below handles reverse programs.
 		//	7	U+0000		U+007F		1	0xxxxxxx
 		//	11	U+0080		U+07FF		2	110xxxxx	10xxxxxx
 		//	16	U+0800		U+FFFF		3	1110xxxx	10xxxxxx	10xxxxxx
@@ -832,7 +833,7 @@ void CaptureComponent::BuildInstructions(InstructionList &instructionList) const
 		if(content->IsFixedLength())
 		{
 			content->BuildInstructions(instructionList);
-			if(emitCaptureStart && instructionList.IsForwards())
+			if(emitCaptureStart || instructionList.IsReverse())
 			{
 				SaveInstruction* instruction = new SaveInstruction(saveNeverRecurses, startCaptureIndex, content->GetMinimumLength());
 				instructionList.AddInstruction(instruction);
@@ -930,7 +931,8 @@ CounterComponent::CounterComponent(uint32_t aMinimum, uint32_t aMaximum, Mode aM
   maximum(aMaximum),
   mode(aMode)
 {
-	if(minimum == maximum) mode = Mode::Maximal;
+	// {n}+ keeps its commit boundary.
+	if(minimum == maximum && mode != Mode::Possessive) mode = Mode::Maximal;
 }
 
 void CounterComponent::Dump(ICharacterWriter& output, int depth)
@@ -1039,7 +1041,7 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 	{
 		if(maximum == TypeData<uint32_t>::Maximum())
 		{
-			if(content->HasSpecificRepeatInstruction() || lastContent == nullptr)
+			if(content->HasSpecificRepeatInstruction() || lastContent == nullptr || content->GetMinimumLength() == 0)
 			{
 				SplitInstruction* split = new SplitInstruction;
 				JumpInstruction* jump = new JumpInstruction;
@@ -1047,12 +1049,12 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 				split->targetList.SetCount(2);
 				instructionList.AddInstruction(jump);
 				instructionList.AddPatchReference(&split->targetList[1]);
-				content->BuildRepeatInstructions(instructionList);
-				
+				// An empty iteration must exit the loop.
 				if(content->GetMinimumLength() == 0)
 				{
 					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
 				}
+				content->BuildRepeatInstructions(instructionList);
 				
 				instructionList.AddInstruction(split);			
 				instructionList.AddPatchReference(&split->targetList[0]);
@@ -1103,7 +1105,7 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 	{
 		if(maximum == TypeData<uint32_t>::Maximum())
 		{
-			if(content->HasSpecificRepeatInstruction() || lastContent == nullptr)
+			if(content->HasSpecificRepeatInstruction() || lastContent == nullptr || content->GetMinimumLength() == 0)
 			{
 				SplitInstruction* split = new SplitInstruction;
 				JumpInstruction* jump = new JumpInstruction;
@@ -1111,12 +1113,11 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 				split->targetList.SetCount(2);
 				instructionList.AddInstruction(jump);
 				instructionList.AddPatchReference(&split->targetList[0]);
-				content->BuildRepeatInstructions(instructionList);
-				
 				if(content->GetMinimumLength() == 0)
 				{
 					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
 				}
+				content->BuildRepeatInstructions(instructionList);
 				
 				instructionList.AddInstruction(split);
 				instructionList.AddPatchReference(&split->targetList[1]);

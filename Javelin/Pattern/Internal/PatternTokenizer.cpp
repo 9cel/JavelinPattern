@@ -34,6 +34,14 @@ Character Tokenizer::GetEscapedCharacter()
 	{
 	case 'a':
 		return Character('\a');
+
+	case 'b':
+		return Character('\b');
+
+	case 'p':
+	case 'P':
+		// Unicode properties are not implemented.
+		JPATTERN_ERROR(UnknownEscape, pUC-1);
 			
 	case 'e':
 		return Character('\e');
@@ -929,4 +937,3 @@ void Tokenizer::ProcessTokens()
 }
 
 //============================================================================
-

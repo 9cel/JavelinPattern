@@ -262,6 +262,9 @@ IComponent* Compiler::CompileGroup(int &options)
 
 bool Compiler::CoalesceComponent(CounterComponent* previousComponent, IComponent* component)
 {
+	// a++a must not become a{2,}+
+	if(previousComponent->mode == CounterComponent::Possessive) return false;
+
 	// Opportunity for coalescing!
 	if(previousComponent->content->IsEqual(component))
 	{
@@ -723,6 +726,7 @@ IComponent* Compiler::CompileAtom(int options)
 		if(inner->minimum > 1) return result;
 		
 		CounterComponent* outer = (CounterComponent*) result;
+		if(inner->mode == CounterComponent::Possessive || outer->mode == CounterComponent::Possessive) return result;
 		
 		// Determine minimal or maximal
 		if(outer->minimum != outer->maximum)
@@ -817,18 +821,26 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 				case TokenType::CounterEnd:
 				case TokenType::CounterEndMinimal:
 				case TokenType::CounterEndPossessive:
+				{
 					// {x}
+					const bool possessive = tokenizer->PeekCurrentTokenType() == TokenType::CounterEndPossessive;
 					tokenizer->ProcessTokens();
 					if(min == 0)
 					{
 						delete atom;
 						return new EmptyComponent;
 					}
+					else if(possessive)
+					{
+						usesBacktrackingComponents = true;
+						return new CounterComponent(min, min, CounterComponent::Possessive, atom);
+					}
 					else if(min == 1)
 					{
 						return atom;
 					}
 					else return new CounterComponent(min, min, CounterComponent::Minimal, atom);
+				}
 						
 				case TokenType::CounterSeparator:
 					tokenizer->ProcessTokens();

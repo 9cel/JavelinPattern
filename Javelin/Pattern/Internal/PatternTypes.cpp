@@ -56,16 +56,18 @@ void CharacterRangeList::Add(CharacterRange interval)
 
 		if(range % checkInterval)
 		{
+			// Interval::operator|= discards min == max.
 			if(mergeIndex < 0)
 			{
-				range |= checkInterval;
+				range = Union(range, interval);
 				mergeIndex = (int) i-1;
 				interval = range;
 			}
 			else
 			{
 				CharacterRange& merge = (*this)[mergeIndex];
-				merge |= range;
+				merge = Union(merge, range);
+				interval = merge;
 				RemoveIndex(i-1);
 				--mergeIndex;
 			}
