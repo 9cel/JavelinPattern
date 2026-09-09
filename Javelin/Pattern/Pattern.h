@@ -224,11 +224,16 @@ namespace Javelin
 		JINLINE size_t GetNumberOfCaptures() const { return numberOfCaptures; }
 
         JINLINE bool        HasFullMatch(const void* data, size_t length) const                         { return InternalHasFullMatch(data, length) != nullptr; }
-        JINLINE bool        HasPartialMatch(const void* data, size_t length, size_t offset = 0) const   { return InternalHasPartialMatch(data, length) != nullptr; }
+        JINLINE bool        HasPartialMatch(const void* data, size_t length, size_t offset = 0) const   { return InternalHasPartialMatch(data, length, offset) != nullptr; }
 
 		JEXPORT bool JCALL   FullMatch(const void* data, size_t length, const void** captures) const;
 		JEXPORT bool JCALL   PartialMatch(const void* data, size_t length, const void** captures, size_t offset = 0) const;
+		// Returns only group zero, without recovering unused capture groups.
+		JEXPORT bool JCALL   LocatePartialMatch(const void* data, size_t length, const void** bounds, size_t offset = 0) const;
+		// Non-overlapping matches, counted as Perl and PCRE2 iterate them.
 		JEXPORT size_t JCALL CountPartialMatches(const void* data, size_t length, size_t offset = 0) const;
+		// Total length of those matches.
+		JEXPORT size_t JCALL CountPartialMatchBytes(const void* data, size_t length, size_t offset = 0) const;
 
 		JINLINE bool 		HasFullMatch(const String& s) const							{ return HasFullMatch(s.GetData(), s.GetNumberOfBytes()); }
 		JINLINE bool 		HasPartialMatch(const String& s, size_t offset=0) const		{ return HasPartialMatch(s.GetData(), s.GetNumberOfBytes(), offset); }
@@ -261,6 +266,7 @@ namespace Javelin
 		JDISABLE_COPY_AND_ASSIGNMENT(Pattern);
 		
 		uint16_t							flags;
+		bool								isUtf8;
 		int32_t								matchLengthCheck;
 		PatternInternal::PatternProcessor* 	partialMatchProcessor;
 		PatternInternal::PatternProcessor* 	fullMatchProcessor;
@@ -275,6 +281,7 @@ namespace Javelin
 		bool HasEndAnchor() const;
 		
 		void Set(const void* data, size_t length, bool makeCopy);
+		size_t AdvanceAfterEmptyMatch(const void* data, size_t length, size_t offset) const;
 		
         JEXPORT const void* JCALL InternalHasFullMatch(const void* data, size_t length) const;
         JEXPORT const void* JCALL InternalHasPartialMatch(const void* data, size_t length, size_t offset = 0) const;

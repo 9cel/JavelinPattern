@@ -85,7 +85,12 @@ bool   jp_has_full_match(jp_pattern_t pattern, const void* data, size_t data_len
 bool   jp_has_partial_match(jp_pattern_t pattern, const void* data, size_t data_length, size_t data_offset);
 bool   jp_full_match(jp_pattern_t pattern, const void* data, size_t data_length, const void** captures);
 bool   jp_partial_match(jp_pattern_t pattern, const void* data, size_t data_length, const void** captures, size_t data_offset);
+// bounds points to two slots: the beginning and one-past-the-end of group zero.
+bool   jp_locate_partial_match(jp_pattern_t pattern, const void* data, size_t data_length, const void** bounds, size_t data_offset);
+// Non-overlapping matches, counted as Perl and PCRE2 iterate them.
 size_t jp_count_partial_matches(jp_pattern_t pattern, const void* data, size_t data_length, size_t data_offset);
+// Total length of those matches.
+size_t jp_count_partial_match_bytes(jp_pattern_t pattern, const void* data, size_t data_length, size_t data_offset);
 
 // Functions to control behavior of matching.
 void jp_dfa_memory_manager_mode_set_unlimited();

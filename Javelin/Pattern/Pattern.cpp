@@ -107,6 +107,7 @@ Pattern::Pattern(const String& pattern, int options) // Can throw PatternExcepti
 	
 	const ByteCodeHeader* header = (ByteCodeHeader*) dataBlock.GetData();
 	flags = header->flags.value;
+	isUtf8 = (header->patternStringOptions & UTF8) != 0;
 	minimumMatchLength = header->minimumMatchLength;
 	maximumMatchLength = header->maximumMatchLength == TypeData<uint16_t>::Maximum() ? TypeData<uint32_t>::Maximum() : size_t(header->maximumMatchLength);
 	matchLengthCheck = GetMaximumLength() - GetMinimumLength();
@@ -171,6 +172,7 @@ void Pattern::Set(const void* data, size_t length, bool makeCopy)
 	
 	numberOfCaptures = header->numberOfCaptures;
 	flags = header->flags.value;
+	isUtf8 = (header->patternStringOptions & UTF8) != 0;
 	minimumMatchLength = header->minimumMatchLength;
 	maximumMatchLength = header->maximumMatchLength == TypeData<uint16_t>::Maximum() ? TypeData<uint32_t>::Maximum() : header->maximumMatchLength;
 	matchLengthCheck = GetMaximumLength() - GetMinimumLength();
@@ -672,6 +674,32 @@ bool Pattern::PartialMatch(const void* data, size_t length, const void** capture
 	return partialMatchProcessor->PartialMatch(data, length, offset, (const char**) captures) != nullptr;
 }
 
+bool Pattern::LocatePartialMatch(const void* data, size_t length, const void** bounds, size_t offset) const
+{
+	if(offset > length) return false;
+	size_t remainingLength = length - offset;
+	if(HasEndAnchor() && remainingLength > GetMaximumLength()) offset = length - GetMaximumLength();
+	else if(remainingLength < GetMinimumLength()) return false;
+	if(offset > 0 && HasStartAnchor()) return false;
+
+	if(AlwaysRequiresCaptures())
+	{
+		const char* captures[2*numberOfCaptures];
+		memset(captures, 0, sizeof(captures));
+		if(!partialMatchProcessor->PartialMatch(data, length, offset, captures)) return false;
+		bounds[0] = captures[0];
+		bounds[1] = captures[1];
+	}
+	else
+	{
+		Interval<const void*> result = partialMatchProcessor->LocatePartialMatch(data, length, offset);
+		if(!result.max) return false;
+		bounds[0] = result.min;
+		bounds[1] = result.max;
+	}
+	return true;
+}
+
 MatchResult Pattern::FullMatch(const String& s) const
 {
 	const char* captures[2*numberOfCaptures];
@@ -700,6 +728,45 @@ MatchResult Pattern::PartialMatch(const String& s, size_t offset) const
 	{
 		return MatchResult(nullptr, 0);
 	}
+}
+
+size_t Pattern::CountPartialMatchBytes(const void* data, size_t length, size_t offset) const
+{
+	if(offset > length || length - offset < GetMinimumLength()) return 0;
+	if(HasEndAnchor() && length - offset > GetMaximumLength()) offset = length - GetMaximumLength();
+	const bool anchored = HasStartAnchor();
+	if(anchored && offset != 0) return 0;
+	size_t total = 0;
+	if(AlwaysRequiresCaptures())
+	{
+		const void* bounds[2];
+		while(LocatePartialMatch(data, length, bounds, offset))
+		{
+			total += uintptr_t(bounds[1]) - uintptr_t(bounds[0]);
+			offset = uintptr_t(bounds[1]) - uintptr_t(data);
+			if(anchored || offset == length) break;
+			if(bounds[0] == bounds[1]) offset = AdvanceAfterEmptyMatch(data, length, offset);
+		}
+		return total;
+	}
+	const size_t lastStart = length - GetMinimumLength();
+	while(offset <= lastStart)
+	{
+		const Interval<const void*> match = partialMatchProcessor->LocatePartialMatch(data, length, offset);
+		if(!match.max) break;
+		total += uintptr_t(match.max) - uintptr_t(match.min);
+		offset = uintptr_t(match.max) - uintptr_t(data);
+		if(anchored || offset == length) break;
+		if(match.min == match.max) offset = AdvanceAfterEmptyMatch(data, length, offset);
+	}
+	return total;
+}
+
+size_t Pattern::AdvanceAfterEmptyMatch(const void* data, size_t length, size_t offset) const
+{
+	++offset;
+	if(isUtf8) while(offset < length && (((const unsigned char*) data)[offset] & 0xc0) == 0x80) ++offset;
+	return offset;
 }
 
 size_t Pattern::CountPartialMatches(const void* data, size_t length, size_t offset) const
@@ -731,13 +798,12 @@ size_t Pattern::CountPartialMatches(const void* data, size_t length, size_t offs
 	{
 		do
 		{
-			Interval<const void*> result = partialMatchProcessor->LocatePartialMatch(data, length, offset);
+			const Interval<const void*> result = partialMatchProcessor->LocatePartialMatch(data, length, offset);
 			if(result.max == nullptr) return count;
-			
 			++count;
 			offset = uintptr_t(result.max) - uintptr_t(data);
-			if(result.min == result.max) ++offset;
-		} while(offset < length);
+			if(result.min == result.max) offset = AdvanceAfterEmptyMatch(data, length, offset);
+		} while(offset <= length);
 	}
 	else
 	{
@@ -766,7 +832,6 @@ size_t Pattern::CountPartialMatchesWithCaptures(const void* data, size_t length,
 	}
 		
 
-	const void* lastMatch = nullptr;
 	size_t count = 0;
 	do
 	{
@@ -774,14 +839,10 @@ size_t Pattern::CountPartialMatchesWithCaptures(const void* data, size_t length,
 		const void* result = partialMatchProcessor->PartialMatch(data, length, offset, captures);
 		if(result == nullptr) return count;
 		
-		if(result == lastMatch) ++offset;
-		else
-		{
-			++count;
-			offset = uintptr_t(result) - uintptr_t(data);
-			lastMatch = result;
-		}
-	} while(offset < length);
+		++count;
+		offset = uintptr_t(result) - uintptr_t(data);
+		if(captures[0] == captures[1]) offset = AdvanceAfterEmptyMatch(data, length, offset);
+	} while(offset <= length);
 
 	return count;
 }
