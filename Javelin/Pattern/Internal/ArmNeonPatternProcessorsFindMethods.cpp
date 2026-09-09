@@ -336,6 +336,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindPairNibble
 __attribute__((no_sanitize("address")))
 const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNibbleMask(const void* pIn, const uint8x16_t* nibbleMasks, const void* pEnd)
 {
+    if (static_cast<const uint8_t*>(pEnd) - static_cast<const uint8_t*>(pIn) < 3) return nullptr;
     int shift = int(size_t(pIn) & 0x1f);
     const uint8x16_t* p = (const uint8x16_t*) (intptr_t(pIn) & -32);
     
@@ -378,7 +379,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
     if(JUNLIKELY(mask != 0))
     {
         const uint8_t* result = (const uint8_t*) pIn + __builtin_ctz(mask);
-        return result < pEnd ? result : nullptr;
+        return result < pEnd && static_cast<const uint8_t*>(pEnd) - result >= 3 ? result : nullptr;
     }
     
     while(p < pEnd)
@@ -400,7 +401,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
         z0 = vtstq_u8(vtblq(nm4, b0l), vtblq(nm5, b0h));
         z1 = vtstq_u8(vtblq(nm4, b1l), vtblq(nm5, b1h));
 
-        m0 = vextq_u8(lastX, x0, 14) & vextq_u8(lastY, y0, 15) & y0;
+        m0 = vextq_u8(lastX, x0, 14) & vextq_u8(lastY, y0, 15) & z0;
         m1 = vextq_u8(x0, x1, 14) & vextq_u8(y0, y1, 15) & z1;
         
         lastX = x1;
@@ -409,8 +410,12 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
         if(JUNLIKELY(IsNotZero(m0|m1)))
         {
             mask = Create32BitMask(m0, m1);
-            const uint8_t* result = (const uint8_t*) p - 34 + __builtin_ctz(mask);
-            return result < pEnd ? result : nullptr;
+            const uint8_t* base = (const uint8_t*) p - 34;
+            // Discard a triplet starting before pIn.
+            if (base < pIn) mask &= ~0U << (static_cast<const uint8_t*>(pIn) - base);
+            if (!mask) continue;
+            const uint8_t* result = base + __builtin_ctz(mask);
+            return result < pEnd && static_cast<const uint8_t*>(pEnd) - result >= 3 ? result : nullptr;
         }
     }
     
@@ -420,6 +425,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
 __attribute__((no_sanitize("address")))
 const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNibbleMaskPath(const void* pIn, const uint8x16_t* nibbleMasks, const void* pEnd)
 {
+    if (static_cast<const uint8_t*>(pEnd) - static_cast<const uint8_t*>(pIn) < 3) return nullptr;
     int shift = int(size_t(pIn) & 0x1f);
     const uint8x16_t* p = (const uint8x16_t*) (intptr_t(pIn) & -32);
     
@@ -461,7 +467,7 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
     if(JUNLIKELY(mask != 0))
     {
         const uint8_t* result = (const uint8_t*) pIn + __builtin_ctz(mask);
-        return result < pEnd ? result : nullptr;
+        return result < pEnd && static_cast<const uint8_t*>(pEnd) - result >= 3 ? result : nullptr;
     }
     
     while(p < pEnd)
@@ -492,8 +498,11 @@ const void* Javelin::PatternInternal::ArmNeonFindMethods::InternalFindTripletNib
         if(JUNLIKELY(IsNotZero(mm0|mm1)))
         {
             mask = Create32BitMask(mm0, mm1);
-            const uint8_t* result = (const uint8_t*) p - 34 + __builtin_ctz(mask);
-            return result < pEnd ? result : nullptr;
+            const uint8_t* base = (const uint8_t*) p - 34;
+            if (base < pIn) mask &= ~0U << (static_cast<const uint8_t*>(pIn) - base);
+            if (!mask) continue;
+            const uint8_t* result = base + __builtin_ctz(mask);
+            return result < pEnd && static_cast<const uint8_t*>(pEnd) - result >= 3 ? result : nullptr;
         }
     }
     

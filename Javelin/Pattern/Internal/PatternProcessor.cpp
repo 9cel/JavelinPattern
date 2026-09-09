@@ -305,11 +305,12 @@ const void* PatternProcessor::FindShiftOr(const void* p, const ByteCodeSearchDat
 {
 	uint32_t state = ~0U;
 	const unsigned char* process = (const unsigned char*) p;
-	const unsigned char* end = (const unsigned char*) pEnd - 8;
+	const unsigned char* end = (const unsigned char*) pEnd;
 
-	uint32_t testMask = ~0U << data->length;
+	// A cleared bit marks a match.
+	const uint32_t testMask = 1U << data->length;
 
-	while(process < end)
+	while(size_t(end - process) >= 8)
 	{
 #if FIND_SHIFT_OR_USE_64_BIT_LOAD
         uint64_t value;
@@ -338,9 +339,9 @@ const void* PatternProcessor::FindShiftOr(const void* p, const ByteCodeSearchDat
 #endif
 		process += 8;
 		
-		if(JUNLIKELY(state & testMask))
+		uint32_t test = ~state >> data->length;
+		if(JUNLIKELY(test != 0))
 		{
-			uint32_t test = ~state >> data->length;
 			uint32_t clz = __builtin_clz(test);
 			return process + clz - 32 - data->length;
 		}

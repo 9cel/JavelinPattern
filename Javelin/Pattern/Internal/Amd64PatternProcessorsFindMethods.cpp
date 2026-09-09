@@ -282,9 +282,8 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
     asm("kmovq %k1, %rax");
     
     asm("shrq %cl, %rax");
-    asm("jz LInternalAvx512FindByteMaskDoMainLoop");
-    
     asm("bsfq %rax, %rax");
+    asm("jz LInternalAvx512FindByteMaskDoMainLoop");
     asm("addq %rcx, %rax");
     asm("popq %rcx");
     asm("cmpq %rdx, %rax");
@@ -1431,7 +1430,7 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	asm("vpbroadcastb %xmm15, %ymm15");
 
 	asm("cmpl $31, %eax");
-	asm("je LInternalAvx2FindByteTripletMaskPathDoMainLoopMaskR11");
+	asm("je LInternalAvx2FindByteTripletMaskPathDoMainLoopFromLastByteOfBlock");
 	
 	asm("vmovd %eax, %xmm13");
 	
@@ -1482,19 +1481,26 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	asm(".byte 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16");
 	asm(".byte 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32");
 	
-	// Padding so that MainLoop ends up on a 32-byte boundary
-	asm(".byte 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90");
-
-	asm("LInternalAvx2FindByteTripletMaskPathDoMainLoopMaskR11:");
+	asm("LInternalAvx2FindByteTripletMaskPathDoMainLoopFromLastByteOfBlock:");
 	asm("movq %rsi, %r10");
 	asm("addq $32, %rsi");
 	asm("subq %rdx, %rsi");
 	asm("jnc LInternalAvx2FindByteTripletMaskPathFail");
-	
+
 	asm("vmovdqu 31(%r10), %ymm12");
-	asm("vperm2i128 $0x20, %ymm12, %ymm14, %ymm11");
-	asm("vpalignr $15, %ymm11, %ymm12, %ymm11");
-	asm("jmp LInternalAvx2FindByteTripletMaskPathMainLoopR11B0Zeroed");
+	asm("vmovdqa 32(%r10), %ymm13");
+	asm("prefetchnta 1536(%r10)");
+	asm("addq $32, %r10");
+
+	asm("vpsrlq $4, %ymm12, %ymm8");
+	asm("vpand %ymm15, %ymm12, %ymm11");
+	asm("vpand %ymm15, %ymm8, %ymm8");
+	asm("vpshufb %ymm11, %ymm0, %ymm11");
+	asm("vpshufb %ymm8, %ymm1, %ymm8");
+	asm("vpand %ymm8, %ymm11, %ymm8");
+	asm("vperm2i128 $0x20, %ymm8, %ymm14, %ymm11");
+	asm("vpalignr $15, %ymm11, %ymm8, %ymm8");
+	asm("jmp LInternalAvx2FindByteTripletMaskPathMainLoopFirstByteLookedUp");
 
 	asm("LInternalAvx2FindByteTripletMaskPathDoMainLoop:");
 	asm("movq %rsi, %r10");
@@ -1506,30 +1512,30 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	asm("LInternalAvx2FindByteTripletMaskPathMainLoop:");
 	asm("vmovdqu 30(%r10), %ymm11");
 	asm("vmovdqu 31(%r10), %ymm12");
-	asm("LInternalAvx2FindByteTripletMaskPathMainLoopR11B0Zeroed:");
 	asm("vmovdqa 32(%r10), %ymm13");
 	asm("prefetchnta 1536(%r10)");
 	asm("addq $32, %r10");
 
 	asm("vpsrlq $4, %ymm11, %ymm8");
 	asm("vpand %ymm15, %ymm11, %ymm11");
+	asm("vpand %ymm15, %ymm8, %ymm8");
+	asm("vpshufb %ymm11, %ymm0, %ymm11");
+	asm("vpshufb %ymm8, %ymm1, %ymm8");
+	asm("vpand %ymm8, %ymm11, %ymm8");
+
+	asm("LInternalAvx2FindByteTripletMaskPathMainLoopFirstByteLookedUp:");
 	asm("vpsrlq $4, %ymm12, %ymm9");
 	asm("vpand %ymm15, %ymm12, %ymm12");
 	asm("vpsrlq $4, %ymm13, %ymm10");
 	asm("vpand %ymm15, %ymm13, %ymm13");
-	
-	asm("vpand %ymm15, %ymm8, %ymm8");
 	asm("vpand %ymm15, %ymm9, %ymm9");
 	asm("vpand %ymm15, %ymm10, %ymm10");
-	
-	asm("vpshufb %ymm11, %ymm0, %ymm11");
-	asm("vpshufb %ymm8, %ymm1, %ymm8");
+
 	asm("vpshufb %ymm12, %ymm2, %ymm12");
 	asm("vpshufb %ymm9, %ymm3, %ymm9");
 	asm("vpshufb %ymm13, %ymm4, %ymm13");
 	asm("vpshufb %ymm10, %ymm5, %ymm10");
-	
-	asm("vpand %ymm8, %ymm11, %ymm8");
+
 	asm("vpand %ymm9, %ymm12, %ymm9");
 	asm("vpand %ymm10, %ymm13, %ymm10");
 	asm("vpand %ymm8, %ymm9, %ymm8");
@@ -1710,9 +1716,8 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
     
     asm("kmovq %k1, %rax");
     asm("shrq %cl, %rax");
-    asm("jz LInternalAvx512FindByteDoMainLoop");
-    
     asm("bsfq %rax, %rax");
+    asm("jz LInternalAvx512FindByteDoMainLoop");
     asm("addq %rcx, %rax");
     asm("popq %rcx");
     asm("cmpq %rdx, %rax");
@@ -2011,9 +2016,8 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
     asm("korq %k1, %k2, %k1");
     asm("kmovq %k1, %rax");
     asm("shrq %cl, %rax");
-    asm("jz LInternalAvx512FindEitherOf2DoMainLoop");
-    
     asm("bsfq %rax, %rax");
+    asm("jz LInternalAvx512FindEitherOf2DoMainLoop");
     asm("addq %rcx, %rax");
     asm("popq %rcx");
     asm("cmpq %rdx, %rax");
@@ -4786,6 +4790,7 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	asm("movl %eax, %r15d");
 	asm("notl %r15d");
 	asm("shrl %cl, %r15d");
+	asm("testl %r15d, %r15d"); // A zero shift count leaves flags unchanged.
 	asm("jnz LFindShiftOrFound");
 	asm("cmpq %rdx, %rsi");
 	asm("jb LFindShiftOrLoop");
@@ -4799,10 +4804,12 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	asm("movl $1, %r8d");
 	asm("addq $8, %rdx");
 	asm("shll %cl, %r8d");
+	asm("cmpq %rdx, %rsi");
+	asm("jae LFindShiftOrFail");
 	
 	asm("LFindShiftOrSingleByteLoop:");
 	asm("movzbl (%rsi), %r9d");
-	asm("movzbl (%rdi,%r9,4), %r9d");
+	asm("movl (%rdi,%r9,4), %r9d");
 	asm("addq $1, %rsi");
 	asm("shll $1, %eax");
 	asm("orl %r9d, %eax");
@@ -5105,7 +5112,7 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	asm("vpbroadcastb %xmm14, %ymm14");
 	
 	asm("cmp $63, %r10d");
-	asm("je LInternalAvx2FindByteTripletDoMainLoopMaskR3");
+	asm("je LInternalAvx2FindByteTripletDoMainLoopFromLastByteOfBlock");
 	
 	asm("vpcmpgtb %ymm14, %ymm12, %ymm12");
 	asm("vpcmpgtb %ymm14, %ymm13, %ymm13");
@@ -5150,51 +5157,50 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	asm("LInternalAvx2FindTripletShiftMask2:");
 	asm(".byte 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48");
 	asm(".byte 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64");
-	// This is so that the MainLoop aligns on a 32-byte boundary.
-	asm(".byte 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90");
-	
-	asm("LInternalAvx2FindByteTripletDoMainLoopMaskR3:");
+	asm("LInternalAvx2FindByteTripletDoMainLoopFromLastByteOfBlock:");
 	asm("addq $64, %rsi");
 	asm("subq %rdx, %rsi");
 	asm("jnc LInternalAvx2FindTripletFail");
-	
+
 	asm("vmovdqu -1(%rdx, %rsi), %ymm4");
-	asm("vperm2i128 $0x8, %ymm4, %ymm4, %ymm3");
-	asm("vpalignr $15, %ymm3, %ymm4, %ymm3");
-	asm("jmp LInternalAvx2FindByteTripletMainLoopR3B0Zeroed");
-	
+	asm("vpcmpeqb %ymm0, %ymm4, %ymm3");
+	asm("vperm2i128 $0x8, %ymm3, %ymm3, %ymm5");
+	asm("vpalignr $15, %ymm5, %ymm3, %ymm3");
+	asm("jmp LInternalAvx2FindByteTripletMainLoopFirstByteCompared");
+
 	asm("LInternalAvx2FindTripletDoMainLoop:");
 	asm("addq $64, %rsi");
 	asm("subq %rdx, %rsi");
 	asm("jnc LInternalAvx2FindTripletFail");
-	
+
 	asm(".balign 32");
 	asm("LInternalAvx2FindTripletMainLoop:");
 	asm("vmovdqu -2(%rdx, %rsi), %ymm3");
 	asm("vmovdqu -1(%rdx, %rsi), %ymm4");
-	asm("LInternalAvx2FindByteTripletMainLoopR3B0Zeroed:");
+	asm("vpcmpeqb %ymm0, %ymm3, %ymm3");
+
+	asm("LInternalAvx2FindByteTripletMainLoopFirstByteCompared:");
 	asm("vmovdqa (%rdx, %rsi), %ymm5");
 	asm("vmovdqu 30(%rdx, %rsi), %ymm6");
 	asm("vmovdqu 31(%rdx, %rsi), %ymm7");
 	asm("vmovdqa 32(%rdx, %rsi), %ymm8");
 	asm("prefetchnta 1024(%rdx, %rsi)");
-	
-	asm("vpcmpeqb %ymm0, %ymm3, %ymm3");
+
 	asm("vpcmpeqb %ymm1, %ymm4, %ymm4");
 	asm("vpcmpeqb %ymm2, %ymm5, %ymm5");
 	asm("vpcmpeqb %ymm0, %ymm6, %ymm6");
 	asm("vpcmpeqb %ymm1, %ymm7, %ymm7");
 	asm("vpcmpeqb %ymm2, %ymm8, %ymm8");
-	
+
 	asm("vpand %ymm3, %ymm4, %ymm3");
 	asm("vpand %ymm6, %ymm7, %ymm6");
-	
+
 	asm("vpand %ymm3, %ymm5, %ymm3");
 	asm("vpand %ymm6, %ymm8, %ymm6");
-	
+
 	asm("vpor %ymm3, %ymm6, %ymm6");
 	asm("vpmovmskb %ymm6, %eax");
-	
+
 	asm("test %eax, %eax");
 	asm("jne LInternalAvx2FindTripletFound");
 	asm("addq $64, %rsi");
@@ -5389,7 +5395,7 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	asm("test %eax, %eax");
 	asm("jne LInternalFindByteReverseFound");
 	asm("subq $32, %rsi");
-	asm("jbe LInternalFindByteReverseMainLoop");
+	asm("ja LInternalFindByteReverseMainLoop");
 	
 	asm("LInternalFindByteReverseFail:");
 	asm("xor %eax, %eax");

@@ -1260,7 +1260,7 @@ __attribute__((naked)) const void* PatternProcessor::FindByteRange(const void* p
 	asm("addq %rdx, %rax");
 	asm("retq");
 	
-	asm(".align 4");
+	asm(".balign 16");
 	asm("LFindByteRangeXmm126Constant:");
 	asm(".quad 0x7e7e7e7e7e7e7e7e");
 	asm(".quad 0x7e7e7e7e7e7e7e7e");
@@ -1383,7 +1383,7 @@ __attribute__((naked)) const void* PatternProcessor::FindByteRangePair(const voi
 	asm("addq %rdx, %rax");
 	asm("retq");
 
-	asm(".align 4");
+	asm(".balign 16");
 	asm("LFindByteRangePairXmm126Constant:");
 	asm(".quad 0x7e7e7e7e7e7e7e7e");
 	asm(".quad 0x7e7e7e7e7e7e7e7e");
@@ -1450,6 +1450,7 @@ __attribute__((naked)) const void* PatternProcessor::FindShiftOr(const void* p, 
 	asm("movl %eax, %r15d");
 	asm("notl %r15d");
 	asm("shrl %cl, %r15d");
+	asm("testl %r15d, %r15d"); // A zero shift count leaves flags unchanged.
 	asm("jnz LFindShiftOrFound");
 	asm("cmpq %rdx, %rdi");
 	asm("jb LFindShiftOrLoop");
@@ -1463,10 +1464,12 @@ __attribute__((naked)) const void* PatternProcessor::FindShiftOr(const void* p, 
 	asm("movl $1, %r8d");
 	asm("addq $8, %rdx");
 	asm("shll %cl, %r8d");
+	asm("cmpq %rdx, %rdi");
+	asm("jae LFindShiftOrFail");
 	
 	asm("LFindShiftOrSingleByteLoop:");
 	asm("movzbl (%rdi), %r9d");
-	asm("movzbl (%rsi,%r9,4), %r9d");
+	asm("movl (%rsi,%r9,4), %r9d");
 	asm("addq $1, %rdi");
 	asm("shll $1, %eax");
 	asm("orl %r9d, %eax");
