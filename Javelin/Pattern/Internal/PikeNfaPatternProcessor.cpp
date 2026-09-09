@@ -800,7 +800,8 @@ void PikeNfaPatternProcessor::Set(const void* data, size_t length)
 	partialMatchStartingInstruction = header->partialMatchStartingInstruction;
 	fullMatchStartingInstruction = header->fullMatchStartingInstruction;
 	patternData.p = (const unsigned char*) header->GetForwardProgram();
-	expandedJumpTables.Set(patternData, numberOfInstructions);
+	// numberOfInstructions is rounded up for alignment.
+	expandedJumpTables.Set(patternData, header->numberOfInstructions);
 }
 
 //============================================================================

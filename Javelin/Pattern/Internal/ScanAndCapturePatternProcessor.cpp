@@ -34,6 +34,7 @@ private:
 	PatternProcessor*		populateCaptureProcessor;
 	
 	void Set(const void* data, size_t length);
+	JNOINLINE Interval<const void*> LocateWithCaptures(const void* data, size_t length, size_t offset, const void* result) const;
 };
 
 //============================================================================
@@ -130,10 +131,14 @@ const void* ScanAndCapturePatternProcessor::PartialMatch(const void* data, size_
 		}
 		else
 		{
-			// Reducing the effective length enables the bit state back tracking processor to be used more often
-			size_t simulatedLength = intptr_t(result) - intptr_t(data);
-			if(simulatedLength < length) ++simulatedLength;
-			populateCaptureProcessor->PopulateCaptures(data, simulatedLength, intptr_t(start)-intptr_t(data), captures);
+			// Truncating the input can turn a failed assertion into a match.
+			const void* populated = populateCaptureProcessor->PopulateCaptures(data, length, intptr_t(start)-intptr_t(data), captures);
+			JASSERT(populated != nullptr);
+			if(!populated)
+			{
+				captures[0] = (const char*) start;
+				captures[1] = (const char*) result;
+			}
 		}
 	}
 	
@@ -144,7 +149,17 @@ Interval<const void*> ScanAndCapturePatternProcessor::LocatePartialMatch(const v
 {
 	const void* result = scanProcessor->PartialMatch(data, length, offset);
 	if(!result) return {nullptr, nullptr};
-	
+	// An empty match at the search boundary needs no reverse scan.
+	if(numberOfCaptures == 1 && result == static_cast<const char*>(data) + offset)
+		return {result, result};
+	// Only the one-pass reverse processor writes captures.
+	if(!preferReverseProcessorForFullMatchCapture)
+		return {reverseProcessor->Match(data, length, offset, result, nullptr, reverseMatchRequiresStartOfSearch), result};
+	return LocateWithCaptures(data, length, offset, result);
+}
+
+Interval<const void*> ScanAndCapturePatternProcessor::LocateWithCaptures(const void* data, size_t length, size_t offset, const void* result) const
+{
 	const char* captures[numberOfCaptures*2];
 	const void* start = reverseProcessor->Match(data, length, offset, result, captures, reverseMatchRequiresStartOfSearch);
 	if(start) return {start, result};

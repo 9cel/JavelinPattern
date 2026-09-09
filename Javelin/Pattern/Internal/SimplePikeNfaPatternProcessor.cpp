@@ -753,7 +753,8 @@ void SimplePikeNfaPatternProcessor::Set(const void* data, size_t length)
 	partialMatchStartingInstruction = header->partialMatchStartingInstruction;
 	fullMatchStartingInstruction = header->fullMatchStartingInstruction;
 	patternData.p = (const unsigned char*) header->GetForwardProgram();
-	expandedJumpTables.Set(patternData, numberOfInstructions);
+	// numberOfInstructions is rounded up for alignment.
+	expandedJumpTables.Set(patternData, header->numberOfInstructions);
 }
 
 //============================================================================
@@ -1340,8 +1341,7 @@ const void* SimplePikeNfaPatternProcessor::PopulateCaptures(const void* data, si
 {
 	ProcessData processData(matchRequiresEndOfInput, data, length, offset, fullMatchStartingInstruction, *this);
 	const void* result = Process(processData.pSearchStart, processData);
-	JASSERT(result);
-	memcpy(captures, processData.captures.captures, sizeof(const char*)*numberOfCaptures);
+	if(result) memcpy(captures, processData.captures.captures, sizeof(const char*)*numberOfCaptures);
 	return result;
 }
 
