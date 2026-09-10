@@ -9,6 +9,7 @@
 #include "Javelin/Pattern/Internal/PatternTokenizerBase.h"
 #include "Javelin/Pattern/Internal/PatternLiteralPrefilter.h"
 #include "Javelin/Pattern/Internal/PatternMultiLiteralPrefilter.h"
+#include "Javelin/Pattern/Internal/PatternScanOptimizer.h"
 
 //============================================================================
 
@@ -37,6 +38,7 @@ namespace Javelin::PatternInternal
 		const DataBlock&	GetByteCode() const				{ return byteCode;			}
 		MultiLiteralPrefilter TakeMultiLiteralPrefilter() { return std::move(multiLiteralPrefilter); }
 		LiteralPrefilter TakeLiteralPrefilter() { return std::move(literalPrefilter); }
+		PatternScanOptimizer* TakeScanOptimizer() { return scanOptimizer.release(); }
 
 	private:
 		IComponent* CompileCapture(int options);
@@ -48,6 +50,7 @@ namespace Javelin::PatternInternal
 		DataBlock					byteCode;
 		LiteralPrefilter literalPrefilter;
 		MultiLiteralPrefilter multiLiteralPrefilter;
+		std::unique_ptr<PatternScanOptimizer> scanOptimizer;
 		String						pattern;
 		bool						usesBacktrackingComponents = false;
 		uint32_t					numberOfCaptures;

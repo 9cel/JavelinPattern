@@ -89,12 +89,27 @@ bool   jp_has_full_match(jp_pattern_t pattern, const void* data, size_t data_len
 bool   jp_has_partial_match(jp_pattern_t pattern, const void* data, size_t data_length, size_t data_offset);
 bool   jp_full_match(jp_pattern_t pattern, const void* data, size_t data_length, const void** captures);
 bool   jp_partial_match(jp_pattern_t pattern, const void* data, size_t data_length, const void** captures, size_t data_offset);
-// bounds points to two slots: the beginning and one-past-the-end of group zero.
-bool   jp_locate_partial_match(jp_pattern_t pattern, const void* data, size_t data_length, const void** bounds, size_t data_offset);
-// Non-overlapping matches, counted as Perl and PCRE2 iterate them.
-size_t jp_count_partial_matches(jp_pattern_t pattern, const void* data, size_t data_length, size_t data_offset);
-// Total length of those matches.
-size_t jp_count_partial_match_bytes(jp_pattern_t pattern, const void* data, size_t data_length, size_t data_offset);
+// Visit non-overlapping matches in leftmost-first order, starting at data_offset.
+// from/to are byte offsets into the original data, with to exclusive, even in
+// UTF-8 mode. After an empty match, nonempty alternatives at the same position
+// are tried before searching at later character boundaries. An empty match at
+// the end of the input completes the scan.
+// on_match must be non-null. Return 0 to continue, or any other value to stop;
+// jp_scan returns that exact value, or 0 when scanning completes. An offset
+// beyond data_length completes without calling on_match. data may be null when
+// data_length is zero. Keep the pattern and input alive and the input unchanged
+// until scanning returns. Callbacks may start independent, nested scans.
+int jp_scan(jp_pattern_t pattern, const void* data, size_t data_length, void* user,
+            int (*on_match)(size_t from, size_t to, void* user), size_t data_offset);
+// Like jp_scan, but report all capture groups for each match. capture_count
+// includes group zero, and captures has 2 * capture_count pointers: begin/end
+// pairs into the original input, with end exclusive. Unmatched groups have
+// two null pointers; participating empty groups have equal, non-null pointers.
+// The array is read-only and valid only during the callback. For null, empty
+// input, empty captures point to a temporary non-null location valid during
+// the callback. The scanner clears unmatched groups between matches.
+int jp_scan_captures(jp_pattern_t pattern, const void* data, size_t data_length, void* user,
+                     int (*on_match)(const void* const* captures, size_t capture_count, void* user), size_t data_offset);
 
 // Functions to control behavior of matching.
 void jp_dfa_memory_manager_mode_set_unlimited();

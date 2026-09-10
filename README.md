@@ -205,7 +205,7 @@ See [the generator](tools/unicode/generate.py) for regeneration instructions and
 | \\K             |         | Reset capture                                             |
 | \\n             |         | Newline (ASCII 0x0a)                                      |
 | \\p{_property_} |         | Unicode property (byte or UTF8 mode; independent of UCP)  |
-| \\P{_property_} |         | Complement of a Unicode property                         |
+| \\P{_property_} |         | Complement of a Unicode property                          |
 | \\Q...\\E       |         | Treat ... after \\Q as a literal until \\E is encountered |
 | \\r             |         | Carriage Return (ASCII 0x0d)                              |
 | \\s             |         | Whitespace                                                |

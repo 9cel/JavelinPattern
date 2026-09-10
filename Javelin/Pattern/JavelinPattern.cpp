@@ -137,19 +137,16 @@ bool jp_partial_match(jp_pattern_t pattern, const void* data, size_t length, con
 	return static_cast<Pattern*>(pattern)->PartialMatch(data, length, captures, offset);
 }
 
-bool jp_locate_partial_match(jp_pattern_t pattern, const void* data, size_t length, const void** bounds, size_t offset)
+int jp_scan(jp_pattern_t pattern, const void* data, size_t length, void* user,
+            int (*on_match)(size_t from, size_t to, void* user), size_t offset)
 {
-	return static_cast<Pattern*>(pattern)->LocatePartialMatch(data, length, bounds, offset);
+	return static_cast<Pattern*>(pattern)->Scan(data, length, user, on_match, offset);
 }
 
-size_t jp_count_partial_matches(jp_pattern_t pattern, const void* data, size_t length, size_t offset)
+int jp_scan_captures(jp_pattern_t pattern, const void* data, size_t length, void* user,
+                     int (*on_match)(const void* const* captures, size_t captureCount, void* user), size_t offset)
 {
-	return static_cast<Pattern*>(pattern)->CountPartialMatches(data, length, offset);
-}
-
-size_t jp_count_partial_match_bytes(jp_pattern_t pattern, const void* data, size_t length, size_t offset)
-{
-	return static_cast<Pattern*>(pattern)->CountPartialMatchBytes(data, length, offset);
+	return static_cast<Pattern*>(pattern)->ScanCaptures(data, length, user, on_match, offset);
 }
 
 //============================================================================

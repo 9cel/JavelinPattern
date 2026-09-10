@@ -96,6 +96,7 @@ namespace Javelin
 		struct ByteCodeHeader;
 		class Compiler;
 		class PatternProcessor;
+		class PatternScanOptimizer;
 		enum class PatternProcessorType : uint16_t;
 	}
 
@@ -233,12 +234,15 @@ namespace Javelin
 
 		JEXPORT bool JCALL   FullMatch(const void* data, size_t length, const void** captures) const;
 		JEXPORT bool JCALL   PartialMatch(const void* data, size_t length, const void** captures, size_t offset = 0) const;
-		// Returns only group zero, without recovering unused capture groups.
-		JEXPORT bool JCALL   LocatePartialMatch(const void* data, size_t length, const void** bounds, size_t offset = 0) const;
-		// Non-overlapping matches, counted as Perl and PCRE2 iterate them.
-		JEXPORT size_t JCALL CountPartialMatches(const void* data, size_t length, size_t offset = 0) const;
-		// Total length of those matches.
-		JEXPORT size_t JCALL CountPartialMatchBytes(const void* data, size_t length, size_t offset = 0) const;
+		using MatchCallback = int (*)(size_t from, size_t to, void* user);
+		using CaptureCallback = int (*)(const void* const* captures, size_t captureCount, void* user);
+		// Visit group-zero byte ranges, using NOTEMPTY_ATSTART after empty matches.
+		// Return the callback's first nonzero result, or zero on completion.
+		// See jp_scan for input lifetime, offset, and reentrancy semantics.
+		JEXPORT int JCALL Scan(const void* data, size_t length, void* user, MatchCallback onMatch, size_t offset = 0) const;
+		// Visit all capture groups with the same iteration and stopping behavior.
+		// See jp_scan_captures for the capture array layout and lifetime.
+		JEXPORT int JCALL ScanCaptures(const void* data, size_t length, void* user, CaptureCallback onMatch, size_t offset = 0) const;
 
 		JINLINE bool 		HasFullMatch(const String& s) const							{ return HasFullMatch(s.GetData(), s.GetNumberOfBytes()); }
 		JINLINE bool 		HasPartialMatch(const String& s, size_t offset=0) const		{ return HasPartialMatch(s.GetData(), s.GetNumberOfBytes(), offset); }
@@ -246,7 +250,8 @@ namespace Javelin
 		JEXPORT MatchResult FullMatch(const String& s) const;
 		JEXPORT MatchResult PartialMatch(const String& s, size_t offset=0) const;
 
-		JINLINE size_t 		CountPartialMatches(const String& s, size_t offset=0) const	{ return CountPartialMatches(s.GetData(), s.GetNumberOfBytes(), offset); }
+		JINLINE int Scan(const String& s, void* user, MatchCallback onMatch, size_t offset=0) const { return Scan(s.GetData(), s.GetNumberOfBytes(), user, onMatch, offset); }
+		JINLINE int ScanCaptures(const String& s, void* user, CaptureCallback onMatch, size_t offset=0) const { return ScanCaptures(s.GetData(), s.GetNumberOfBytes(), user, onMatch, offset); }
 
 		static String		EscapeString(const String& literal);
 		static DataBlock 	CreateByteCode(const String& pattern, int options=0); // Can throw PatternException
@@ -271,10 +276,11 @@ namespace Javelin
 		JDISABLE_COPY_AND_ASSIGNMENT(Pattern);
 
 		uint16_t							flags;
-		bool								isUtf8;
 		int32_t								matchLengthCheck;
 		PatternInternal::PatternProcessor* 	partialMatchProcessor;
 		PatternInternal::PatternProcessor* 	fullMatchProcessor;
+		PatternInternal::PatternProcessor* 	notEmptyAtStartProcessor = nullptr;
+		PatternInternal::PatternScanOptimizer* scanOptimizer = nullptr;
 		uint32_t							numberOfCaptures;
 		uint32_t							minimumMatchLength;
 		int32_t								maximumMatchLength;
@@ -289,7 +295,6 @@ namespace Javelin
 
 		void Set(const void* data, size_t length, bool makeCopy);
 		void SetAnchoredByteFilter(const PatternInternal::ByteCodeHeader* header);
-		size_t AdvanceAfterEmptyMatch(const void* data, size_t length, size_t offset) const;
 		JINLINE bool RejectsAnchoredByte(const void* data, size_t length) const
 		{
 			return anchoredByteMask && (length == 0 ||
@@ -301,7 +306,8 @@ namespace Javelin
 
 		const void* HasFullMatchWithCaptures(const void* data, size_t length) const;
 		const void* HasPartialMatchWithCaptures(const void* data, size_t length, size_t offset) const;
-		size_t CountPartialMatchesWithCaptures(const void* data, size_t length, size_t offset) const;
+		template<typename Callback> JNOINLINE int ScanCaptureFallback(const void* data, size_t length, Callback onMatch, size_t offset) const;
+		template<typename Callback> JINLINE int ScanWithCaptures(const void* data, size_t length, Callback onMatch, size_t offset) const;
 		size_t GetMatchLengthCheck() const;
 
 		static void DumpInstructionList(IWriter& output, const PatternInternal::ByteCodeInstruction* instructions, size_t numberOfInstructions, size_t offset);

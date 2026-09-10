@@ -1,6 +1,6 @@
 CC=clang++
 ODIR=build
-CPPFLAGS=-O3 -I. -std=c++17 -fomit-frame-pointer -DJBUILDCONFIG_FINAL -DNDEBUG
+CPPFLAGS=-O3 -I. -std=c++17 -Wno-c++11-narrowing -fomit-frame-pointer -DJBUILDCONFIG_FINAL -DNDEBUG
 
 UNAME_S := $(shell uname -s 2>/dev/null)
 SHARED_LIBRARY_EXTENSION = so
@@ -113,6 +113,7 @@ PATTERN_SOURCES = \
         Javelin/Pattern/Internal/PatternByteCode.cpp \
         Javelin/Pattern/Internal/PatternCaseFold.cpp \
         Javelin/Pattern/Internal/PatternCompiler.cpp \
+        Javelin/Pattern/Internal/PatternScanOptimizer.cpp \
         Javelin/Pattern/Internal/PatternComponent.cpp \
         Javelin/Pattern/Internal/PatternData.cpp \
         Javelin/Pattern/Internal/PatternDfaMemoryManager.cpp \

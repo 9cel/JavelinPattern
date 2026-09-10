@@ -2,6 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 
+static int print_match(size_t from, size_t to, void *user) {
+  size_t *count = (size_t *)user;
+  printf("  Partial match %zu: offset %zu -> %zu\n", ++*count, from, to);
+  return 0;
+}
+
 int main(int argc, const char **argv) {
   if (argc != 3) {
     printf("Usage: %s <pattern> <data>\n", argv[0]);
@@ -35,21 +41,9 @@ int main(int argc, const char **argv) {
       jp_has_partial_match(pattern, data, data_length, 0);
   printf("  has_partial_match: %s\n", has_partial_match ? "true" : "false");
   if (has_partial_match) {
-    printf("  count_partial_match: %zu\n",
-           jp_count_partial_matches(pattern, data, data_length, 0));
-
-    size_t offset = 0;
-    while (offset <= data_length &&
-           jp_partial_match(pattern, data, data_length, captures, offset)) {
-      printf("Partial match starting at %zu:\n", offset);
-      for (size_t i = 0; i < capture_count; ++i) {
-        printf("  %zu: offset %zu -> %zu\n", i,
-               (const char *)captures[2 * i] - data,
-               (const char *)captures[2 * i + 1] - data);
-      }
-      const size_t end_offset = (const char *)captures[1] - data;
-      offset = (offset == end_offset) ? offset + 1 : end_offset;
-    }
+    size_t count = 0;
+    jp_scan(pattern, data, data_length, &count, print_match, 0);
+    printf("  Match count: %zu\n", count);
   }
 
   jp_pattern_free(pattern);

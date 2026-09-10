@@ -121,6 +121,8 @@ void Compiler::Compile(int options)
 	{
 		numberOfCaptures = captureGroups.GetCount();
 	}
+	if(!(options & (Pattern::NO_OPTIMIZE | Pattern::ANCHORED)))
+		scanOptimizer = PatternScanOptimizer::Build(component);
 
 #if JDUMP_PATTERN_INFORMATION
 	PrintInformation(StandardOutput, component);
