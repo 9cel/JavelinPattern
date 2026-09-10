@@ -12,6 +12,12 @@ using namespace Javelin::PatternInternal;
 
 //============================================================================
 
+// PCRE2's limit applies to each numeric quantifier bound, including exact
+// counts and the lower bound of an unbounded repetition.
+static const int MAXIMUM_REPETITION_COUNT = 65535;
+
+//============================================================================
+
 Tokenizer::Tokenizer(Utf8Pointer aP, Utf8Pointer aEnd, bool aUseUtf8)
 {
 	useUtf8 = aUseUtf8;
@@ -114,6 +120,11 @@ Character Tokenizer::GetEscapedCharacter()
 		}
 
 	default:
+		if(useUtf8 && c >= 128)
+		{
+			--pUC;
+			return *p++;
+		}
 		return Character(c);
 	}
 }
@@ -439,6 +450,7 @@ void Tokenizer::ProcessTokens()
 				}
 				while(PeekCharacter() != ']')
 				{
+					JPATTERN_VERIFY(pUC < pUCEnd, UnexpectedEndOfPattern, pUC);
 					if(pUC[0] == '[' && pUC[1] == ':')
 					{
 						if(memcmp(pUC, "[:alnum:]", 9) == 0)
@@ -822,10 +834,20 @@ void Tokenizer::ProcessTokens()
 						currentToken.c = '\0';
 					}
 					return;
+
+				default:
+					// Non-alphanumeric escapes quote the following literal,
+					// including punctuation, whitespace and UTF-8 characters.
+					if(PeekCharacter() != '\0'
+					   && !('A' <= PeekCharacter() && PeekCharacter() <= 'Z')
+					   && !('a' <= PeekCharacter() && PeekCharacter() <= 'z'))
+						goto LiteralCharacter;
+					break;
 				}
 				JPATTERN_ERROR(UnknownEscape, pUC);
 
 			default:
+			LiteralCharacter:
 				if(useUtf8)
 				{
 					// This could be a single character, or a utf8 sequence!
@@ -899,6 +921,8 @@ void Tokenizer::ProcessTokens()
 					if(c < '0' || c > '9') break;
 
 					currentToken.i = currentToken.i * 10 + (c - '0');
+					// Checking each digit also prevents integer overflow.
+					JPATTERN_VERIFY(currentToken.i <= MAXIMUM_REPETITION_COUNT, MaximumRepetitionCountExceeded, pUC);
 					ConsumeCharacter();
 				}
 				return;

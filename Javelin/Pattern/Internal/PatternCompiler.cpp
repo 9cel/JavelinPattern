@@ -22,10 +22,6 @@ using namespace Javelin::PatternInternal;
 
 //============================================================================
 
-static const int MAXIMUM_REPETITION_COUNT	= 1000;
-
-//============================================================================
-
 static PatternProcessorType GetProcessorTypeForOptions(int options)
 {
 	switch(options & Pattern::PREFER_MASK)
@@ -879,7 +875,6 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 						{
 							int max = tokenizer->PeekCurrentToken().i;
 							JPATTERN_VERIFY(min <= max, MinimumCountExceedsMaximumCount, tokenizer->GetExceptionData());
-							JPATTERN_VERIFY(max <= MAXIMUM_REPETITION_COUNT, MaximumRepetitionCountExceeded, tokenizer->GetExceptionData());
 							tokenizer->ProcessTokens();
 
 							switch(tokenizer->PeekCurrentTokenType())
@@ -936,7 +931,6 @@ IComponent* Compiler::CompileAtomQuantifier(IComponent* atom, int options)
 
 				JPATTERN_VERIFY(tokenizer->PeekCurrentTokenType() == TokenType::CounterValue, UnableToParseRepetition, tokenizer->GetExceptionData());
 				int max = tokenizer->PeekCurrentToken().i;
-				JPATTERN_VERIFY(max <= MAXIMUM_REPETITION_COUNT, MaximumRepetitionCountExceeded, tokenizer->GetExceptionData());
 				tokenizer->ProcessTokens();
 
 				switch(tokenizer->PeekCurrentTokenType())
