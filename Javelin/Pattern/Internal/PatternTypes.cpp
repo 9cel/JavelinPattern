@@ -14,7 +14,7 @@ using namespace Javelin::PatternInternal;
 
 bool CharacterRangeList::IsSingleByteUtf8() const
 {
-	return Back().max < 128;
+	return IsEmpty() || Back().max < 128;
 }
 
 uint32_t CharacterRangeList::GetNumberOfMatchingBytes() const
@@ -273,6 +273,49 @@ void Token::operator=(Token &&a)
 	i			= a.i;
 	stringData	= Move(a.stringData);
 	rangeList	= Move(a.rangeList);
+	unicodeProperties = Move(a.unicodeProperties);
+}
+
+bool UnicodeProperty::Find(const char* normalizedName, UnicodeProperty& result)
+{
+	size_t low = 0, high = NAME_COUNT;
+	while(low < high)
+	{
+		size_t mid = low + (high-low)/2;
+		int comparison = strcmp(normalizedName, NAMES[mid].name);
+		if(comparison < 0) high = mid;
+		else if(comparison > 0) low = mid+1;
+		else
+		{
+			result.index = NAMES[mid].index;
+			return true;
+		}
+	}
+	return false;
+}
+
+CharacterRangeList UnicodeProperty::CreateRangeList(bool ignoreCase) const
+{
+	const Data& data = DATA[ignoreCase ? DATA[index].caselessIndex : index];
+	CharacterRangeList ranges;
+	for(size_t i = data.offset; i < data.offset + data.count; ++i)
+	{
+		ranges.Append(RANGES[i].min, RANGES[i].max);
+	}
+	if(negated) ranges = ranges.CreateComplement();
+	return ranges.CreateUnicodeScalarRange();
+}
+
+CharacterRangeList CharacterRangeList::CreateUnicodeScalarRange() const
+{
+	// Exclude surrogates from properties and their complements.
+	CharacterRangeList result;
+	for(const CharacterRange& range : *this)
+	{
+		if(range.min < 0xd800) result.Append(range.min, Minimum(range.max, Character(0xd7ff)));
+		if(range.max > 0xdfff) result.Append(Maximum(range.min, Character(0xe000)), range.max);
+	}
+	return result;
 }
 
 //==========================================================================

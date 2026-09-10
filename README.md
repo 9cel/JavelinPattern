@@ -87,6 +87,89 @@ Example code snippet:
 
 ## Supported Patterns
 
+### Unicode character classes
+
+Pass `JP_OPTION_UCP` (`Javelin::Pattern::UCP` in C++) to enable Unicode property
+classification for `\d`, `\w`, `\s`, `\b`, and their uppercase complements.
+It applies inside character classes too, including mixed and negated classes.
+`[\b]` remains the backspace character.
+
+UCP is independent of encoding and case folding. Use `JP_OPTION_UTF8 |
+JP_OPTION_UCP` for UTF-8 input. With UCP alone, each input byte is classified
+as its Latin-1 code point. `JP_OPTION_UNICODE_CASE` retains its separate role
+in case-insensitive matching. Without UCP, the existing ASCII shorthand and
+word-boundary behavior is preserved (including the legacy omission of vertical
+tab from `\s`).
+
+The property tables use Unicode **17.0.0** and PCRE2 10.43+ class definitions:
+
+| Escape | UCP definition |
+| --- | --- |
+| `\d` | General category `Nd` (decimal digits) |
+| `\w` | Categories `L`, `N`, `Mn`, and `Pc` |
+| `\s` | Categories `Z`, plus TAB–CR, NEL, and U+180E |
+| `\b` | A transition between word and non-word characters; input edges count as non-word |
+
+`\D`, `\W`, and `\S` complement their corresponding character sets; `\B`
+asserts the absence of a word boundary. In UTF-8 mode boundaries occur only
+between encoded characters. These are regex word boundaries, not Unicode
+text-segmentation rules. UCP does not change POSIX classes, `\h`, or `\v`.
+
+Explicit `\p{property}` and `\P{property}` escapes match one character
+with or without the named property, independently of UCP. With `JP_OPTION_UTF8`,
+they decode UTF-8; without it, they classify each byte as its Latin-1 code point
+(U+0000–U+00FF), as PCRE2 does. They can be mixed with literals and
+other properties inside brackets, for example `[\p{L}\p{Nd}_]` and
+`[^\p{White_Space}]`. A property cannot be a character-range endpoint.
+
+Supported property names use Unicode 17.0.0 data and aliases:
+
+| Property | Examples |
+| --- | --- |
+| General categories, including aggregates | `\p{L}`, `\p{Letter}`, `\p{Nd}`, `\p{gc=Decimal_Number}`, `\p{General_Category:Lu}`, `\p{LC}`, `\p{L&}` |
+| Scripts | `\p{sc=Greek}`, `\p{Script:Grek}` |
+| Script extensions | `\p{Greek}`, `\p{scx=Grek}`, `\p{Script_Extensions=Katakana}` |
+| Binary properties | `\p{Alphabetic}`, `\p{Alpha}`, `\p{White_Space}`, `\p{Emoji}`, `\p{XID_Start}` |
+| Bidirectional classes | `\p{bc=AL}`, `\p{Bidi_Class:Arabic_Letter}` |
+| Additional sets | `Any`, `ASCII`, `Assigned`, `Xan` (L or N), `Xwd` (UCP word), `Xsp`/`Xps` (UCP whitespace) |
+
+Names ignore ASCII case, whitespace, underscores, and hyphens; `:` and `=`
+are equivalent separators. One-letter categories can omit braces (`\pL`,
+`\PN`). A leading `^` inside braces negates the property: `\p{^L}` means
+`\P{L}`, and `\P{^L}` means `\p{L}`. Unknown names and malformed property
+escapes are compile errors. Blocks, ages, string properties, and `Is`/`In`
+prefixes are not supported. Binary properties come from `PropList.txt`,
+`DerivedCoreProperties.txt`, `DerivedBinaryProperties.txt`, and `emoji-data.txt`.
+
+As in PCRE2 10.45+, caseless matching treats `Lu`, `Ll`, and `Lt` (and their
+aliases) as `LC`; other properties keep their membership. This applies with
+`JP_OPTION_IGNORE_CASE` or inline `(?i)`, independently of UCP and
+`JP_OPTION_UNICODE_CASE`. Literal class members retain the ordinary case-folding
+rules. `\p{White_Space}` uses the Unicode definition, which excludes U+180E;
+`\p{Xsp}` and UCP `\s` include it for PCRE2 compatibility.
+
+Bare script names mean Script_Extensions. Explicit script-extension assignments
+replace the primary script's default membership, including for Common and
+Inherited. This follows Unicode's data; PCRE2 instead treats `scx=Common` and
+`scx=Inherited` as primary-script queries. Surrogates are not UTF-8 characters:
+`\p{Cs}` and `\P{Any}` match nothing; their complements match Unicode scalar
+values in UTF-8 mode, or any byte in byte mode.
+
+Malformed property syntax and unknown names report
+`JP_RESULT_MALFORMED_UNICODE_PROPERTY` and `JP_RESULT_UNKNOWN_UNICODE_PROPERTY`,
+respectively. The C++ API has matching `PatternException::Type` values.
+
+Unicode classes use the ordinary bytecode engines. UCP word boundaries currently
+lower to fixed-width lookarounds and therefore select the backtracking engine,
+including its x64/ARM64 JIT. This can affect performance when enabling the option
+on existing patterns.
+
+The generated tables are checked in; builds do not download Unicode data.
+See [the generator](tools/unicode/generate.py) for regeneration instructions and
+[the Unicode license](tools/unicode/LICENSE.txt).
+
+### Syntax
+
 | Pattern         | BT Only | Meaning                                                   |
 | --------------- | ------- | --------------------------------------------------------- |
 | (...)           |         | Capture                                                   |
@@ -121,6 +204,8 @@ Example code snippet:
 | \\h             |         | Horizontal whitespace                                     |
 | \\K             |         | Reset capture                                             |
 | \\n             |         | Newline (ASCII 0x0a)                                      |
+| \\p{_property_} |         | Unicode property (byte or UTF8 mode; independent of UCP)  |
+| \\P{_property_} |         | Complement of a Unicode property                         |
 | \\Q...\\E       |         | Treat ... after \\Q as a literal until \\E is encountered |
 | \\r             |         | Carriage Return (ASCII 0x0d)                              |
 | \\s             |         | Whitespace                                                |

@@ -23,8 +23,10 @@ typedef void* jp_bytecode_t;
 #define JP_OPTION_DOTALL                    4       // "s" option. This allows . to match newlines
 #define JP_OPTION_UNICODE_CASE              8       // "u" option. When IGNORE_CASE is used, this allows unicode case folding
 #define JP_OPTION_UNGREEDY                  0x10    // "U" option
+#define JP_OPTION_UCP                       0x40    // Unicode properties for \d, \w, \s, \b and their complements.
+                                                    // Independent of UTF8 and UNICODE_CASE; without UTF8, classifies bytes as Latin-1.
 
-#define JP_OPTION_UTF8                      0x100   // Without this flag, text is treated as ASCII
+#define JP_OPTION_UTF8                      0x100   // Decode UTF-8; otherwise match individual bytes.
 
 #define JP_OPTION_GLOB_SYNTAX               0x400   // With this flag, ? is treated as [^/], * as [^/]* and ** as .*
                                                     // You will probably combine this with JP_OPTION_ANCHORED
@@ -65,6 +67,8 @@ typedef void* jp_bytecode_t;
 #define JP_RESULT_UNEXPECTED_TOKEN                       20
 #define JP_RESULT_UNKNOWN_ESCAPE                         21
 #define JP_RESULT_UNKNOWN_POSIX_CHARACTER_CLASS          22
+#define JP_RESULT_MALFORMED_UNICODE_PROPERTY              23
+#define JP_RESULT_UNKNOWN_UNICODE_PROPERTY                24
 
 //============================================================================
 

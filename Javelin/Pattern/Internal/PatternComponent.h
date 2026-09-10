@@ -153,6 +153,22 @@ namespace Javelin
 			IComponent* content;
 		};
 
+		// Retain the assertion's meaning for source-level optimizers while using
+		// the same portable lookaround expansion when emitting bytecode.
+		struct UnicodeWordBoundaryComponent final : public ContentComponent
+		{
+			UnicodeWordBoundaryComponent(IComponent* expansion, bool utf8, bool boundary)
+			: ContentComponent(expansion), useUtf8(utf8), boundary(boundary) { }
+			void BuildInstructions(InstructionList& list) const override { content->BuildInstructions(list); }
+			bool IsEqual(const IComponent* other) const override
+			{
+				const auto* assertion = dynamic_cast<const UnicodeWordBoundaryComponent*>(other);
+				return assertion && assertion->useUtf8 == useUtf8 && assertion->boundary == boundary;
+			}
+			bool CanCoalesce() const override { return false; }
+			bool useUtf8, boundary;
+		};
+
 		struct LookAheadComponent : public ContentComponent
 		{
 			LookAheadComponent(IComponent* body, bool aExpectedResult) : ContentComponent(body), expectedResult(aExpectedResult) { }

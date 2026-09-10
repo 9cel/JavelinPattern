@@ -302,6 +302,7 @@ void Pattern::DumpInstructions(IWriter& output, const DataBlock& data)
 		if(header->patternStringOptions & UNICODE_CASE) output.PrintF(" UNICODE_CASE");
 		if(header->patternStringOptions & UNGREEDY) output.PrintF(" UNGREEDY");
 		if(header->patternStringOptions & UTF8) output.PrintF(" UTF8");
+		if(header->patternStringOptions & UCP) output.PrintF(" UCP");
 		if(header->patternStringOptions & AUTO_CLUSTER) output.PrintF(" AUTO_CLUSTER");
 		if(header->patternStringOptions & GLOB_SYNTAX) output.PrintF(" GLOB_SYNTAX");
 		if(header->patternStringOptions & ANCHORED) output.PrintF(" ANCHORED");

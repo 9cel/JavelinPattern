@@ -121,6 +121,7 @@ namespace Javelin
 			void Dump(ICharacterWriter& output);
 
 			CharacterRangeList CreateAsciiRange() const;
+			CharacterRangeList CreateUnicodeScalarRange() const;
 			CharacterRangeList CreateComplement() const;
 			CharacterRangeList CreateCaseInsensitive() const;
 			CharacterRangeList CreateUnicodeCaseInsensitive() const;
@@ -134,12 +135,34 @@ namespace Javelin
 			static const CharacterRangeList WORD_CHARACTERS;
 			static const CharacterRangeList NOT_WORD_CHARACTERS;
 			static const CharacterRangeList WHITESPACE_CHARACTERS;
+			static const CharacterRangeList UNICODE_DIGIT_CHARACTERS;
+			static const CharacterRangeList UNICODE_WORD_CHARACTERS;
+			static const CharacterRangeList UNICODE_WHITESPACE_CHARACTERS;
 
 			static const CharacterRangeList HORIZONTAL_WHITESPACE_CHARACTERS;
 			static const CharacterRangeList VERTICAL_WHITESPACE_CHARACTERS;
 		};
 
 //==========================================================================
+
+		// Keep properties separate from literals when applying case folding.
+		struct UnicodeProperty
+		{
+			struct Range { uint32_t min, max; };
+			struct Data { uint32_t offset; uint16_t count, caselessIndex; };
+			struct Name { const char* name; uint16_t index; };
+
+			uint16_t index;
+			bool negated;
+
+			static bool Find(const char* normalizedName, UnicodeProperty& result);
+			CharacterRangeList CreateRangeList(bool ignoreCase) const;
+
+			static const Range RANGES[];
+			static const Data DATA[];
+			static const Name NAMES[];
+			static const size_t NAME_COUNT;
+		};
 
 		struct Token
 		{
@@ -158,6 +181,7 @@ namespace Javelin
 
 			Table<char>				stringData;
 			CharacterRangeList		rangeList;
+			Table<UnicodeProperty>	unicodeProperties;
 
 			Token() { type = TokenType::End; }
 

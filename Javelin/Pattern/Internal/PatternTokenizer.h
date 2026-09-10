@@ -14,7 +14,7 @@ namespace Javelin::PatternInternal
 	class Tokenizer final : public TokenizerBase
 	{
 	public:
-		Tokenizer(Utf8Pointer aP, Utf8Pointer aEnd, bool useUtf8);
+		Tokenizer(Utf8Pointer aP, Utf8Pointer aEnd, bool useUtf8, bool useUnicodeProperties = false);
 
 		const Token&	PeekCurrentToken()	const		{ return currentToken;	}
 		TokenType		PeekCurrentTokenType()	const	{ return currentToken.type; }
@@ -31,6 +31,7 @@ namespace Javelin::PatternInternal
 		};
 
 		bool		useUtf8;
+		bool		useUnicodeProperties;
 		Phase 		phase;
 
 		union
@@ -49,6 +50,7 @@ namespace Javelin::PatternInternal
 		// Used for decoding character classes, eg. [a-z\n\t]
 		Character 	GetCharacter();
 		Character	GetEscapedCharacter();
+		void		AddUnicodeProperty();
 
 		char 		PeekCharacter();
 		inline void ConsumeCharacter();

@@ -501,23 +501,26 @@ void CharacterRangeListComponent::BuildUtf8Components(InstructionList &instructi
 	bool allowLowBytes = characterRangeList.HasData() &&
 						 (CharacterRange{0, 127} & characterRangeList[0]) == CharacterRange{0, 127};
 
+	// Quantifiers and reverse programs emit the same component more than once.
+	// Lower once and keep the resulting tree for subsequent emissions.
 	AlternationComponent* alternation = const_cast<CharacterRangeListComponent*>(this);
-
-	for(size_t i = 0; i < JNUMBER_OF_ELEMENTS(UTF8_BYTE_RANGES); ++i)
+	if(alternation->componentList.IsEmpty())
 	{
-		const BuildUtf8Data& data = UTF8_BYTE_RANGES[i];
-		for(const CharacterRange& range : characterRangeList)
+		for(size_t i = 0; i < JNUMBER_OF_ELEMENTS(UTF8_BYTE_RANGES); ++i)
 		{
-			CharacterRange intersection = range & data.range;
-			if(intersection.IsValid())
+			const BuildUtf8Data& data = UTF8_BYTE_RANGES[i];
+			for(const CharacterRange& range : characterRangeList)
 			{
-				if(allowLowBytes && intersection.min == data.range.min && data.bitShift != 0 && intersection.GetSize() >= (1<<data.bitShift)) intersection.min = 0;
-				BuildUtf8Components(alternation, intersection, data.bitShift, data.offset);
+				CharacterRange intersection = range & data.range;
+				if(intersection.IsValid())
+				{
+					if(allowLowBytes && intersection.min == data.range.min && data.bitShift != 0 && intersection.GetSize() >= (1<<data.bitShift)) intersection.min = 0;
+					BuildUtf8Components(alternation, intersection, data.bitShift, data.offset);
+				}
 			}
 		}
+		alternation->Optimize();
 	}
-
-	alternation->Optimize();
 	AlternationComponent::BuildInstructions(instructionList);
 }
 

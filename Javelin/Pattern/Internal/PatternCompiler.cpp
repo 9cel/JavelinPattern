@@ -34,12 +34,56 @@ static PatternProcessorType GetProcessorTypeForOptions(int options)
 	}
 }
 
+// Split Unicode lookbehinds by UTF-8 width so each assertion has a fixed length.
+static IComponent* CompileUnicodeWordBoundary(bool useUtf8, bool boundary)
+{
+	const auto& word = CharacterRangeList::UNICODE_WORD_CHARACTERS;
+	auto previousWord = [&]() -> IComponent* {
+		auto* alternatives = new AlternationComponent;
+		static constexpr CharacterRange widths[] = {
+			{0, 0x7f}, {0x80, 0x7ff}, {0x800, 0xffff}, {0x10000, 0x10ffff}
+		};
+		for(const auto& width : widths)
+		{
+			CharacterRangeList ranges;
+			for(const auto& range : word)
+			{
+				CharacterRange overlap = range & (useUtf8 ? width : CharacterRange{0, 255});
+				if(overlap.IsValid()) ranges.Append(overlap);
+			}
+			if(ranges.HasData()) alternatives->componentList.Append(
+				new LookBehindComponent(new CharacterRangeListComponent(useUtf8, ranges), true));
+			if(!useUtf8) break;
+		}
+		return alternatives;
+	};
+
+	auto* alternatives = new AlternationComponent;
+	for(bool before : {false, true})
+	{
+		auto* branch = new ConcatenateComponent;
+		branch->componentList.Append(new LookAheadComponent(previousWord(), before));
+		branch->componentList.Append(new LookAheadComponent(
+			new CharacterRangeListComponent(useUtf8, word), before != boundary));
+		alternatives->componentList.Append(branch);
+	}
+	if(!useUtf8) return new UnicodeWordBoundaryComponent(alternatives, false, boundary);
+
+	auto* result = new ConcatenateComponent;
+	// Partial searches can visit byte offsets. Neither assertion may succeed
+	// inside a UTF-8 sequence, including the non-word/non-word case of \B.
+	result->componentList.Append(new LookAheadComponent(
+		new CharacterRangeListComponent(false, CharacterRange{0x80, 0xbf}), false));
+	result->componentList.Append(alternatives);
+	return new UnicodeWordBoundaryComponent(result, true, boundary);
+}
+
 Compiler::Compiler(Utf8Pointer pattern, Utf8Pointer patternEnd, int patternOptions)
 : pattern(pattern.GetCharPointer(), patternEnd.GetCharPointer()-pattern.GetCharPointer())
 {
 	tokenizer = (patternOptions & Pattern::GLOB_SYNTAX) ?
 					(TokenizerBase*) new GlobTokenizer(pattern, patternEnd, (patternOptions & Pattern::UTF8) != 0) :
-					(TokenizerBase*) new Tokenizer(pattern, patternEnd, (patternOptions & Pattern::UTF8) != 0);
+					(TokenizerBase*) new Tokenizer(pattern, patternEnd, (patternOptions & Pattern::UTF8) != 0, (patternOptions & Pattern::UCP) != 0);
 }
 
 Compiler::~Compiler()
@@ -437,6 +481,12 @@ IComponent* Compiler::CompileAtom(int options)
 {
 	// This is only valid until tokenizer->ProcessTokens() is called
 	const Token& currentToken = tokenizer->PeekCurrentToken();
+	const bool useUtf8 = (options & Pattern::UTF8) != 0;
+	const bool useUcp = (options & Pattern::UCP) != 0;
+	const auto& whitespace = useUcp ? CharacterRangeList::UNICODE_WHITESPACE_CHARACTERS
+	                               : CharacterRangeList::WHITESPACE_CHARACTERS;
+	const auto& word = useUcp ? CharacterRangeList::UNICODE_WORD_CHARACTERS
+	                         : CharacterRangeList::WORD_CHARACTERS;
 
 	IComponent* component = nullptr;
 	switch(currentToken.type)
@@ -528,21 +578,31 @@ IComponent* Compiler::CompileAtom(int options)
 		return new TerminalComponent(false);
 
 	case TokenType::WhitespaceCharacter:
-		component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, CharacterRangeList::WHITESPACE_CHARACTERS);
+		component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, whitespace);
 		tokenizer->ProcessTokens();
 		break;
 
 	case TokenType::NotWhitespaceCharacter:
-		component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, CharacterRangeList::WHITESPACE_CHARACTERS.CreateComplement());
+		component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, whitespace.CreateComplement());
 		tokenizer->ProcessTokens();
 		break;
 
 	case TokenType::WordBoundary:
 		tokenizer->ProcessTokens();
+		if(options & Pattern::UCP)
+		{
+			usesBacktrackingComponents = true;
+			return CompileUnicodeWordBoundary((options & Pattern::UTF8) != 0, true);
+		}
 		return new AssertComponent(AssertType::WordBoundary);
 
 	case TokenType::NotWordBoundary:
 		tokenizer->ProcessTokens();
+		if(options & Pattern::UCP)
+		{
+			usesBacktrackingComponents = true;
+			return CompileUnicodeWordBoundary((options & Pattern::UTF8) != 0, false);
+		}
 		return new AssertComponent(AssertType::NotWordBoundary);
 
 	case TokenType::Wildcard:
@@ -568,22 +628,33 @@ IComponent* Compiler::CompileAtom(int options)
 		break;
 
 	case TokenType::Range:
-		if(options & Pattern::IGNORE_CASE)
+	case TokenType::NotRange:
 		{
-			if((options & Pattern::UTF8) && (options & Pattern::UNICODE_CASE))
+			const bool ignoreCase = (options & Pattern::IGNORE_CASE) != 0;
+			const bool hasProperties = !currentToken.unicodeProperties.IsEmpty();
+			CharacterRangeList ranges = currentToken.rangeList;
+			if(ignoreCase)
 			{
-				component = new CharacterRangeListComponent(true, currentToken.rangeList.CreateUnicodeCaseInsensitive());
+				if(useUtf8 && (options & Pattern::UNICODE_CASE))
+				{
+					ranges = ranges.CreateUnicodeCaseInsensitive();
+				}
+				else
+				{
+					ranges = ranges.CreateCaseInsensitive();
+				}
 			}
-			else
+			for(const UnicodeProperty& property : currentToken.unicodeProperties)
 			{
-				component = new CharacterRangeListComponent(false, currentToken.rangeList.CreateCaseInsensitive());
+				for(const CharacterRange& range : property.CreateRangeList(ignoreCase)) ranges.Add(range);
 			}
+			if(hasProperties) ranges.Sort();
+			if(currentToken.type == TokenType::NotRange) ranges = ranges.CreateComplement();
+			if(hasProperties) ranges = ranges.CreateUnicodeScalarRange();
+			// Case folding must not change the class's encoding.
+			component = new CharacterRangeListComponent(useUtf8, Move(ranges));
+			tokenizer->ProcessTokens();
 		}
-		else
-		{
-			component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, currentToken.rangeList);
-		}
-		tokenizer->ProcessTokens();
 		break;
 
 	case TokenType::RecurseRelative:
@@ -606,32 +677,13 @@ IComponent* Compiler::CompileAtom(int options)
 		}
 		break;
 
-	case TokenType::NotRange:
-		if(options & Pattern::IGNORE_CASE)
-		{
-			if((options & Pattern::UTF8) && (options & Pattern::UNICODE_CASE))
-			{
-				component = new CharacterRangeListComponent(true, currentToken.rangeList.CreateUnicodeCaseInsensitive().CreateComplement());
-			}
-			else
-			{
-				component = new CharacterRangeListComponent(false, currentToken.rangeList.CreateCaseInsensitive().CreateComplement());
-			}
-		}
-		else
-		{
-			component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, currentToken.rangeList.CreateComplement());
-		}
-		tokenizer->ProcessTokens();
-		break;
-
 	case TokenType::WordCharacter:
-		component = new CharacterRangeListComponent(false, CharacterRangeList::WORD_CHARACTERS);
+		component = new CharacterRangeListComponent(useUcp && useUtf8, word);
 		tokenizer->ProcessTokens();
 		break;
 
 	case TokenType::NotWordCharacter:
-		component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, CharacterRangeList::NOT_WORD_CHARACTERS);
+		component = new CharacterRangeListComponent((options&Pattern::UTF8) != 0, word.CreateComplement());
 		tokenizer->ProcessTokens();
 		break;
 

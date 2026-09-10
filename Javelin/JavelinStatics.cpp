@@ -14,6 +14,8 @@
 using namespace Javelin;
 using namespace Javelin::PatternInternal;
 
+#include "Javelin/Pattern/Internal/PatternUnicodeData.inc"
+
 //============================================================================
 
 const String String::EMPTY_STRING;

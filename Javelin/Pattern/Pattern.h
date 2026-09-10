@@ -165,6 +165,8 @@ namespace Javelin
 			UnexpectedToken,
 			UnknownEscape,
 			UnknownPosixCharacterClass,
+			MalformedUnicodeProperty,
+			UnknownUnicodeProperty,
 		};
 
 		PatternException(Type aType, const void* p) : GeneralException(GeneralExceptionType::InvalidData), type(aType) { }
@@ -197,7 +199,9 @@ namespace Javelin
 		static const int UNICODE_CASE				= 8;		// "u" option. when IGNORE_CASE is used, this allows unicode case folding
 		static const int UNGREEDY					= 0x10;		// "U" option
 
-		static const int UTF8						= 0x100;	// Without this, text is treated as ASCII
+		static const int UCP							= 0x40;	// Unicode character classes and word boundaries; independent of UTF8/case folding.
+
+		static const int UTF8						= 0x100;	// Decode UTF-8; otherwise match individual bytes.
 		static const int AUTO_CLUSTER				= 0x200;	// Automatically use clusters instead of captures when possible.
 
 		static const int GLOB_SYNTAX				= 0x400;
@@ -261,7 +265,7 @@ namespace Javelin
 		static const StackGrowthHandler* GetStackGrowthHandler() 		{ return stackGrowthHandler; }
 		static void SetStackGrowthHandler(const StackGrowthHandler* a) 	{ stackGrowthHandler = a; }
 
-		static void SetDfaMemoryModeConfiguration(DfaMemoryManagerMode mode, size_t limit=4*1024*1024);
+		static void SetDfaMemoryModeConfiguration(DfaMemoryManagerMode mode, size_t limit=8*1024*1024);
 
 	private:
 		JDISABLE_COPY_AND_ASSIGNMENT(Pattern);

@@ -18,9 +18,10 @@ static const int MAXIMUM_REPETITION_COUNT = 65535;
 
 //============================================================================
 
-Tokenizer::Tokenizer(Utf8Pointer aP, Utf8Pointer aEnd, bool aUseUtf8)
+Tokenizer::Tokenizer(Utf8Pointer aP, Utf8Pointer aEnd, bool aUseUtf8, bool aUseUnicodeProperties)
 {
 	useUtf8 = aUseUtf8;
+	useUnicodeProperties = aUseUnicodeProperties;
 	phase	= Phase::General;
 	p		= aP;
 	end 	= aEnd;
@@ -46,8 +47,8 @@ Character Tokenizer::GetEscapedCharacter()
 
 	case 'p':
 	case 'P':
-		// Unicode properties are not implemented.
-		JPATTERN_ERROR(UnknownEscape, pUC-1);
+		// A character range endpoint must be a single character.
+		JPATTERN_ERROR(UnexpectedToken, pUC-1);
 
 	case 'e':
 		return Character('\e');
@@ -129,6 +130,48 @@ Character Tokenizer::GetEscapedCharacter()
 	}
 }
 
+void Tokenizer::AddUnicodeProperty()
+{
+	UnicodeProperty property{0, *pUC++ == 'P'};
+	Table<char> name;
+	if(pUC < pUCEnd && *pUC == '{')
+	{
+		++pUC;
+		bool canNegate = true;
+		while(pUC < pUCEnd && *pUC != '}')
+		{
+			unsigned char c = *pUC++;
+			if(c == ' ' || (c >= '\t' && c <= '\r') || c == '_' || c == '-') continue;
+			if(canNegate && c == '^')
+			{
+				property.negated = !property.negated;
+				canNegate = false;
+				continue;
+			}
+			canNegate = false;
+			if(c >= 'A' && c <= 'Z') c += 'a' - 'A';
+			if(c == ':') c = '=';
+			JPATTERN_VERIFY((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+							|| c == '=' || c == '&', MalformedUnicodeProperty, pUC-1);
+			name.Append(c);
+		}
+		JPATTERN_VERIFY(pUC < pUCEnd && !name.IsEmpty(), MalformedUnicodeProperty, pUC);
+		++pUC;
+	}
+	else
+	{
+		// The one-letter general categories also allow the Perl form \pL.
+		JPATTERN_VERIFY(pUC < pUCEnd, MalformedUnicodeProperty, pUC);
+		unsigned char c = *pUC++;
+		if(c >= 'A' && c <= 'Z') c += 'a' - 'A';
+		JPATTERN_VERIFY(c >= 'a' && c <= 'z', MalformedUnicodeProperty, pUC-1);
+		name.Append(c);
+	}
+	name.Append('\0');
+	JPATTERN_VERIFY(UnicodeProperty::Find(name.GetData(), property), UnknownUnicodeProperty, pUC);
+	currentToken.unicodeProperties.Append(property);
+}
+
 Character Tokenizer::GetCharacter()
 {
 	JPATTERN_VERIFY(p < end, UnexpectedEndOfPattern, nullptr);
@@ -164,6 +207,7 @@ JINLINE void Tokenizer::ConsumeCharacter()
 
 void Tokenizer::ProcessTokens()
 {
+	currentToken.unicodeProperties.SetCount(0);
 	while(1)
 	{
 	Loop:
@@ -541,14 +585,25 @@ void Tokenizer::ProcessTokens()
 							++pUC;
 							switch(*pUC)
 							{
+							case 'p':
+							case 'P':
+								AddUnicodeProperty();
+								JPATTERN_VERIFY(pUC == pUCEnd || *pUC != '-' ||
+												(pUC+1 < pUCEnd && pUC[1] == ']'), UnexpectedToken, pUC);
+								continue;
+
 							case 'd':
 								++pUC;
-								currentToken.rangeList.Add('0', '9');
+								if(useUnicodeProperties)
+								{
+									for(const auto& range : CharacterRangeList::UNICODE_DIGIT_CHARACTERS) currentToken.rangeList.Add(range);
+								}
+								else currentToken.rangeList.Add('0', '9');
 								continue;
 
 							case 's':
 								++pUC;
-								for(const CharacterRange& range : CharacterRangeList::WHITESPACE_CHARACTERS)
+								for(const CharacterRange& range : (useUnicodeProperties ? CharacterRangeList::UNICODE_WHITESPACE_CHARACTERS : CharacterRangeList::WHITESPACE_CHARACTERS))
 								{
 									currentToken.rangeList.Add(range);
 								}
@@ -556,7 +611,7 @@ void Tokenizer::ProcessTokens()
 
 							case 'w':
 								++pUC;
-								for(const CharacterRange& range : CharacterRangeList::WORD_CHARACTERS)
+								for(const CharacterRange& range : (useUnicodeProperties ? CharacterRangeList::UNICODE_WORD_CHARACTERS : CharacterRangeList::WORD_CHARACTERS))
 								{
 									currentToken.rangeList.Add(range);
 								}
@@ -564,13 +619,20 @@ void Tokenizer::ProcessTokens()
 
 							case 'D':
 								++pUC;
-								currentToken.rangeList.Add(0, '0'-1);
-								currentToken.rangeList.Add('9'+1, Character::Maximum());
+								if(useUnicodeProperties)
+								{
+									for(const auto& range : CharacterRangeList::UNICODE_DIGIT_CHARACTERS.CreateComplement()) currentToken.rangeList.Add(range);
+								}
+								else
+								{
+									currentToken.rangeList.Add(0, '0'-1);
+									currentToken.rangeList.Add('9'+1, Character::Maximum());
+								}
 								continue;
 
 							case 'S':
 								++pUC;
-								for(const CharacterRange& range : CharacterRangeList::WHITESPACE_CHARACTERS.CreateComplement())
+								for(const CharacterRange& range : (useUnicodeProperties ? CharacterRangeList::UNICODE_WHITESPACE_CHARACTERS : CharacterRangeList::WHITESPACE_CHARACTERS).CreateComplement())
 								{
 									currentToken.rangeList.Add(range);
 								}
@@ -578,7 +640,7 @@ void Tokenizer::ProcessTokens()
 
 							case 'W':
 								++pUC;
-								for(const CharacterRange& range : CharacterRangeList::WORD_CHARACTERS.CreateComplement())
+								for(const CharacterRange& range : (useUnicodeProperties ? CharacterRangeList::UNICODE_WORD_CHARACTERS : CharacterRangeList::WORD_CHARACTERS).CreateComplement())
 								{
 									currentToken.rangeList.Add(range);
 								}
@@ -603,7 +665,7 @@ void Tokenizer::ProcessTokens()
 					}
 				}
 
-				if(currentToken.rangeList.GetCount() == 1)
+				if(currentToken.rangeList.GetCount() == 1 && currentToken.unicodeProperties.IsEmpty())
 				{
 					if(currentToken.type == TokenType::Range
 					   && currentToken.rangeList[0].GetSize() == 0
@@ -692,7 +754,15 @@ void Tokenizer::ProcessTokens()
 					ConsumeCharacter();
 					currentToken.type = TokenType::Range;
 					currentToken.rangeList.SetCount(0);
-					currentToken.rangeList.Append('0', '9');
+					if(useUnicodeProperties) currentToken.rangeList = CharacterRangeList::UNICODE_DIGIT_CHARACTERS;
+					else currentToken.rangeList.Append('0', '9');
+					return;
+
+				case 'p':
+				case 'P':
+					currentToken.type = TokenType::Range;
+					currentToken.rangeList.SetCount(0);
+					AddUnicodeProperty();
 					return;
 
 				case 'c':
@@ -717,7 +787,8 @@ void Tokenizer::ProcessTokens()
 					ConsumeCharacter();
 					currentToken.type = TokenType::NotRange;
 					currentToken.rangeList.SetCount(0);
-					currentToken.rangeList.Append('0', '9');
+					if(useUnicodeProperties) currentToken.rangeList = CharacterRangeList::UNICODE_DIGIT_CHARACTERS;
+					else currentToken.rangeList.Append('0', '9');
 					return;
 
 				case 'e':
