@@ -127,6 +127,7 @@ Pattern::Pattern(const String& pattern, int options) // Can throw PatternExcepti
 		fullMatchProcessor = CreateProcessor(data, length, false, header->flags.fullMatchProcessorType);
 	}
 	PatternProcessor* filtered = CreateLiteralPrefilterProcessor(partialMatchProcessor, compiler.TakeLiteralPrefilter(), numberOfCaptures);
+	filtered = CreateMultiLiteralPrefilterProcessor(filtered, compiler.TakeMultiLiteralPrefilter());
 	if (fullMatchProcessor == partialMatchProcessor) fullMatchProcessor = filtered;
 	partialMatchProcessor = filtered;
 }

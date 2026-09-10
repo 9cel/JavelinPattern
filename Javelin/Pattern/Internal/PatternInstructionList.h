@@ -48,7 +48,9 @@ namespace Javelin
 
 			~InstructionList();
 
-			void Build(uint32_t options, ScanDirection scanDirection, IComponent* headComponent, Compiler& compiler, bool needsProgressChecks, PatternProcessorType processorType);
+			// Candidate verifiers need only the anchored entry, with the original
+			// input-anchor semantics. They can omit the partial-search scan loop.
+			void Build(uint32_t options, ScanDirection scanDirection, IComponent* headComponent, Compiler& compiler, bool needsProgressChecks, PatternProcessorType processorType, bool buildSearch = true);
 
 			void AddInstruction(Instruction* instruction);
 			void Patch(Instruction* instruction);

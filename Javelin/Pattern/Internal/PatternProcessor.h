@@ -20,6 +20,7 @@ namespace Javelin
 
 		struct ByteCodeSearchData;
 		class InstructionListBuilder;
+		class CandidatePatternProcessor;
 
 		class PatternProcessor : public PatternProcessorBase
 		{
@@ -68,6 +69,8 @@ namespace Javelin
 			static PatternProcessor* CreatePikeNfaProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateSimplePikeNfaProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateThompsonNfaProcessor(const void* data, size_t length);
+			// Capture-free anchored candidate verification, preserving input bounds.
+			static CandidatePatternProcessor* CreateAnchoredThompsonNfaProcessor(const void* data, size_t length);
 
 			static bool CanUseBitFieldGlushkovNfaPatternProcessor(const void* data, size_t length);
 
@@ -90,6 +93,15 @@ namespace Javelin
 
 			static const void* FindBoyerMoore(const void* p, const ByteCodeSearchData* data, const void* pEnd);
 			static const void* FindShiftOr(const void* p, const ByteCodeSearchData* data, const void* pEnd);
+		};
+
+		// A separate interface keeps the ordinary processor vtable compatible
+		// with the hand-written JIT tables. Only candidate verifiers expose it.
+		class CandidatePatternProcessor : public PatternProcessor
+		{
+		public:
+			static constexpr uintptr_t CANDIDATE_BUDGET_EXHAUSTED = 1;
+			virtual const void* MatchCandidate(const void* data, size_t length, size_t offset, size_t& budget) const = 0;
 		};
 
 //============================================================================

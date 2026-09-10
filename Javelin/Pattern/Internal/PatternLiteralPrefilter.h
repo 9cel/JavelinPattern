@@ -14,27 +14,45 @@ struct LiteralPrefixRun {
     bool Contains(unsigned char c) const { return (bytes[c / 64] >> (c % 64)) & 1; }
 };
 
-struct LiteralPrefilter {
-    std::vector<std::string> literals;
-    // Conservative byte-class prefixes, verified by the matcher unless completeMatch.
-    std::vector<std::vector<LiteralPrefixRun>> prefixBytes;
-    std::vector<LiteralPrefixRun> reversePrefix;
+// Plans that can compute group zero directly. Other captures still require
+// the regex processor; None requires it to verify every candidate.
+struct LiteralMatchPlan {
+    enum class Kind { None, Runs, WholeRun, Delimited };
+    Kind kind = Kind::None;
+
+    // Runs: a literal/byte product with disjoint greedy prefix/suffix runs.
+    // reversePrefix is shared with candidate verification in LiteralPrefilter.
     std::vector<LiteralPrefixRun> forwardSuffix;
-    size_t minimumPrefix = 0, maximumPrefix = 0;
-    size_t suffixLength = 0;
-    bool endAnchored = false;
-    bool completeMatch = false;
     bool startWordBoundary = false, endWordBoundary = false, requireEnd = false;
-    bool unboundedVerification = false;
     bool greedyLiteralSuffix = false;
-    bool wholeRun = false;
-    bool byteRun = false;
-    LiteralPrefixRun runBytes;
-    bool delimited = false, delimiterTail = false;
+
+    // WholeRun: identical unbounded greedy runs surrounding a literal whose
+    // bytes all belong to the run. At most one byte is excluded from the run.
+    int excludedRunByte = -1;
+
+    // Delimited: a one-byte opener, a greedy body that excludes every closer,
+    // and a one-byte closer. The optional tail is a subset of the body class.
+    bool delimiterTail = false;
     bool delimiterDisjointOpener = false;
     LiteralPrefixRun delimiterBody, delimiterLastByte;
     std::vector<unsigned char> closingBytes;
-    int excludedRunByte = -1;
+
+    bool IsComplete() const { return kind != Kind::None; }
+};
+
+struct LiteralPrefilter {
+    std::vector<std::string> literals;
+    // Conservative byte-class prefixes: false positives are allowed, false
+    // negatives are not. Only match.kind authorizes returning a final span.
+    std::vector<std::vector<LiteralPrefixRun>> prefixBytes;
+    std::vector<LiteralPrefixRun> reversePrefix;
+    size_t minimumPrefix = 0, maximumPrefix = 0;
+    size_t suffixLength = 0;
+    bool endAnchored = false;
+    bool unboundedVerification = false;
+    bool byteRun = false;
+    LiteralPrefixRun runBytes;
+    LiteralMatchPlan match;
     bool HasData() const { return !literals.empty(); }
 };
 

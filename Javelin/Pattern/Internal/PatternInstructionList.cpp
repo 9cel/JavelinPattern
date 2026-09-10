@@ -3547,7 +3547,7 @@ bool InstructionList::NeedsProgressChecks() const
 	return hasBackTrackingComponents || processorType == PatternProcessorType::BackTracking;
 }
 
-void InstructionList::Build(uint32_t aOptions, ScanDirection aScanDirection, IComponent* headComponent, Compiler& compiler, bool aHasBackTrackingComponents, PatternProcessorType aProcessorType)
+void InstructionList::Build(uint32_t aOptions, ScanDirection aScanDirection, IComponent* headComponent, Compiler& compiler, bool aHasBackTrackingComponents, PatternProcessorType aProcessorType, bool buildSearch)
 {
 	options = aOptions;
 	scanDirection = aScanDirection;
@@ -3579,6 +3579,7 @@ void InstructionList::Build(uint32_t aOptions, ScanDirection aScanDirection, ICo
 	UpdateReferencesForInstructions();
 
 	if(scanDirection == Forwards
+	   && buildSearch
 	   && !isAnchored
 	   && RequiresAnyByteMinimalForPartialMatch(headComponent))
 	{

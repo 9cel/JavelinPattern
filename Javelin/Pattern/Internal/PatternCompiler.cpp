@@ -97,7 +97,7 @@ void Compiler::Compile(int options)
 	JPATTERN_VERIFY(tokenizer->PeekCurrentTokenType() == TokenType::End, UnexpectedToken, tokenizer->GetExceptionData());
 
 	ResolveRecurseComponents();
-	if (!(options & (Pattern::NO_OPTIMIZE | Pattern::ANCHORED)) && !usesBacktrackingComponents)
+	if(!(options & (Pattern::NO_OPTIMIZE | Pattern::ANCHORED)) && !usesBacktrackingComponents)
 		literalPrefilter = BuildLiteralPrefilter(component);
 
 	if(options & Pattern::AUTO_CLUSTER)
@@ -125,6 +125,9 @@ void Compiler::Compile(int options)
 #if JDUMP_PATTERN_INFORMATION
 	PrintInformation(StandardOutput, component);
 #endif
+
+	if(!(options & (Pattern::NO_OPTIMIZE | Pattern::ANCHORED)) && !usesBacktrackingComponents)
+		multiLiteralPrefilter = BuildMultiLiteralPrefilter(component, *this, options, numberOfCaptures);
 
 	PatternProcessorType processorType = GetProcessorTypeForOptions(options);
 	instructionList.Build(options, InstructionList::Forwards, component, *this, usesBacktrackingComponents, processorType);
@@ -172,7 +175,14 @@ void Compiler::Compile(int options)
 			if(prefix.size() <= 3) { literalPrefilter = {}; break; }
 		}
 	}
-	if(!literalPrefilter.completeMatch && !literalPrefilter.prefixBytes.empty() && numberOfCaptures > 1)
+	// Merged byte classes lose the correlation between alternatives. Prefer
+	// native paired/Shift-Or searches for ASCII prefixes; keep range filters.
+	bool mergedAsciiPrefix = literalPrefilter.prefixBytes.size() == 1;
+	if(mergedAsciiPrefix)
+		for(const auto& byte : literalPrefilter.prefixBytes[0])
+			if(byte.bytes[2] || byte.bytes[3]) { mergedAsciiPrefix = false; break; }
+	if(!literalPrefilter.match.IsComplete() && !literalPrefilter.prefixBytes.empty()
+	   && (numberOfCaptures > 1 || mergedAsciiPrefix))
 	{
 		const auto* compiled = (const ByteCodeHeader*) byteCode.GetData();
 		switch(compiled->GetForwardProgram()[compiled->partialMatchStartingInstruction].type)
@@ -185,6 +195,9 @@ void Compiler::Compile(int options)
 		case InstructionType::SearchByteTriplet2:
 			// A paired prefix search is already selective.
 			literalPrefilter = {};
+			break;
+		case InstructionType::SearchShiftOr:
+			if(mergedAsciiPrefix) literalPrefilter = {};
 			break;
 		default:
 			break;

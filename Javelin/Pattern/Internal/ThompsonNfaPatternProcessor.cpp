@@ -21,14 +21,15 @@ using namespace Javelin::PatternInternal;
 
 //============================================================================
 
-class ThompsonNfaPatternProcessor final : public PatternProcessor
+class ThompsonNfaPatternProcessor final : public CandidatePatternProcessor
 {
 public:
-	ThompsonNfaPatternProcessor(const void* data, size_t length);
+	ThompsonNfaPatternProcessor(const void* data, size_t length, bool anchored = false);
 
 	virtual const void* FullMatch(const void* data, size_t length) const;
 	virtual const void* FullMatch(const void* data, size_t length, const char **captures) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
+	virtual const void* MatchCandidate(const void* data, size_t length, size_t offset, size_t& budget) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const;
 	virtual Interval<const void*> LocatePartialMatch(const void* data, size_t length, size_t offset) const;
 	virtual const void* PopulateCaptures(const void* data, size_t length, size_t offset, const char **captures) const;
@@ -38,12 +39,15 @@ public:
 	size_t GetNumberOfBytesForState() const;
 
 private:
+	bool anchoredCandidate = false;
 	bool				matchRequiresEndOfInput;
 	PatternData			patternData;
 	uint32_t			numberOfInstructions;
 	uint32_t			partialMatchStartingInstruction;
 	uint32_t			fullMatchStartingInstruction;
 	ExpandedJumpTables	expandedJumpTables;
+	Table<StaticBitTable<256>> firstByteMasks;
+	void BuildFirstByteMasks();
 
 	void Set(const void* data, size_t length);
 
@@ -52,6 +56,7 @@ private:
 
 	void ProcessState(const State* currentState, State* nextState, const unsigned char* &p, ProcessData& processData) const;
 	const void* Process(const unsigned char* pIn, ProcessData& processData) const;
+	const void* MatchPartial(const void* data, size_t length, size_t offset, size_t* budget) const;
 };
 
 //============================================================================
@@ -67,6 +72,8 @@ struct ThompsonNfaPatternProcessor::ProcessData
 	const PatternData			patternData;
 	State*						currentState;
 	const ExpandedJumpTables&	expandedJumpTables;
+	const StaticBitTable<256>*	firstByteMasks;
+	size_t* candidateBudget = nullptr;
 
 	ProcessData(bool aIsFullMatch, const void* data, size_t length, size_t offset, uint32_t aStartingInstruction, const ThompsonNfaPatternProcessor& processor)
 	: isFullMatch(aIsFullMatch),
@@ -75,7 +82,8 @@ struct ThompsonNfaPatternProcessor::ProcessData
 	  pEnd((const unsigned char*) data + length),
 	  startingInstruction(aStartingInstruction),
 	  patternData(processor.patternData),
-	  expandedJumpTables(processor.expandedJumpTables)
+	  expandedJumpTables(processor.expandedJumpTables),
+	  firstByteMasks(processor.firstByteMasks.GetData())
 	{
 	}
 };
@@ -87,38 +95,34 @@ struct ThompsonNfaPatternProcessor::State
 	uint32_t		numberOfThreads;
 	uint32_t*		threadList;
 	uint32_t*		updateCache;
-	uint64_t		numberOfStates;			// Becomes (1<<32) to stop any further states from being added
-	uint32_t		stateList[1];			// List of already visited states
+	// A generation per input step replaces the sparse visited-state list.
+	uint32_t		generation;			// Zero stops lower priority threads after a match.
+	uint32_t		threadStorage[1];
 
-	static size_t GetSize(uint32_t maximumNumberOfThreads) 				{ return (sizeof(State) + maximumNumberOfThreads*(2*sizeof(uint32_t)) + 7) & -8; }
+	static size_t GetSize(uint32_t maximumNumberOfThreads) 				{ return (sizeof(State) + maximumNumberOfThreads*sizeof(uint32_t) + 7) & -8; }
 	static size_t GetUpdateCacheSize(uint32_t maximumNumberOfThreads) 	{ return (maximumNumberOfThreads*(sizeof(uint32_t)) + 7) & -8; }
 
 	void Dump(ICharacterWriter& output) const;
 	bool HasNoThreads() const 							{ return numberOfThreads == 0;			}
 
-	void ResetThreads()
+	void ResetThreads(uint32_t aGeneration)
 	{
-		numberOfStates  = 0;
+		generation = aGeneration;
 		numberOfThreads = 0;
 	}
 
 	JINLINE bool Check(uint32_t pc)
 	{
-		uint32_t index = updateCache[pc];
-		if(index < numberOfStates)
-		{
-			if(numberOfStates >= 0x100000000ll || stateList[index] == pc) return false;
-		}
-		updateCache[pc] = uint32_t(numberOfStates);
-		stateList[numberOfStates++] = pc;
+		if(generation == 0 || updateCache[pc] == generation) return false;
+		updateCache[pc] = generation;
 		return true;
 	}
 
-	void Prepare(uint32_t* aUpdateCache, uint32_t maximumNumberOfThreads)
+	void Prepare(uint32_t* aUpdateCache)
 	{
 		updateCache = aUpdateCache;
-		threadList = (uint32_t*) &stateList[maximumNumberOfThreads];
-		ResetThreads();
+		threadList = threadStorage;
+		ResetThreads(0);
 	}
 
 	void AddThread(uint32_t pc)
@@ -136,6 +140,9 @@ struct ThompsonNfaPatternProcessor::State
 void ThompsonNfaPatternProcessor::State::AddThread(uint32_t pc, const unsigned char* p, ProcessData& processData)
 {
 Loop:
+	// Reject a branch before walking its assertions and epsilon transitions.
+	// At EOF, leave nullable paths and assertions to the interpreter.
+	if(p != processData.pEnd && !processData.firstByteMasks[pc][*p]) return;
 #if VERBOSE_DEBUG_PATTERN
 	StandardOutput.PrintF("Adding to next thread pc: %u\n", pc);
 #endif
@@ -161,28 +168,28 @@ Loop:
 		break;
 
 	case InstructionType::AssertWordBoundary:
-		if(Character::IsWordCharacter(*p))
+		if(p != processData.pEnd && WORD_MASK[*p])
 		{
 			if(p == processData.pStart) goto ProcessNextInstruction;
-			if(!Character::IsWordCharacter(p[-1])) goto ProcessNextInstruction;
+			if(!WORD_MASK[p[-1]]) goto ProcessNextInstruction;
 		}
 		else
 		{
 			if(p != processData.pStart
-			   && Character::IsWordCharacter(p[-1])) goto ProcessNextInstruction;
+			   && WORD_MASK[p[-1]]) goto ProcessNextInstruction;
 		}
 		break;
 
 	case InstructionType::AssertNotWordBoundary:
-		if(Character::IsWordCharacter(*p))
+		if(p != processData.pEnd && WORD_MASK[*p])
 		{
 			if(p != processData.pStart
-			   && Character::IsWordCharacter(p[-1])) goto ProcessNextInstruction;
+			   && WORD_MASK[p[-1]]) goto ProcessNextInstruction;
 		}
 		else
 		{
 			if(p == processData.pStart) goto ProcessNextInstruction;
-			if(!Character::IsWordCharacter(p[-1])) goto ProcessNextInstruction;
+			if(!WORD_MASK[p[-1]]) goto ProcessNextInstruction;
 		}
 		break;
 
@@ -244,8 +251,8 @@ Loop:
 		if(processData.isFullMatch && p != processData.pEnd) break;
 		processData.match = p;
 		// Prevent processing of lower priority threads
-		numberOfStates = 0x100000000ll;
-		processData.currentState->ResetThreads();
+		generation = 0;
+		processData.currentState->numberOfThreads = 0;
 		return;
 
 	case InstructionType::SearchByte:
@@ -575,9 +582,11 @@ void ThompsonNfaPatternProcessor::State::Dump(ICharacterWriter& output) const
 
 //============================================================================
 
-ThompsonNfaPatternProcessor::ThompsonNfaPatternProcessor(const void* data, size_t length)
+ThompsonNfaPatternProcessor::ThompsonNfaPatternProcessor(const void* data, size_t length, bool anchored)
 {
 	Set(data, length);
+	anchoredCandidate = anchored;
+	if(anchored) partialMatchStartingInstruction = fullMatchStartingInstruction;
 }
 
 void ThompsonNfaPatternProcessor::Set(const void* data, size_t length)
@@ -589,6 +598,72 @@ void ThompsonNfaPatternProcessor::Set(const void* data, size_t length)
 	fullMatchStartingInstruction = header->fullMatchStartingInstruction;
 	patternData.p = (const unsigned char*) header->GetForwardProgram();
 	expandedJumpTables.Set(patternData, numberOfInstructions);
+	BuildFirstByteMasks();
+}
+
+//============================================================================
+
+// Follow short non-consuming paths to reject impossible first bytes. Leave
+// assertions in the program and stop at splits, matches and search instructions.
+void ThompsonNfaPatternProcessor::BuildFirstByteMasks()
+{
+	firstByteMasks.SetCount(numberOfInstructions);
+	for(uint32_t start = 0; start < numberOfInstructions; ++start)
+	{
+		auto& mask = firstByteMasks[start];
+		mask.SetAllBits();
+		uint32_t pc = start;
+		for(unsigned steps = 0; steps < 8; ++steps)
+		{
+			const auto instruction = patternData[pc];
+			switch(instruction.type)
+			{
+			case InstructionType::Jump: pc = instruction.data; continue;
+			case InstructionType::Save:
+			case InstructionType::SaveNoRecurse:
+			case InstructionType::ProgressCheck:
+			case InstructionType::PropagateBackwards:
+			case InstructionType::AssertStartOfInput:
+			case InstructionType::AssertEndOfInput:
+			case InstructionType::AssertStartOfLine:
+			case InstructionType::AssertEndOfLine:
+			case InstructionType::AssertWordBoundary:
+			case InstructionType::AssertNotWordBoundary:
+			case InstructionType::AssertStartOfSearch:
+				++pc; continue;
+			default: break;
+			}
+			for(unsigned c = 0; c < 256; ++c)
+			{
+				bool accepts = true;
+				const uint32_t value = instruction.data;
+				switch(instruction.type)
+				{
+				case InstructionType::Byte: accepts = c == value; break;
+				case InstructionType::ByteEitherOf2: accepts = c == (value & 255) || c == (value >> 8 & 255); break;
+				case InstructionType::ByteEitherOf3: accepts = c == (value & 255) || c == (value >> 8 & 255) || c == (value >> 16 & 255); break;
+				case InstructionType::ByteRange: accepts = c >= (value & 255) && c <= (value >> 8 & 255); break;
+				case InstructionType::ByteNot: accepts = c != value; break;
+				case InstructionType::ByteNotEitherOf2: accepts = c != (value & 255) && c != (value >> 8 & 255); break;
+				case InstructionType::ByteNotEitherOf3: accepts = c != (value & 255) && c != (value >> 8 & 255) && c != (value >> 16 & 255); break;
+				case InstructionType::ByteNotRange: accepts = c < (value & 255) || c > (value >> 8 & 255); break;
+				case InstructionType::ByteBitMask: accepts = (*patternData.GetData<StaticBitTable<256>>(value))[c]; break;
+				case InstructionType::ByteJumpTable:
+				case InstructionType::ByteJumpMask:
+				case InstructionType::DispatchTable:
+				case InstructionType::DispatchMask:
+					accepts = expandedJumpTables.GetJumpTable(pc)[c] != TypeData<uint32_t>::Maximum(); break;
+				case InstructionType::ByteJumpRange:
+				case InstructionType::DispatchRange:
+					{ auto data = patternData.GetData<ByteCodeJumpRangeData>(value); accepts = data->pcData[data->range.Contains(c)] != TypeData<uint32_t>::Maximum(); break; }
+				case InstructionType::Fail: accepts = false; break;
+				default: break;
+				}
+				if(!accepts) mask.ClearBit(c);
+			}
+			break;
+		}
+	}
 }
 
 //============================================================================
@@ -1057,6 +1132,11 @@ void ThompsonNfaPatternProcessor::ProcessState(const State* currentState, State*
 
 const void* ThompsonNfaPatternProcessor::Process(const unsigned char* pIn, ProcessData& processData) const
 {
+	if (processData.candidateBudget)
+	{
+		if (*processData.candidateBudget < numberOfInstructions) return (const void*) CANDIDATE_BUDGET_EXHAUSTED;
+		*processData.candidateBudget -= numberOfInstructions;
+	}
 	uint32_t processSize = State::GetSize(numberOfInstructions);
 	uint32_t updateCacheSize = State::GetUpdateCacheSize(numberOfInstructions);
 	return StackBuffer(2*processSize+updateCacheSize, [=, &processData](unsigned char* pBuffer) -> const void*
@@ -1065,23 +1145,48 @@ const void* ThompsonNfaPatternProcessor::Process(const unsigned char* pIn, Proce
 		State* nextState = (State*) (pBuffer + processSize);
 		uint32_t* updateCache = (uint32_t*) (pBuffer + 2*processSize);
 
-		currentState->Prepare(updateCache, numberOfInstructions);
-		nextState->Prepare(updateCache, numberOfInstructions);
+		currentState->Prepare(updateCache);
+		nextState->Prepare(updateCache);
 
 		const unsigned char* p = pIn;
 		const unsigned char* pEnd = processData.pEnd;
 
+		memset(updateCache, 0, updateCacheSize);
+		uint32_t generation = 1;
+		nextState->ResetThreads(generation);
 		processData.currentState = currentState;
 		nextState->AddThread(processData.startingInstruction, pIn, processData);
 
 		for(; p < pEnd; ++p)
 		{
 			if(nextState->HasNoThreads()) return processData.match;
+			if (processData.candidateBudget)
+			{
+				// Generation deduplication visits at most the program once per
+				// input position. Charge that upper bound, including epsilon work.
+				if (*processData.candidateBudget < numberOfInstructions) return (const void*) CANDIDATE_BUDGET_EXHAUSTED;
+				*processData.candidateBudget -= numberOfInstructions;
+			}
 			Swap(currentState, nextState);
-			nextState->ResetThreads();
+			// Reuse generation values safely even on inputs exceeding 4 GiB.
+			if(++generation == 0)
+			{
+				memset(updateCache, 0, updateCacheSize);
+				generation = 1;
+			}
+			nextState->ResetThreads(generation);
 
 			processData.currentState = currentState;
+			const unsigned char* before = p;
 			ProcessState(currentState, nextState, p, processData);
+			if (processData.candidateBudget)
+			{
+				// Search instructions may skip input within one NFA step.
+				size_t skipped = p == nullptr ? size_t(pEnd - before) : p > before ? size_t(p - before) : 0;
+				if (*processData.candidateBudget < skipped) return (const void*) CANDIDATE_BUDGET_EXHAUSTED;
+				*processData.candidateBudget -= skipped;
+			}
+			if (!p) return processData.match;
 		}
 
 		return processData.match;
@@ -1102,7 +1207,86 @@ const void* ThompsonNfaPatternProcessor::FullMatch(const void* data, size_t leng
 
 const void* ThompsonNfaPatternProcessor::PartialMatch(const void* data, size_t length, size_t offset) const
 {
+	return MatchPartial(data, length, offset, nullptr);
+}
+
+const void* ThompsonNfaPatternProcessor::MatchCandidate(const void* data, size_t length, size_t offset, size_t& budget) const
+{
+	return MatchPartial(data, length, offset, &budget);
+}
+
+const void* ThompsonNfaPatternProcessor::MatchPartial(const void* data, size_t length, size_t offset, size_t* budget) const
+{
 	ProcessData processData(matchRequiresEndOfInput, data, length, offset, partialMatchStartingInstruction, *this);
+	processData.candidateBudget = budget;
+	if (anchoredCandidate)
+	{
+		// Most literal candidates fail along a deterministic prefix. Avoid
+		// allocating and clearing NFA state until the first actual fork.
+		const auto* p = processData.pSearchStart;
+		uint32_t pc = fullMatchStartingInstruction;
+		for (unsigned steps = 0; steps < 64; ++steps)
+		{
+			if (budget)
+			{
+				if (!*budget) return (const void*) CANDIDATE_BUDGET_EXHAUSTED;
+				--*budget;
+			}
+			if (pc == UINT32_MAX) return nullptr;
+			if (p != processData.pEnd && !firstByteMasks[pc][*p]) return nullptr;
+			const auto instruction = patternData[pc];
+			switch (instruction.type)
+			{
+			case InstructionType::Fail: return nullptr;
+			case InstructionType::Match:
+				return !matchRequiresEndOfInput || p == processData.pEnd ? p : nullptr;
+			case InstructionType::Jump: pc = instruction.data; continue;
+			case InstructionType::Save:
+			case InstructionType::SaveNoRecurse:
+			case InstructionType::ProgressCheck: break;
+			case InstructionType::AssertStartOfInput: if (p != processData.pStart) return nullptr; break;
+			case InstructionType::AssertEndOfInput: if (p != processData.pEnd) return nullptr; break;
+			case InstructionType::AssertStartOfLine: if (p != processData.pStart && p[-1] != '\n') return nullptr; break;
+			case InstructionType::AssertEndOfLine: if (p != processData.pEnd && *p != '\n') return nullptr; break;
+			case InstructionType::AssertWordBoundary:
+			case InstructionType::AssertNotWordBoundary:
+				if (((p != processData.pStart && WORD_MASK[p[-1]]) != (p != processData.pEnd && WORD_MASK[*p]))
+					!= (instruction.type == InstructionType::AssertWordBoundary)) return nullptr;
+				break;
+			case InstructionType::AnyByte:
+			case InstructionType::AdvanceByte:
+			case InstructionType::Byte:
+			case InstructionType::ByteEitherOf2:
+			case InstructionType::ByteEitherOf3:
+			case InstructionType::ByteRange:
+			case InstructionType::ByteNot:
+			case InstructionType::ByteNotEitherOf2:
+			case InstructionType::ByteNotEitherOf3:
+			case InstructionType::ByteNotRange:
+			case InstructionType::ByteBitMask:
+				if (p == processData.pEnd) return nullptr;
+				++p; break;
+			case InstructionType::ByteJumpTable:
+			case InstructionType::ByteJumpMask:
+				if (p == processData.pEnd) return nullptr;
+				pc = expandedJumpTables.GetJumpTable(pc)[*p++]; continue;
+			case InstructionType::DispatchTable:
+			case InstructionType::DispatchMask:
+				if (p == processData.pEnd) goto UseNfa;
+				pc = expandedJumpTables.GetJumpTable(pc)[*p]; continue;
+			case InstructionType::ByteJumpRange:
+			case InstructionType::DispatchRange:
+				if (p == processData.pEnd) goto UseNfa;
+				pc = patternData.GetData<ByteCodeJumpRangeData>(instruction.data)->pcData[
+					patternData.GetData<ByteCodeJumpRangeData>(instruction.data)->range.Contains(*p)];
+				if (instruction.type == InstructionType::ByteJumpRange) ++p;
+				continue;
+			default: goto UseNfa;
+			}
+			++pc;
+		}
+	}
+UseNfa:
 	return Process(processData.pSearchStart, processData);
 }
 
@@ -1129,6 +1313,11 @@ const void* ThompsonNfaPatternProcessor::PopulateCaptures(const void* data, size
 PatternProcessor* PatternProcessor::CreateThompsonNfaProcessor(const void* data, size_t length)
 {
 	return new ThompsonNfaPatternProcessor(data, length);
+}
+
+CandidatePatternProcessor* PatternProcessor::CreateAnchoredThompsonNfaProcessor(const void* data, size_t length)
+{
+	return new ThompsonNfaPatternProcessor(data, length, true);
 }
 
 //============================================================================

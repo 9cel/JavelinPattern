@@ -26,6 +26,7 @@ public:
 
 private:
 	bool					preferReverseProcessorForFullMatchCapture;
+	bool					smallAnchoredCaptureProgram;
 	bool					reverseMatchRequiresStartOfSearch;
 	uint8_t					numberOfCaptures;
 	DataBlock				dataStore;
@@ -54,6 +55,11 @@ void ScanAndCapturePatternProcessor::Set(const void* data, size_t length)
 {
 	const ByteCodeHeader* header = (ByteCodeHeader*) data;
 	numberOfCaptures = header->numberOfCaptures;
+	// Short anchored inputs can skip the forward/reverse scans and run the
+	// bounded capture processor directly.
+	smallAnchoredCaptureProgram = header->flags.hasStartAnchor
+		&& header->numberOfCaptures > 1 && header->numberOfInstructions <= 256
+		&& header->numberOfProgressChecks == 0;
 
 	// To prevent the optimizations
 	if(numberOfCaptures == 1 && header->flags.hasResetCapture) numberOfCaptures = 2;
@@ -90,6 +96,8 @@ const void* ScanAndCapturePatternProcessor::FullMatch(const void* data, size_t l
 
 const void* ScanAndCapturePatternProcessor::FullMatch(const void* data, size_t length, const char **captures) const
 {
+	if(smallAnchoredCaptureProgram && length <= 1024)
+		return populateCaptureProcessor->FullMatch(data, length, captures);
 	const void* result = scanProcessor->FullMatch(data, length);
 	if(!result) return nullptr;
 
@@ -118,6 +126,8 @@ const void* ScanAndCapturePatternProcessor::PartialMatch(const void* data, size_
 
 const void* ScanAndCapturePatternProcessor::PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const
 {
+	if(smallAnchoredCaptureProgram && length <= 1024)
+		return populateCaptureProcessor->PartialMatch(data, length, offset, captures);
 	const void* result = scanProcessor->PartialMatch(data, length, offset);
 	if(!result) return nullptr;
 

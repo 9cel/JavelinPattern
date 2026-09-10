@@ -8,6 +8,7 @@
 #include "Javelin/Pattern/Internal/PatternInstructionList.h"
 #include "Javelin/Pattern/Internal/PatternTokenizerBase.h"
 #include "Javelin/Pattern/Internal/PatternLiteralPrefilter.h"
+#include "Javelin/Pattern/Internal/PatternMultiLiteralPrefilter.h"
 
 //============================================================================
 
@@ -34,6 +35,7 @@ namespace Javelin::PatternInternal
 		void 				ResolveRecurseInstructions();
 		uint32_t 			GetNumberOfCaptures() const		{ return numberOfCaptures;	}
 		const DataBlock&	GetByteCode() const				{ return byteCode;			}
+		MultiLiteralPrefilter TakeMultiLiteralPrefilter() { return std::move(multiLiteralPrefilter); }
 		LiteralPrefilter TakeLiteralPrefilter() { return std::move(literalPrefilter); }
 
 	private:
@@ -45,6 +47,7 @@ namespace Javelin::PatternInternal
 
 		DataBlock					byteCode;
 		LiteralPrefilter literalPrefilter;
+		MultiLiteralPrefilter multiLiteralPrefilter;
 		String						pattern;
 		bool						usesBacktrackingComponents = false;
 		uint32_t					numberOfCaptures;
