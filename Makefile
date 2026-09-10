@@ -2,6 +2,16 @@ CC=clang++
 ODIR=build
 CPPFLAGS=-O3 -I. -std=c++17 -fomit-frame-pointer -DJBUILDCONFIG_FINAL -DNDEBUG
 
+UNAME_S := $(shell uname -s 2>/dev/null)
+SHARED_LIBRARY_EXTENSION = so
+SHARED_LIBRARY_LDFLAGS = -shared
+ifneq ($(filter Windows_NT MINGW% MSYS% CYGWIN%,$(OS) $(UNAME_S)),)
+SHARED_LIBRARY_EXTENSION = dll
+else ifeq ($(UNAME_S),Darwin)
+SHARED_LIBRARY_EXTENSION = dylib
+SHARED_LIBRARY_LDFLAGS = -dynamiclib
+endif
+
 ASSEMBLER_SOURCES = \
 		    Javelin/Assembler/BitUtility.cpp \
 			 	Javelin/Assembler/JitForwardReferenceMap.cpp \
@@ -157,6 +167,7 @@ help:
 	@echo "clean             - Clean all targets"
 	@echo "assembler-library - Build libJavelinAssembler"
 	@echo "pattern-library   - Build libJavelinPattern"
+	@echo "shared-library    - Build libJavelinPattern.$(SHARED_LIBRARY_EXTENSION)"
 	@echo "jasm              - Build jasm"
 	@echo
 
@@ -196,10 +207,10 @@ $(ODIR)/libJavelinPattern.a: $(patsubst %.cpp,$(ODIR)/Objects/%.o,$(PATTERN_SOUR
 	@rm -f "$@"
 	@ar rcs $@ $^ 
 
-$(ODIR)/libJavelinPattern.so: $(patsubst %.cpp,$(ODIR)/Objects/%.o,$(PATTERN_SOURCES))
+$(ODIR)/libJavelinPattern.$(SHARED_LIBRARY_EXTENSION): $(patsubst %.cpp,$(ODIR)/Objects/%.o,$(PATTERN_SOURCES))
 	@echo "Linking: [32;1m$@[m"
 	@rm -f "$@"
-	@$(CC) -shared -flto -o $@ $^ 
+	@$(CC) $(SHARED_LIBRARY_LDFLAGS) -flto -o $@ $^
 
 $(ODIR)/jasm: $(patsubst %.cpp,$(ODIR)/Objects/%.o,$(JASM_SOURCES))
 	@echo "Linking: [32;1m$@[m"
@@ -211,7 +222,7 @@ assembler-library: $(ODIR)/libJavelinAssembler.a
 
 pattern-library: $(ODIR)/libJavelinPattern.a
 
-shared-library: $(ODIR)/libJavelinPattern.so
+shared-library: $(ODIR)/libJavelinPattern.$(SHARED_LIBRARY_EXTENSION)
 
 example: pattern-library
 	@echo "Creating: [32;1m$(ODIR)/example[m"
