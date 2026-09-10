@@ -95,14 +95,27 @@ void Compiler::Compile(int options)
 	ByteCodeHeader* header = (ByteCodeHeader*) byteCodeWriter.GetData();
 	if(header->RequiresReverseProgram() && header->flags.reverseProcessorType == PatternProcessorType::None)
 	{
-		InstructionList reverseProgram;
-		reverseProgram.Build(options, InstructionList::Reverse, component, *this, usesBacktrackingComponents, processorType);
-		reverseProgram.AppendByteCode(byteCodeWriter);
-
+		try
+		{
+			InstructionList reverseProgram;
+			reverseProgram.Build(options, InstructionList::Reverse, component, *this, usesBacktrackingComponents, processorType);
+			reverseProgram.AppendByteCode(byteCodeWriter);
 #if JDUMP_PATTERN_INFORMATION
-		StandardOutput.PrintF("Reverse\n");
-		reverseProgram.Dump(StandardOutput);
+			StandardOutput.PrintF("Reverse\n");
+			reverseProgram.Dump(StandardOutput);
 #endif
+		}
+		catch(const PatternException& exception)
+		{
+			if(exception.GetType() != PatternException::Type::TooManyByteCodeInstructions
+			   || (options & Pattern::NO_OPTIMIZE)) throw;
+			// Retry without determinization if the reverse program exceeds the
+			// bytecode limits. AppendByteCode leaves the writer unchanged on failure.
+			InstructionList reverseProgram;
+			reverseProgram.Build(options | Pattern::NO_OPTIMIZE, InstructionList::Reverse,
+				component, *this, usesBacktrackingComponents, processorType);
+			reverseProgram.AppendByteCode(byteCodeWriter);
+		}
 	}
 
 	byteCode = (DataBlock&&) byteCodeWriter.GetBuffer();

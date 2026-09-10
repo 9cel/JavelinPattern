@@ -51,6 +51,7 @@ struct InstructionList::StateMap
 	StatesToInstructionMap statesToInstructionMap;
 	InstructionToStatesMap instructionToStatesMap;
 	uint32_t& visitMark;
+	mutable size_t traversalWork = 0;
 
 	StateMap(uint32_t& aVisitMark)
 	: statesToInstructionMap(4),
@@ -97,6 +98,7 @@ struct InstructionList::StateMap
 // Visited instructions carry mark, instructions in the result carry mark+1.
 void InstructionList::StateMap::RecurseAddTargets(InstructionTable& result, Instruction* original, Instruction* target, uint32_t mark) const
 {
+	++traversalWork;
 	if(target == original || target->visitMark >= mark) return;
 	target->visitMark = mark;
 	if(target->hasStates)
@@ -375,6 +377,9 @@ void InstructionList::Optimize()
 	STEP(Optimize_RemoveZeroReference);
 	STEP(Optimize_RightFactor);
 	if(scanDirection == Forwards) STEP(Optimize_DelaySave);
+	// Share these limits across both reverse determinization passes.
+	collapseStepsRemaining = 32768;
+	collapseWorkRemaining = 4 * 1024 * 1024;
 	STEP(Optimize_CollapseSplit);
 	STEP(Optimize_RemoveZeroReference);
 	STEP(Optimize_ForwardJumpTargets);
@@ -1770,9 +1775,15 @@ void InstructionList::Optimize_CollapseSplit()
 	// ...
 
 
+	// Bound determinization work, including traversal of cached states. Stop
+	// between transformations so remaining splits remain valid NFA code.
+	size_t remainingSteps = 8 * instructionList.GetCount();
 	LinkedInstructionList::Iterator instructionIterator = instructionList.ReverseBegin();
 	while(instructionIterator != instructionList.ReverseEnd())
 	{
+		if(remainingSteps == 0 || collapseStepsRemaining == 0 || stateMap.traversalWork >= collapseWorkRemaining) break;
+		--remainingSteps;
+		--collapseStepsRemaining;
 		Instruction* instruction = &*instructionIterator;
 		if(instruction->referenceList.GetCount() == 0)
 		{
@@ -1798,6 +1809,7 @@ void InstructionList::Optimize_CollapseSplit()
 		--instructionIterator;
 		if(instructionIterator == instruction) --instructionIterator;
 	}
+	collapseWorkRemaining -= Minimum(collapseWorkRemaining, stateMap.traversalWork);
 }
 
 void InstructionList::Optimize_RemoveZeroReference()

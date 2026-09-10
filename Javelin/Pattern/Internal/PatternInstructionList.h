@@ -115,6 +115,8 @@ namespace Javelin
 			uint32_t				recurseCounter = 0;
 			uint32_t				progressCheckCounter = 0;
 			uint32_t				visitMark = 0;
+			size_t					collapseStepsRemaining = 0;
+			size_t					collapseWorkRemaining = 0;
 #if DUMP_OPTIMIZATION_STATISTICS
 			uint32_t				optimizationStepCounter = 0;
 #endif

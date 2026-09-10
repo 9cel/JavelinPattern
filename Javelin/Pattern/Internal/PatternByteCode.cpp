@@ -226,6 +226,7 @@ ByteCodeBuilder::ByteCodeBuilder(const String&		  aPattern,
   instructionList(aTotalInstructionCount),
   patternData(4096)
 {
+	JPATTERN_VERIFY(totalInstructionCount <= TypeData<uint16_t>::Maximum(), TooManyByteCodeInstructions, nullptr);
 }
 
 //============================================================================
@@ -235,7 +236,7 @@ void ByteCodeBuilder::AddInstruction(const Instruction* instruction, Instruction
 	ByteCodeInstruction b;
 
 	JASSERT((uint32_t) opcode < 128);
-	JASSERT(opcodeData < (1 << 26));
+	JPATTERN_VERIFY(opcodeData < (1 << 24), TooManyByteCodeInstructions, nullptr);
 
 	b.data = opcodeData;
 	b.isSingleReference = instruction->IsSingleReference();
