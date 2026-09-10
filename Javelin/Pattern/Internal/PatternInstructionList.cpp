@@ -2906,11 +2906,15 @@ uint32_t InstructionList::CalculateSearchEffectivenessValue(const uint32_t* data
 
 static uint32_t ScaleBaseSpeedForProbability(uint32_t baseSpeed, float probability)
 {
-	constexpr float    PROBABILITY_FOR_LENGTH	= 0.90f;
+	constexpr double   PROBABILITY_FOR_LENGTH	= 0.90;
 	constexpr uint32_t RELAXATION_LENGTH 		= 224;
 
-	float length = Math::Log(1.0f-PROBABILITY_FOR_LENGTH) / Math::Log(1.0f-probability);
-	return uint32_t(baseSpeed * (1.0 - exp(-length/RELAXATION_LENGTH)));
+	// Fixed-point products can round a rare match's probability down to zero.
+	// Use the limiting scores at the endpoints and avoid rounding 1-p to 1.
+	if(probability <= 0.0f) return baseSpeed;
+	if(probability >= 1.0f) return 0;
+	double length = Math::Log1P(-PROBABILITY_FOR_LENGTH) / Math::Log1P(-double(probability));
+	return uint32_t(baseSpeed * -Math::ExpM1(-length/RELAXATION_LENGTH));
 }
 
 void InstructionList::SearchOptimizer::ReplaceOriginal(Instruction* searcher, bool replaceByteJumpTableWithAdvanceByte, bool hasZeroOffsetCheck, Instruction*& partialMatchInstruction)

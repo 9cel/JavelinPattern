@@ -31,9 +31,11 @@ namespace Javelin
 		template<typename T> T CopySign(T magnitude, T sign);
 		template<typename T> T Cos(T x);
 		template<typename T> T Exp(T x);
+		template<typename T> T ExpM1(T x);
 		template<typename T> T Floor(T x);
 		template<typename T> T Log(T x);
 		template<typename T> T Log10(T x);
+		template<typename T> T Log1P(T x);
 		template<typename T> T Mod(T x, T y);
 		template<typename T> T Pow(T x, T y);
 		template<typename T> T Pow10(T x);
@@ -63,9 +65,11 @@ namespace Javelin
 		template<> JINLINE float CopySign(float m, float s)		{ return copysignf(m, s);	}
 		template<> JINLINE float Cos(float x)					{ return cosf(x);			}
 		template<> JINLINE float Exp(float x)					{ return expf(x);			}
+		template<> JINLINE float ExpM1(float x)					{ return expm1f(x);		}
 		template<> JINLINE float Floor(float x)					{ return floorf(x);			}
 		template<> JINLINE float Log(float x)					{ return logf(x);			}
 		template<> JINLINE float Log10(float x)					{ return log10f(x);			}
+		template<> JINLINE float Log1P(float x)					{ return log1pf(x);		}
 		template<> JINLINE float Mod(float x, float y)			{ return fmodf(x, y);		}
 		template<> JINLINE float Pow(float x, float y)			{ return powf(x, y);		}
 		template<> JINLINE float Pow10(float x)					{ return powf(10, x);		}
@@ -90,9 +94,11 @@ namespace Javelin
 		template<> JINLINE double CopySign(double m, double s)	{ return copysign(m, s);	}
 		template<> JINLINE double Cos(double x)					{ return cos(x);			}
 		template<> JINLINE double Exp(double x)					{ return exp(x);			}
+		template<> JINLINE double ExpM1(double x)				{ return expm1(x);		}
 		template<> JINLINE double Floor(double x)				{ return floor(x);			}
 		template<> JINLINE double Log(double x)					{ return log(x);			}
 		template<> JINLINE double Log10(double x)				{ return log10(x);			}
+		template<> JINLINE double Log1P(double x)				{ return log1p(x);			}
 		template<> JINLINE double Mod(double x, double y)		{ return fmod(x, y);		}
 		template<> JINLINE double Pow(double x, double y)		{ return pow(x, y);			}
 		template<> JINLINE double Pow10(double x)				{ return pow(10, x);		}
@@ -117,9 +123,11 @@ namespace Javelin
 		template<> JINLINE long double CopySign(long double m, long double s)	{ return copysignl(m, s);	}
 		template<> JINLINE long double Cos(long double x)						{ return cosl(x);			}
 		template<> JINLINE long double Exp(long double x)						{ return expl(x);			}
+		template<> JINLINE long double ExpM1(long double x)					{ return expm1l(x);		}
 		template<> JINLINE long double Floor(long double x)						{ return floorl(x);			}
 		template<> JINLINE long double Log(long double x)						{ return logl(x);			}
 		template<> JINLINE long double Log10(long double x)						{ return log10l(x);			}
+		template<> JINLINE long double Log1P(long double x)						{ return log1pl(x);		}
 		template<> JINLINE long double Mod(long double x, long double y)		{ return fmodl(x, y);		}
 		template<> JINLINE long double Pow(long double x, long double y)		{ return powl(x, y);		}
 		template<> JINLINE long double Pow10(long double x)						{ return powl(10, x);		}
