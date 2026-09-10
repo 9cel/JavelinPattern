@@ -52,6 +52,7 @@ namespace Javelin::PatternInternal
 		Table<Presence>	presenceList;
 
 		bool childMasksUpdated = false;
+		bool pathMasksComplete = true;
 
 		uint32_t pathIndex;
 		uint32_t parentMasks[32];			// mapping of where branches came from

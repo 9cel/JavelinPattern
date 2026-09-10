@@ -1414,6 +1414,9 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	// %xmm4 loaded with low nibble mask of byte 3
 	// %xmm5 loaded with high nibble mask of byte 3
 
+	// A failed candidate can resume the search at the end of the buffer.
+	asm("cmpq %rdx, %rsi");
+	asm("jae LInternalAvx2FindByteTripletMaskPathFail");
 	asm("movl %esi, %eax");
 	asm("movl $0x0f, %r10d");
 	asm("andq $-32, %rsi");
@@ -4245,6 +4248,8 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 
 __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMethods::InternalFindByteRange()
 {
+	asm("cmpq %rdx, %rsi");
+	asm("jae LInternalFindByteRangeFail");
 	asm("pushq %rcx");
 	asm("movq %rsi, %rcx");
 	asm("andq $-32, %rsi");
@@ -4314,6 +4319,8 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 
 __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMethods::InternalAvxFindByteRange()
 {
+    asm("cmpq %rdx, %rsi");
+    asm("jae LInternalAvxFindByteRangeFail");
     asm("pushq %rcx");
     asm("movq %rsi, %rcx");
     asm("andq $-32, %rsi");
@@ -4387,6 +4394,8 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 // %xmm1 must be loaded with the second byte to search in the lower 32 bits
 __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMethods::InternalAvx512FindByteRange()
 {
+    asm("cmpq %rdx, %rsi");
+    asm("jae LInternalAvx512FindByteRangeFail");
     asm("pushq %rcx");
     asm("movq %rsi, %rcx");
     asm("andq $-64, %rsi");
@@ -4448,6 +4457,8 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 // %xmm1 must be loaded with the second byte to search in the lower 32 bits
 __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMethods::InternalAvx2FindByteRange()
 {
+    asm("cmpq %rdx, %rsi");
+    asm("jae LInternalAvx2FindByteRangeFail");
     asm("pushq %rcx");
     asm("movq %rsi, %rcx");
     asm("andq $-64, %rsi");
@@ -4848,6 +4859,9 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 	asm("pushq %rbx");
 	asm("pushq %r12");
 	asm("pushq %r13");
+	// Candidate retries can exhaust the search range before the first load.
+	asm("cmpq %rdx, %rsi");
+	asm("jae LInternalFindTripletFail");
 	asm("pushq %rcx");
 
 	asm("movl %esi, %ecx");
@@ -4976,6 +4990,8 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 
 __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMethods::InternalAvxFindTriplet()
 {
+	asm("cmpq %rdx, %rsi");
+	asm("jae LInternalAvxFindTripletFail");
 	asm("movl %esi, %r10d");
 	asm("andq $-32, %rsi");
 	asm("andl $31, %r10d");
@@ -5094,6 +5110,8 @@ __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMet
 
 __attribute__((naked, aligned(32))) void* Javelin::PatternInternal::Amd64FindMethods::InternalAvx2FindTriplet()
 {
+	asm("cmpq %rdx, %rsi");
+	asm("jae LInternalAvx2FindTripletFail");
 	asm("movl %esi, %r10d");
 	asm("andq $-64, %rsi");
 	asm("andl $63, %r10d");

@@ -1,10 +1,10 @@
 //============================================================================
 
 #include "Javelin/Pattern/Internal/PatternProcessor.h"
-#if !PATTERN_USE_JIT
 
 #include "Javelin/Container/BitTable.h"
 #include "Javelin/Pattern/Internal/PatternByteCode.h"
+#include "Javelin/Pattern/Pattern.h"
 #include "Javelin/Stream/ICharacterWriter.h"
 #include "Javelin/Template/Memory.h"
 
@@ -19,7 +19,7 @@ class BackTrackingPatternProcessor final : public PatternProcessor
 {
 public:
 	BackTrackingPatternProcessor(const void* data, size_t length);
-	BackTrackingPatternProcessor(DataBlock&& dataBlock);
+	BackTrackingPatternProcessor(DataBlock&& dataBlock, bool notEmptyAtStart = false);
 	~BackTrackingPatternProcessor();
 
 	virtual const void* FullMatch(const void* data, size_t length) const;
@@ -27,6 +27,7 @@ public:
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset) const;
 	virtual const void* PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const;
 	virtual Interval<const void*> LocatePartialMatch(const void* data, size_t length, size_t offset) const;
+	virtual const void* PopulateCaptures(const void* data, size_t length, size_t offset, const char **captures) const;
 
 private:
 	struct ProcessData
@@ -36,6 +37,7 @@ private:
 		const unsigned char* 	pStart;
 		const unsigned char*	pSearchStart;
 		const unsigned char* 	pEnd;
+		const unsigned char*	pNotEmptyStart = nullptr;
 		const char**			captures;
 		const unsigned char**	progressCheck;
 
@@ -53,6 +55,10 @@ private:
 	};
 
 	bool					matchRequiresEndOfInput;
+	bool					notEmptyAtStart = false;
+	bool					isUtf8;
+	bool					hasStartAnchor;
+	PatternProcessor*		retryJit = nullptr;
 	uint8_t					numberOfCaptures;
 	uint8_t					numberOfProgressChecks;
 	PatternData				patternData;
@@ -62,6 +68,7 @@ private:
 	ExpandedJumpTables		expandedJumpTables;
 
 	const void* Process(uint32_t pc, const unsigned char* p, const ProcessData& processData) const;
+	const void* SearchNotEmptyAtStart(const void* data, size_t length, size_t offset, const char** captures) const;
 
 	void Set(const void* data, size_t length);
 };
@@ -73,16 +80,40 @@ BackTrackingPatternProcessor::BackTrackingPatternProcessor(const void* data, siz
 	Set(data, length);
 }
 
-BackTrackingPatternProcessor::BackTrackingPatternProcessor(DataBlock&& dataBlock)
-: dataStore((DataBlock&&) dataBlock)
+BackTrackingPatternProcessor::BackTrackingPatternProcessor(DataBlock&& dataBlock, bool aNotEmptyAtStart)
+: notEmptyAtStart(aNotEmptyAtStart), dataStore((DataBlock&&) dataBlock)
 {
 	Set(dataStore.GetData(), dataStore.GetCount());
+#if PATTERN_USE_JIT
+	if(notEmptyAtStart)
+	{
+		ByteCodeHeader* header = (ByteCodeHeader*) dataStore.GetData();
+		header->patternStringOptions |= ByteCodeHeader::NOT_EMPTY_AT_START;
+		header->flags.alwaysRequiresCaptures = true;
+		header->flags.useStackGuard = true;
+		// Empty-match rejection invalidates unconditional-match shortcuts.
+		ByteCodeInstruction* instructions = (ByteCodeInstruction*) (header + 1);
+		for(size_t pc = 0; pc < header->numberOfInstructions; ++pc)
+		{
+			switch(instructions[pc].type)
+			{
+			case InstructionType::SaveNoRecurse: instructions[pc].type = InstructionType::Save; break;
+			case InstructionType::SplitNextMatchN: instructions[pc].type = InstructionType::SplitNextN; break;
+			case InstructionType::SplitNMatchNext: instructions[pc].type = InstructionType::SplitNNext; break;
+			default: break;
+			}
+		}
+		retryJit = CreateBackTrackingProcessor(dataStore.GetData(), dataStore.GetCount(), false);
+	}
+#endif
 }
 
 void BackTrackingPatternProcessor::Set(const void* data, size_t length)
 {
 	const ByteCodeHeader* header = (const ByteCodeHeader*) data;
 	matchRequiresEndOfInput = header->flags.matchRequiresEndOfInput;
+	isUtf8 = (header->patternStringOptions & Pattern::UTF8) != 0;
+	hasStartAnchor = header->flags.hasStartAnchor;
 	numberOfCaptures = header->numberOfCaptures;
 	numberOfProgressChecks = header->numberOfProgressChecks;
 	partialMatchStartingInstruction = header->partialMatchStartingInstruction;
@@ -93,6 +124,7 @@ void BackTrackingPatternProcessor::Set(const void* data, size_t length)
 
 BackTrackingPatternProcessor::~BackTrackingPatternProcessor()
 {
+	delete retryJit;
 }
 
 //============================================================================
@@ -651,6 +683,7 @@ Loop:
 		goto Loop;
 
 	case InstructionType::Match:
+		if(p == processData.pNotEmptyStart && processData.captures[0] == (const char*) p) return nullptr;
 		if(processData.isFullMatch)	return p == processData.pEnd ? p : nullptr;
 		else return p;
 
@@ -666,6 +699,9 @@ Loop:
 		}
 
 	case InstructionType::SaveNoRecurse:
+		// A formerly unconditional match can fail during a nonempty retry.
+		// Restore captures when that failure tries another alternative.
+		if(processData.pNotEmptyStart) goto Save;
 		if(processData.captures != nullptr)
 		{
 			uint32_t saveIndex = instruction.data & 0xff;
@@ -676,6 +712,7 @@ Loop:
 		goto Loop;
 
 	case InstructionType::Save:
+	Save:
 		if(processData.captures == nullptr)
 		{
 			++pc;
@@ -709,6 +746,13 @@ Loop:
 	case InstructionType::SplitMatch:
 		{
 			const uint32_t* splitData = patternData.GetData<uint32_t>(instruction.data);
+			if(processData.pNotEmptyStart)
+			{
+				const void* result = Process(splitData[0], p, processData);
+				if(result) return result;
+				pc = splitData[1];
+				goto Loop;
+			}
 			pc = (!processData.isFullMatch || p == processData.pEnd) ? splitData[0] : splitData[1];
 			goto Loop;
 		}
@@ -730,16 +774,30 @@ Loop:
 		}
 
 	case InstructionType::SplitNextMatchN:
+		if(processData.pNotEmptyStart)
+		{
+			const void* result = Process(pc+1, p, processData);
+			if(result) return result;
+			pc = instruction.data;
+			goto Loop;
+		}
 		pc = (!processData.isFullMatch || p == processData.pEnd) ? pc+1 : instruction.data;
 		goto Loop;
 
 	case InstructionType::SplitNMatchNext:
+		if(processData.pNotEmptyStart)
+		{
+			const void* result = Process(instruction.data, p, processData);
+			if(result) return result;
+			++pc;
+			goto Loop;
+		}
 		pc = (!processData.isFullMatch || p == processData.pEnd) ? instruction.data : pc+1;
 		goto Loop;
 
 	case InstructionType::StepBack:
+		if(size_t(p - processData.pStart) < instruction.data) return nullptr;
 		p -= instruction.data;
-		if(p < processData.pStart) return nullptr;
 		++pc;
 		goto Loop;
 
@@ -766,6 +824,11 @@ const void* BackTrackingPatternProcessor::FullMatch(const void* data, size_t len
 
 const void* BackTrackingPatternProcessor::PartialMatch(const void* data, size_t length, size_t offset) const
 {
+	if(notEmptyAtStart)
+	{
+		const char* captures[numberOfCaptures*2];
+		return SearchNotEmptyAtStart(data, length, offset, captures);
+	}
 	const unsigned char* progressCheck[numberOfProgressChecks];
 	ProcessData processData(matchRequiresEndOfInput, data, length, offset, nullptr, progressCheck, numberOfProgressChecks);
 	return Process(partialMatchStartingInstruction, processData.pSearchStart, processData);
@@ -773,6 +836,7 @@ const void* BackTrackingPatternProcessor::PartialMatch(const void* data, size_t 
 
 const void* BackTrackingPatternProcessor::PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const
 {
+	if(notEmptyAtStart) return SearchNotEmptyAtStart(data, length, offset, captures);
 	const unsigned char* progressCheck[numberOfProgressChecks];
 	ProcessData processData(matchRequiresEndOfInput, data, length, offset, captures, progressCheck, numberOfProgressChecks);
 	return Process(partialMatchStartingInstruction, processData.pSearchStart, processData);
@@ -782,6 +846,11 @@ Interval<const void*> BackTrackingPatternProcessor::LocatePartialMatch(const voi
 {
 	JASSERT(numberOfCaptures > 0);
 	const char* captures[numberOfCaptures*2];
+	if(notEmptyAtStart)
+	{
+		if(!SearchNotEmptyAtStart(data, length, offset, captures)) return {nullptr, nullptr};
+		return {captures[0], captures[1]};
+	}
 	const unsigned char* progressCheck[numberOfProgressChecks];
 	captures[0] = nullptr;
 	captures[1] = nullptr;
@@ -792,6 +861,40 @@ Interval<const void*> BackTrackingPatternProcessor::LocatePartialMatch(const voi
 
 //============================================================================
 
+const void* BackTrackingPatternProcessor::PopulateCaptures(const void* data, size_t length, size_t offset, const char** captures) const
+{
+	const unsigned char* progressCheck[numberOfProgressChecks];
+	ProcessData processData(matchRequiresEndOfInput, data, length, offset, captures, progressCheck, numberOfProgressChecks);
+	return Process(fullMatchStartingInstruction, processData.pSearchStart, processData);
+}
+
+const void* BackTrackingPatternProcessor::SearchNotEmptyAtStart(const void* data, size_t length, size_t offset, const char** captures) const
+{
+	const unsigned char* progressCheck[numberOfProgressChecks];
+	ProcessData processData(matchRequiresEndOfInput, data, length, offset, captures, progressCheck, numberOfProgressChecks);
+	processData.pNotEmptyStart = processData.pSearchStart;
+	// Start the anchored program at successive character boundaries, preserving
+	// the original search start for \\G and the full subject for lookbehind.
+	for(const unsigned char* p = processData.pSearchStart;;)
+	{
+		ClearMemory(captures, size_t(numberOfCaptures)*2);
+		ClearMemory(progressCheck, size_t(numberOfProgressChecks));
+		const void* result = retryJit
+			? retryJit->PopulateCapturesWithSearchStart(data, length, p - processData.pStart, captures, offset)
+			: Process(fullMatchStartingInstruction, p, processData);
+		if(result) return result;
+		if(hasStartAnchor || p == processData.pEnd) return nullptr;
+		++p;
+		if(isUtf8) while(p < processData.pEnd && (*p & 0xc0) == 0x80) ++p;
+	}
+}
+
+PatternProcessor* PatternProcessor::CreateNotEmptyAtStartProcessor(const void* data, size_t length)
+{
+	return new BackTrackingPatternProcessor(DataBlock(data, length), true);
+}
+
+#if !PATTERN_USE_JIT
 PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(DataBlock&& dataBlock)
 {
 	return new BackTrackingPatternProcessor((DataBlock&&) dataBlock);

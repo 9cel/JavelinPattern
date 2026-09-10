@@ -382,7 +382,7 @@ void ByteCodeBuilder::WriteByteCode(DataBlockWriter& writer) const
 	header.flags.hasResetCapture		   = hasResetCapture;
 
 	bool hasBackReferences = ContainsInstruction(InstructionType::BackReference);
-	header.flags.alwaysRequiresCaptures = hasBackReferences;
+	header.flags.alwaysRequiresCaptures = hasBackReferences || hasResetCapture;
 
 	uint32_t maximumInstructionForSinglePassFullMatch    = GetMaximumInstructionForSinglePass(fullMatchStartingInstruction, false);
 	uint32_t maximumInstructionForSinglePassPartialMatch = GetMaximumInstructionForSinglePass(partialMatchStartingInstruction, false);
@@ -423,7 +423,7 @@ void ByteCodeBuilder::WriteByteCode(DataBlockWriter& writer) const
 	}
 
 	// Back tracking only patterns
-	if(hasBackReferences
+	if(hasBackReferences || hasResetCapture
 	   || ContainsInstruction(InstructionType::Recurse)
 	   || ContainsInstruction(InstructionType::Call)
 	   || ContainsInstruction(InstructionType::Possess))

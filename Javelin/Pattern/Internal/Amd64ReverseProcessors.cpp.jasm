@@ -1022,7 +1022,7 @@ static ReverseProcessor *CreateAmd64ReverseProcessor(const void* data, size_t le
 				{
 					» mov [pCaptures + {saveIndex}], p
 				}
-				else if(pc > 0
+				else if(pc > 0 && instruction.isSingleReference
 						&& patternData[pc-1].IsSave()
 						&& (patternData[pc-1].data >> 8) == saveOffset)
 				{

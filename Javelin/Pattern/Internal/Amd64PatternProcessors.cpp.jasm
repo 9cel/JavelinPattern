@@ -289,6 +289,7 @@ AssemblerContext::AssemblerContext(Assembler &aAssembler,
   type(aType)
 {
 	useStackGuard = header->flags.useStackGuard && type == PatternProcessorType::BackTracking;
+	needsSearchStart = (header->patternStringOptions & ByteCodeHeader::NOT_EMPTY_AT_START) != 0;
 	needsMatchIsAnchored = !header->IsFixedLength();
 	for(uint32_t pc = 0; pc < header->numberOfInstructions; ++pc)
 	{
@@ -305,6 +306,7 @@ AssemblerContext::AssemblerContext(Assembler &aAssembler,
 				break;
 			case InstructionType::AssertStartOfInput:
 			case InstructionType::AssertStartOfLine:
+			case InstructionType::StepBack:
 				needsStart = true;
 				break;
 			case InstructionType::AssertWordBoundary:
@@ -586,9 +588,11 @@ void AssemblerContext::EmitCallToSearch(int searchOffset,
 	if(searchOffset)
 	{
 		» add p, {searchOffset}
-		» cmp p, pEnd
-		» jae *fail
 	}
+	// A zero-offset search can also follow an exhausted greedy branch. The
+	// vector finders may load their initial aligned block before checking it.
+	» cmp p, pEnd
+	» jae *fail
 	
 	if(type == PatternProcessorType::BitState)
 	{
@@ -752,6 +756,7 @@ static PatternProcessor *CreateAmd64PatternProcessor(const void* data, size_t le
 	»   dq *locatePartialMatch, *populateCaptures
 	»   dq provideCaptures
 	»   dq *canUseFullMatchProgram, *canUsePartialMatchProgram
+	»   dq *populateCapturesWithSearchStart
 	» destructor:
 	»   int3										// Should never be called.
 	» provideCaptures:
@@ -859,6 +864,17 @@ static PatternProcessor *CreateAmd64PatternProcessor(const void* data, size_t le
 	»   startSearch {header->fullMatchStartingInstruction}f
 	context.EmitEpilog();
 
+	» *populateCapturesWithSearchStart:              // data, length, offset, captures, searchStart
+	»   lea rdi, [rsi + r9]
+	context.EmitProlog(true, true, true);
+	»   add p, rcx
+	if(context.needsSearchStart)
+	{
+		» mov pSearchStart, rdi
+	}
+	»   startSearch {header->fullMatchStartingInstruction}f
+	context.EmitEpilog();
+
 	if(useStackGuard)
 	{
 		const Pattern::StackGrowthHandler* handler = Pattern::GetStackGrowthHandler();
@@ -946,6 +962,7 @@ static PatternProcessor *CreateAmd64PatternProcessor(const void* data, size_t le
 			case InstructionType::Save:
 			case InstructionType::Split:
 			case InstructionType::SplitNextN:
+			case InstructionType::SplitMatch:
 			case InstructionType::SplitNNext:
 			case InstructionType::SplitNextMatchN:
 			case InstructionType::SplitNMatchNext:
@@ -986,6 +1003,8 @@ static PatternProcessor *CreateAmd64PatternProcessor(const void* data, size_t le
 			break;
 		case InstructionType::StepBack:
 			» advanceP (-instruction.data)
+			» cmp p, pStart
+			» jb *fail
 			break;
 		case InstructionType::AnyByte:
 			» advanceP1
@@ -2207,6 +2226,14 @@ static PatternProcessor *CreateAmd64PatternProcessor(const void* data, size_t le
 			» jmp {instruction.data}bf
 			break;
 		case InstructionType::Match:
+			if(header->patternStringOptions & ByteCodeHeader::NOT_EMPTY_AT_START)
+			{
+				» cmp p, pSearchStart
+				» jne *1f
+				» cmp p, [pCaptures]
+				» je *fail
+				» *1:
+			}
 			if(header->IsFixedLength())
 			{
 				» mov rax, rsi
@@ -2476,7 +2503,17 @@ static PatternProcessor *CreateAmd64PatternProcessor(const void* data, size_t le
 			}
 			break;
 		case InstructionType::SplitMatch:
-			if(header->flags.matchRequiresEndOfInput)
+			if(header->patternStringOptions & ByteCodeHeader::NOT_EMPTY_AT_START)
+			{
+				const uint32_t* splitData = patternData.GetData<uint32_t>(instruction.data);
+				» pushPosition
+				» call {splitData[0]}bf
+				» popPosition
+				» test rax, rax
+				» jnz *done
+				» jmp {splitData[1]}bf
+			}
+			else if(header->flags.matchRequiresEndOfInput)
 			{
 				const uint32_t* splitData = patternData.GetData<uint32_t>(instruction.data);
 				» cmp p, pEnd

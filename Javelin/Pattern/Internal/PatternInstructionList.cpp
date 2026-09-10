@@ -3585,7 +3585,9 @@ void InstructionList::Build(uint32_t aOptions, ScanDirection aScanDirection, ICo
 		Optimize_DelaySave(false);
 		InsertPartialMatchAnyByteMinimal();
 
-		if(options & Pattern::NO_FULL_MATCH) fullMatchInstruction = partialMatchInstruction;
+		// Nullable patterns need the anchored entry for nonempty retries.
+		if((options & Pattern::NO_FULL_MATCH) && minimumLength != 0 && !hasResetCapture)
+			fullMatchInstruction = partialMatchInstruction;
 		UpdateReferencesForInstructions();
 	}
 

@@ -235,6 +235,7 @@ namespace Javelin
 			bool					emitCaptureStart = true;
 			bool					isRecurseTarget = false;
 			bool					isBackReferenceTarget = false;
+			bool					hasResetCapture = false;
 			mutable bool			captured = false;
 			mutable Instruction*	firstInstruction = nullptr;
 		};
@@ -335,7 +336,7 @@ namespace Javelin
 
 	struct ResetCaptureComponent : public IComponent
 	{
-		ResetCaptureComponent(CaptureComponent* aCaptureComponent) : captureComponent(aCaptureComponent) { }
+		ResetCaptureComponent(CaptureComponent* aCaptureComponent) : captureComponent(aCaptureComponent) { captureComponent->hasResetCapture = true; }
 		virtual void Dump(ICharacterWriter& output, int depth) final;
 		virtual void BuildInstructions(InstructionList &instructionList) const final;
 		virtual bool IsEqual(const IComponent* other) const final;

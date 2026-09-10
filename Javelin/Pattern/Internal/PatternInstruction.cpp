@@ -190,6 +190,7 @@ bool Instruction::CanLeadToMatch() const
 		case InstructionType::AssertEndOfLine:
 		case InstructionType::AssertStartOfInput:
 		case InstructionType::AssertStartOfLine:
+		case InstructionType::AssertStartOfSearch:
 		case InstructionType::AssertWordBoundary:
 		case InstructionType::AssertNotWordBoundary:
 		case InstructionType::AssertRecurseValue:

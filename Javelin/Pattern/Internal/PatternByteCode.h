@@ -111,6 +111,8 @@ namespace Javelin::PatternInternal
 
 	struct ByteCodeHeader
 	{
+		// Only set on a private copy used by the empty-match retry processor.
+		static constexpr uint16_t NOT_EMPTY_AT_START = 0x20;
 		uint8_t			magic[4];
 		ByteCodeFlags	flags;
 		uint8_t			numberOfCaptures;

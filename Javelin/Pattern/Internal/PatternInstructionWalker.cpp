@@ -43,8 +43,12 @@ void InstructionWalker::AddInitialInstruction(const Instruction* instruction)
 {
 	if(!activeInstructions.Contains(instruction))
 	{
-		activeInstructions.Insert(instruction, 1<<pathIndex);
-		++pathIndex;
+		if(pathIndex < 32) activeInstructions.Insert(instruction, 1u << pathIndex++);
+		else
+		{
+			pathMasksComplete = false;
+			activeInstructions.Insert(instruction, 1u << 31);
+		}
 	}
 }
 
@@ -86,7 +90,11 @@ uint32_t InstructionWalker::GetNewPathMask(uint32_t mask)
 {
 	uint32_t newPathIndex;
 	if(pathIndex < 32) newPathIndex = pathIndex++;
-	else newPathIndex = 31;
+	else
+	{
+		newPathIndex = 31;
+		pathMasksComplete = false;
+	}
 
 	parentMasks[newPathIndex] |= mask;
 	return 1<<newPathIndex;
@@ -252,6 +260,9 @@ void InstructionWalker::ProcessInstruction(OpenHashSet<const Instruction*> &prog
 Table<NibbleMask> InstructionWalker::BuildNibbleMaskList(size_t index, size_t length, bool allowSinglePath)
 {
 	Table<NibbleMask> result;
+	// Reused path bits lose byte-position correlations and cannot form a
+	// reliable SIMD path mask. Independent presence masks remain valid.
+	if(!pathMasksComplete) return result;
 	if(!allowSinglePath && pathIndex <= 1) return result;
 
 	for(int b = 0; b < length; ++b)

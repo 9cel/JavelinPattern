@@ -38,9 +38,17 @@ namespace Javelin
 			virtual bool ProvidesCaptures() const { return true; }
 			virtual bool CanUseFullMatchProgram(size_t inputLength) const { return true; }
 			virtual bool CanUsePartialMatchProgram(size_t inputLength) const { return true; }
+			// Anchored entry preserving the start of the original search (for \\G).
+			virtual const void* PopulateCapturesWithSearchStart(const void* data, size_t length, size_t offset, const char** captures, size_t searchStart) const
+			{
+				JERROR("Processor does not support a separate search start");
+				return nullptr;
+			}
 
 			static PatternProcessor* CreateBackTrackingProcessor(DataBlock&& dataBlock);
 			static PatternProcessor* CreateBackTrackingProcessor(const void* data, size_t length, bool makeCopy);
+			// Portable retry processor used after an empty match. Owns its bytecode.
+			static PatternProcessor* CreateNotEmptyAtStartProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateConsistencyCheckProcessor(DataBlock&& dataBlock);
 			static PatternProcessor* CreateConsistencyCheckProcessor(const void* data, size_t length, bool makeCopy);
 			static PatternProcessor* CreateNfaProcessor(DataBlock&& dataBlock);

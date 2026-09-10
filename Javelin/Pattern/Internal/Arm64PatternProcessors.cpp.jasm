@@ -154,6 +154,7 @@ AssemblerContext::AssemblerContext(Assembler &aAssembler,
   type(aType)
 {
 	useStackGuard = header->flags.useStackGuard && type == PatternProcessorType::BackTracking;
+	needsSearchStart = (header->patternStringOptions & ByteCodeHeader::NOT_EMPTY_AT_START) != 0;
 	hasExternalFunctionCall = useStackGuard;
 	for(uint32_t pc = 0; pc < header->numberOfInstructions; ++pc)
 	{
@@ -165,6 +166,7 @@ AssemblerContext::AssemblerContext(Assembler &aAssembler,
 		{
 			case InstructionType::AssertStartOfInput:
 			case InstructionType::AssertStartOfLine:
+			case InstructionType::StepBack:
 				needsStart = true;
 				break;
 			case InstructionType::AssertWordBoundary:
@@ -597,6 +599,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 	»   .quad *locatePartialMatch, *populateCaptures
 	»   .quad provideCaptures
 	»   .quad *canUseFullMatchProgram, *canUsePartialMatchProgram
+	»   .quad *populateCapturesWithSearchStart
 	» destructor:
 	»   brk #0										// Should never be called.
 	» provideCaptures:
@@ -715,6 +718,16 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 	»   startSearch {header->fullMatchStartingInstruction}f
 	context.EmitEpilog();
 
+	» *populateCapturesWithSearchStart:              // data, length, offset, captures, searchStart
+	»   add x16, x1, x5
+	context.EmitProlog(true, true, true);
+	»   add pEnd, x1, x2
+	»   add p, x1, x3
+	»   mov captures, x4
+	»   setSearchStart x16
+	»   startSearch {header->fullMatchStartingInstruction}f
+	context.EmitEpilog();
+
 	if(useStackGuard)
 	{
 		const Pattern::StackGrowthHandler* handler = Pattern::GetStackGrowthHandler();
@@ -823,6 +836,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			case InstructionType::Save:
 			case InstructionType::Split:
 			case InstructionType::SplitNextN:
+			case InstructionType::SplitMatch:
 			case InstructionType::SplitNNext:
 			case InstructionType::SplitNextMatchN:
 			case InstructionType::SplitNMatchNext:
@@ -857,6 +871,8 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			break;
 		case InstructionType::StepBack:
 			» sub p, p, #{instruction.data}
+			» cmp p, pStart
+			» b.lo *fail
 			if(type == PatternProcessorType::BitState)
 			{
 				» sub pBitState, pBitState, #{instruction.data * context.numberOfBitStateInstructions / 8}
@@ -1521,6 +1537,15 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			» b {instruction.data}bf
 			break;
 		case InstructionType::Match:
+			if(header->patternStringOptions & ByteCodeHeader::NOT_EMPTY_AT_START)
+			{
+				» cmp p, pSearchStart
+				» b.ne *1f
+				» ldr x9, [captures]
+				» cmp p, x9
+				» b.eq *fail
+				» *1:
+			}
 			if(!header->IsFixedLength())
 			{
 				if(header->flags.matchRequiresEndOfInput)
@@ -1808,7 +1833,16 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 			}
 			break;
 		case InstructionType::SplitMatch:
-			if(header->flags.matchRequiresEndOfInput)
+			if(header->patternStringOptions & ByteCodeHeader::NOT_EMPTY_AT_START)
+			{
+				const uint32_t* splitData = patternData.GetData<uint32_t>(instruction.data);
+				» stp p, lr, [sp, #-16]!
+				» bl {splitData[0]}bf
+				» ldp p, lr, [sp], #16
+				» cbnz x0, *done
+				» b {splitData[1]}bf
+			}
+			else if(header->flags.matchRequiresEndOfInput)
 			{
 				const uint32_t* splitData = patternData.GetData<uint32_t>(instruction.data);
 				» cmp p, pEnd

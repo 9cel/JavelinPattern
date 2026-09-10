@@ -830,7 +830,7 @@ void CaptureComponent::BuildInstructions(InstructionList &instructionList) const
 		{
 			instructionList.AddPatchReference(&firstInstruction);
 		}
-		if(content->IsFixedLength())
+		if(content->IsFixedLength() && !hasResetCapture)
 		{
 			content->BuildInstructions(instructionList);
 			if(emitCaptureStart || instructionList.IsReverse())
@@ -1054,7 +1054,9 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 				{
 					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
 				}
-				content->BuildRepeatInstructions(instructionList);
+				// A lazy repetition may stop after any iteration. In UTF-8 mode,
+				// each iteration must consume a whole character, even for [^\n].
+				content->BuildInstructions(instructionList);
 
 				instructionList.AddInstruction(split);
 				instructionList.AddPatchReference(&split->targetList[0]);
