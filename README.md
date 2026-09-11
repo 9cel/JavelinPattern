@@ -1,3 +1,26 @@
+#### About this fork
+
+This is a fork of Jeffrey Lim's [JavelinPattern](https://github.com/jthlim/JavelinPattern).
+
+It differs from the upstream repository in the following ways:
+
+- Fixes some build errors that I ran into trying to build the library on x86_64 Ubuntu 24.04.
+- Fixes some bugs (memory safety, floating point UB, incorrect matching) that I discovered
+  while testing/benchmarking and doing some fuzzing (though some of these may have been
+  introduced by my other changes).
+- Extends Unicode support by recognizing `\p{...}`/`\P{...}` and introducing a new
+  option (`JP_OPTION_UCP`) which makes `\w`, `\W`, `\s`, `\S`, `\b`, and `\B` Unicode-aware.
+- Adds two new functions to the public API (`jp_scan()` and `jp_scan_captures()`) for iterating
+  matches without most of the overhead incurred by repeatedly restarting the scan on each call
+  to `jp_partial_match()`.
+- Introduces some vibecoded optimizations (e.g. literal prefilter) and adjusts some of the
+  defaults to support some large/complex patterns that previously wouldn't compile at all or
+  would take very long (>10s) to compile.
+
+Despite the vibecoding, the library has been tested pretty extensively in its current state
+on x86_64 using a fairly wide range of challenging patterns and haystacks, including under
+LLVM's LibFuzzer and ASan to catch memory safety bugs and against PCRE2 to verify correctness.
+
 # JavelinPattern v0.1
 
 JavelinPattern is a regular expression engine which aims to be fast _and_ feature rich.
