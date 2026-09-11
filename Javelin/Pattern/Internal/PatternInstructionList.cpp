@@ -3038,6 +3038,13 @@ void InstructionList::SearchOptimizer::ReplaceOriginal(Instruction* searcher, bo
 		   && ((jumpTableInstruction->targetList[0] == searcher && jumpTableInstruction->targetList[1] == jumpTableInstruction->GetNext())
 			   || (jumpTableInstruction->targetList[1] == searcher && jumpTableInstruction->targetList[0] == jumpTableInstruction->GetNext())))
 		{
+			// Search candidates may still take the loop branch after state simplification.
+			const StaticBitTable<256>& presenceBits = instructionWalker.GetPresenceBits(0);
+			for(size_t c = 0; c < 256; ++c)
+			{
+				if(presenceBits[c] && jumpTableInstruction->targetList[jumpTableInstruction->targetTable[c]] != next) return;
+			}
+
 			Instruction* advance = new AdvanceByteInstruction;
 			ReplaceInstruction(localOriginal, advance);
 			advance->referenceList.Append(InstructionReference::PREVIOUS);
