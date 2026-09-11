@@ -174,7 +174,7 @@ CharacterRangeList CharacterRangeList::CreateUnicodeCaseInsensitive() const
 		result.Add(range);
 
 		if(range.max < conversionData->range.min) continue;
-		while(range.min < conversionData->range.max)
+		while(conversionData->range.max < range.min)
 		{
 			if(conversionData == conversionDataEnd-1) goto Next;
 			++conversionData;
@@ -182,7 +182,7 @@ CharacterRangeList CharacterRangeList::CreateUnicodeCaseInsensitive() const
 
 		{
 			const CaseConversionData* p = conversionData;
-			while(p->range.min <= range.max && p < conversionDataEnd)
+			while(p < conversionDataEnd && p->range.min <= range.max)
 			{
 				CharacterRange overlap = range & p->range;
 				if(overlap.IsValid())

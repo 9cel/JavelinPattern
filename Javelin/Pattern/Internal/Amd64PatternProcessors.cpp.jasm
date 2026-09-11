@@ -1754,7 +1754,7 @@ static PatternProcessor *CreateAmd64PatternProcessor(const void* data, size_t le
 		case InstructionType::SearchBytePair2:
 			{
 				const ByteCodeSearchByteData* data = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-				const ByteCodeSearchMultiByteData* smbd = (ByteCodeSearchMultiByteData*) &data->bytes[4];
+				const ByteCodeSearchMultiByteData* smbd = (ByteCodeSearchMultiByteData*) &data->bytes[8];
 
 				const void* function = smbd->isPath ?
 										Machine::SupportsAvx2() ?
@@ -2683,12 +2683,7 @@ static PatternProcessor *CreateAmd64PatternProcessor(const void* data, size_t le
 
 //============================================================================
 
-PatternProcessor* PatternProcessor::CreateOnePassProcessor(DataBlock&& dataBlock)
-{
-	return CreateAmd64PatternProcessor(dataBlock.GetData(), dataBlock.GetCount(), PatternProcessorType::OnePass, 0);
-}
-
-PatternProcessor* PatternProcessor::CreateOnePassProcessor(const void* data, size_t length, bool makeCopy)
+PatternProcessor* PatternProcessor::CreateOnePassProcessor(const void* data, size_t length)
 {
 	return CreateAmd64PatternProcessor(data, length, PatternProcessorType::OnePass, 0);
 }
@@ -2698,12 +2693,7 @@ PatternProcessor* PatternProcessor::CreateBitStateProcessor(const void* data, si
 	return CreateAmd64PatternProcessor(data, length, PatternProcessorType::BitState, 0);
 }
 
-PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(DataBlock&& dataBlock)
-{
-	return CreateAmd64PatternProcessor(dataBlock.GetData(), dataBlock.GetCount(), PatternProcessorType::BackTracking, 0);
-}
-
-PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(const void* data, size_t length, bool makeCopy)
+PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(const void* data, size_t length)
 {
 	return CreateAmd64PatternProcessor(data, length, PatternProcessorType::BackTracking, 0);
 }

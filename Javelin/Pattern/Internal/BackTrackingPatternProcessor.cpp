@@ -19,7 +19,7 @@ class BackTrackingPatternProcessor final : public PatternProcessor
 {
 public:
 	BackTrackingPatternProcessor(const void* data, size_t length);
-	BackTrackingPatternProcessor(DataBlock&& dataBlock, bool notEmptyAtStart = false);
+	BackTrackingPatternProcessor(DataBlock&& dataBlock, bool notEmptyAtStart);
 	~BackTrackingPatternProcessor();
 
 	virtual const void* FullMatch(const void* data, size_t length) const;
@@ -103,7 +103,7 @@ BackTrackingPatternProcessor::BackTrackingPatternProcessor(DataBlock&& dataBlock
 			default: break;
 			}
 		}
-		retryJit = CreateBackTrackingProcessor(dataStore.GetData(), dataStore.GetCount(), false);
+		retryJit = CreateBackTrackingProcessor(dataStore.GetData(), dataStore.GetCount());
 	}
 #endif
 }
@@ -810,14 +810,14 @@ Loop:
 
 const void* BackTrackingPatternProcessor::FullMatch(const void* data, size_t length) const
 {
-	const unsigned char* progressCheck[numberOfProgressChecks];
+	const unsigned char* progressCheck[UINT8_MAX];
 	ProcessData processData(true, data, length, 0, nullptr, progressCheck, numberOfProgressChecks);
 	return Process(fullMatchStartingInstruction, (const unsigned char*) data, processData);
 }
 
 const void* BackTrackingPatternProcessor::FullMatch(const void* data, size_t length, const char **captures) const
 {
-	const unsigned char* progressCheck[numberOfProgressChecks];
+	const unsigned char* progressCheck[UINT8_MAX];
 	ProcessData processData(true, data, length, 0, captures, progressCheck, numberOfProgressChecks);
 	return Process(fullMatchStartingInstruction, (const unsigned char*) data, processData);
 }
@@ -829,7 +829,7 @@ const void* BackTrackingPatternProcessor::PartialMatch(const void* data, size_t 
 		const char* captures[numberOfCaptures*2];
 		return SearchNotEmptyAtStart(data, length, offset, captures);
 	}
-	const unsigned char* progressCheck[numberOfProgressChecks];
+	const unsigned char* progressCheck[UINT8_MAX];
 	ProcessData processData(matchRequiresEndOfInput, data, length, offset, nullptr, progressCheck, numberOfProgressChecks);
 	return Process(partialMatchStartingInstruction, processData.pSearchStart, processData);
 }
@@ -837,7 +837,7 @@ const void* BackTrackingPatternProcessor::PartialMatch(const void* data, size_t 
 const void* BackTrackingPatternProcessor::PartialMatch(const void* data, size_t length, size_t offset, const char **captures) const
 {
 	if(notEmptyAtStart) return SearchNotEmptyAtStart(data, length, offset, captures);
-	const unsigned char* progressCheck[numberOfProgressChecks];
+	const unsigned char* progressCheck[UINT8_MAX];
 	ProcessData processData(matchRequiresEndOfInput, data, length, offset, captures, progressCheck, numberOfProgressChecks);
 	return Process(partialMatchStartingInstruction, processData.pSearchStart, processData);
 }
@@ -851,7 +851,7 @@ Interval<const void*> BackTrackingPatternProcessor::LocatePartialMatch(const voi
 		if(!SearchNotEmptyAtStart(data, length, offset, captures)) return {nullptr, nullptr};
 		return {captures[0], captures[1]};
 	}
-	const unsigned char* progressCheck[numberOfProgressChecks];
+	const unsigned char* progressCheck[UINT8_MAX];
 	captures[0] = nullptr;
 	captures[1] = nullptr;
 	ProcessData processData(matchRequiresEndOfInput, data, length, offset, captures, progressCheck, numberOfProgressChecks);
@@ -863,14 +863,14 @@ Interval<const void*> BackTrackingPatternProcessor::LocatePartialMatch(const voi
 
 const void* BackTrackingPatternProcessor::PopulateCaptures(const void* data, size_t length, size_t offset, const char** captures) const
 {
-	const unsigned char* progressCheck[numberOfProgressChecks];
+	const unsigned char* progressCheck[UINT8_MAX];
 	ProcessData processData(matchRequiresEndOfInput, data, length, offset, captures, progressCheck, numberOfProgressChecks);
 	return Process(fullMatchStartingInstruction, processData.pSearchStart, processData);
 }
 
 const void* BackTrackingPatternProcessor::SearchNotEmptyAtStart(const void* data, size_t length, size_t offset, const char** captures) const
 {
-	const unsigned char* progressCheck[numberOfProgressChecks];
+	const unsigned char* progressCheck[UINT8_MAX];
 	ProcessData processData(matchRequiresEndOfInput, data, length, offset, captures, progressCheck, numberOfProgressChecks);
 	processData.pNotEmptyStart = processData.pSearchStart;
 	// Start the anchored program at successive character boundaries, preserving
@@ -895,22 +895,9 @@ PatternProcessor* PatternProcessor::CreateNotEmptyAtStartProcessor(const void* d
 }
 
 #if !PATTERN_USE_JIT
-PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(DataBlock&& dataBlock)
+PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(const void* data, size_t length)
 {
-	return new BackTrackingPatternProcessor((DataBlock&&) dataBlock);
-}
-
-PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(const void* data, size_t length, bool makeCopy)
-{
-	if(makeCopy)
-	{
-		DataBlock dataBlock(data, length);
-		return new BackTrackingPatternProcessor((DataBlock&&) dataBlock);
-	}
-	else
-	{
-		return new BackTrackingPatternProcessor(data, length);
-	}
+	return new BackTrackingPatternProcessor(data, length);
 }
 
 //============================================================================

@@ -36,6 +36,7 @@ namespace Javelin::PatternInternal
 		void 				ResolveRecurseInstructions();
 		uint32_t 			GetNumberOfCaptures() const		{ return numberOfCaptures;	}
 		const DataBlock&	GetByteCode() const				{ return byteCode;			}
+		DataBlock			TakeByteCode()					{ return (DataBlock&&) byteCode;	}
 		MultiLiteralPrefilter TakeMultiLiteralPrefilter() { return std::move(multiLiteralPrefilter); }
 		LiteralPrefilter TakeLiteralPrefilter() { return std::move(literalPrefilter); }
 		PatternScanOptimizer* TakeScanOptimizer() { return scanOptimizer.release(); }

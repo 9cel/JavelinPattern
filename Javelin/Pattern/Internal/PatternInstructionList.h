@@ -54,6 +54,34 @@ namespace Javelin
 
 			void AddInstruction(Instruction* instruction);
 			void Patch(Instruction* instruction);
+
+			// A nullable loop body is emitted twice. The consumed copy is only
+			// entered from byte consumers in the unconsumed copy, so an
+			// iteration that ends where it began falls out of the loop.
+			struct NullableIteration
+			{
+				NullableIteration(InstructionList& aInstructionList);
+				~NullableIteration();
+
+				void BeginUnconsumedCopy(Instruction* aAfterConsumedCopy);
+				void Finish();
+				bool RequiresProgressCheck() const;
+				void Record(Instruction* instruction)		{ (recordingUnconsumedCopy ? unconsumedCopy : consumedCopy).Append(instruction); }
+
+				struct Redirect
+				{
+					JumpInstruction*	jump;
+					size_t				index;
+				};
+
+				InstructionList&		instructionList;
+				Instruction*			afterConsumedCopy = nullptr;
+				bool					recordingUnconsumedCopy = false;
+				Table<Instruction*>		consumedCopy;
+				Table<Instruction*>		unconsumedCopy;
+				Table<Redirect>			redirectList;
+			};
+
 			Instruction* Back() 								{ return &instructionList.Back(); }
 			void AddPatchReference(Instruction** patch) 		{ patchList.Append(patch); }
 			void RemovePatchReference(Instruction** patch) 		{ patchList.Remove(patch); }
@@ -86,6 +114,7 @@ namespace Javelin
 			bool RequiresAnyByteMinimalForPartialMatch(IComponent* headComponent) const;
 
 			bool NeedsProgressChecks() const;
+			bool UsesProgressChecks() const						{ return IsReverse() || hasBackTrackingComponents; }
 
 			void WriteByteCode(DataBlockWriter& writer, const String& pattern, uint32_t numberOfCaptures);
 			void AppendByteCode(DataBlockWriter& writer);
@@ -99,6 +128,7 @@ namespace Javelin
 			LinkedInstructionList	instructionList;
 
 			Table<Instruction**>	patchList;
+			Table<NullableIteration*>	nullableIterationList;
 
 			ScanDirection			scanDirection;
 			bool					hasBackTrackingComponents;
@@ -178,6 +208,7 @@ namespace Javelin
 			void DumpReferenceMismatch(const ReferenceTable& before, size_t instructionIndex, const char* optimizationPass);
 
 			void InsertPartialMatchAnyByteMinimal();
+			void RecordNullableIteration(Instruction* instruction);
 
 			void Optimize_SplitToSplit(SplitInstruction* split);
 			void Optimize_SplitToByteConsumers(LinkedInstructionList::Iterator& insertAfter, SplitInstruction* split, StateMap& stateMap);

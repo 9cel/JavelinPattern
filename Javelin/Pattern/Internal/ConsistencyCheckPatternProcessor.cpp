@@ -16,7 +16,6 @@ class ConsistencyCheckPatternProcessor final : public PatternProcessor
 {
 public:
 	ConsistencyCheckPatternProcessor(const void* data, size_t length);
-	ConsistencyCheckPatternProcessor(DataBlock&& dataBlock);
 	~ConsistencyCheckPatternProcessor();
 
 	virtual const void* FullMatch(const void* data, size_t length) const;
@@ -29,7 +28,6 @@ public:
 private:
 	bool 				reverseMatchRequiresStartOfSearch;
 	uint32_t			numberOfCaptures;
-	DataBlock			dataStore;
 
 	PatternProcessor*	processorList[7];
 	int					numberOfProcessors = 0;
@@ -47,13 +45,6 @@ ConsistencyCheckPatternProcessor::ConsistencyCheckPatternProcessor(const void* d
 {
 	SetForwards(data, length);
 	SetReverse(data, length);
-}
-
-ConsistencyCheckPatternProcessor::ConsistencyCheckPatternProcessor(DataBlock&& dataBlock)
-: dataStore((DataBlock&&) dataBlock)
-{
-	SetForwards(dataStore.GetData(), dataStore.GetCount());
-	SetReverse(dataStore.GetData(), dataStore.GetCount());
 }
 
 ConsistencyCheckPatternProcessor::~ConsistencyCheckPatternProcessor()
@@ -87,11 +78,11 @@ void ConsistencyCheckPatternProcessor::SetForwards(const void* data, size_t leng
 						 || patternData.ContainsInstruction(InstructionType::SplitNextMatchN, header->numberOfInstructions)
 						 || patternData.ContainsInstruction(InstructionType::SplitNMatchNext, header->numberOfInstructions);
 
-	processorList[numberOfProcessors++] = PatternProcessor::CreateBackTrackingProcessor(data, length, false);
+	processorList[numberOfProcessors++] = PatternProcessor::CreateBackTrackingProcessor(data, length);
 
 	if(!containsSplit)
 	{
-		processorList[numberOfProcessors++] = PatternProcessor::CreateOnePassProcessor(data, length, false);
+		processorList[numberOfProcessors++] = PatternProcessor::CreateOnePassProcessor(data, length);
 	}
 
 	if(!containsBackTrackingOnly)
@@ -104,7 +95,7 @@ void ConsistencyCheckPatternProcessor::SetForwards(const void* data, size_t leng
 
 	if(header->flags.reverseProcessorType != PatternProcessorType::None)
 	{
-		processorList[numberOfProcessors++] = PatternProcessor::CreateScanAndCaptureProcessor(data, length, false);
+		processorList[numberOfProcessors++] = PatternProcessor::CreateScanAndCaptureProcessor(data, length);
 	}
 }
 
@@ -273,22 +264,9 @@ const void* ConsistencyCheckPatternProcessor::PopulateCaptures(const void* data,
 
 //============================================================================
 
-PatternProcessor* PatternProcessor::CreateConsistencyCheckProcessor(DataBlock&& dataBlock)
+PatternProcessor* PatternProcessor::CreateConsistencyCheckProcessor(const void* data, size_t length)
 {
-	return new ConsistencyCheckPatternProcessor((DataBlock&&) dataBlock);
-}
-
-PatternProcessor* PatternProcessor::CreateConsistencyCheckProcessor(const void* data, size_t length, bool makeCopy)
-{
-	if(makeCopy)
-	{
-		DataBlock dataBlock(data, length);
-		return new ConsistencyCheckPatternProcessor((DataBlock&&) dataBlock);
-	}
-	else
-	{
-		return new ConsistencyCheckPatternProcessor(data, length);
-	}
+	return new ConsistencyCheckPatternProcessor(data, length);
 }
 
 //============================================================================

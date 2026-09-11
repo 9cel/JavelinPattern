@@ -176,8 +176,8 @@ namespace Javelin::PatternInternal
 	{
 		uint32_t	offset;
 		uint8_t		bytes[8];
-		uint32_t 	GetFourBytes() const	{ return *(uint32_t*) bytes; }
-		uint64_t 	GetAllBytes() const		{ return *(uint64_t*) bytes; }
+		uint32_t 	GetFourBytes() const	{ uint32_t value; memcpy(&value, bytes, sizeof(value)); return value; }
+		uint64_t 	GetAllBytes() const		{ uint64_t value; memcpy(&value, bytes, sizeof(value)); return value; }
 	};
 
 	// Immediately follows ByteCodeSearchByteData if pair or triplet.

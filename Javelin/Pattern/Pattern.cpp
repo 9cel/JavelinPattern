@@ -69,27 +69,27 @@ String Javelin::ToString(const MatchResult& a)
 
 //============================================================================
 
-PatternInternal::PatternProcessor* Pattern::CreateProcessor(DataBlock&& dataBlock, PatternInternal::PatternProcessorType type)
+PatternProcessor* Pattern::CreateProcessor(const void* data, size_t length, PatternProcessorType type)
 {
 	switch(type)
 	{
 	case PatternProcessorType::BackTracking:
-		return PatternProcessor::CreateBackTrackingProcessor((DataBlock&&) dataBlock);
+		return PatternProcessor::CreateBackTrackingProcessor(data, length);
 
 	case PatternProcessorType::ConsistencyCheck:
-		return PatternProcessor::CreateConsistencyCheckProcessor((DataBlock&&) dataBlock);
+		return PatternProcessor::CreateConsistencyCheckProcessor(data, length);
 
 	case PatternProcessorType::Nfa:
-		return PatternProcessor::CreateNfaProcessor((DataBlock&&) dataBlock);
+		return PatternProcessor::CreateNfaProcessor(data, length);
 
 	case PatternProcessorType::NfaOrBitStateBackTracking:
-		return PatternProcessor::CreateNfaOrBitStateProcessor((DataBlock&&) dataBlock);
+		return PatternProcessor::CreateNfaOrBitStateProcessor(data, length);
 
 	case PatternProcessorType::ScanAndCapture:
-		return PatternProcessor::CreateScanAndCaptureProcessor((DataBlock&&) dataBlock);
+		return PatternProcessor::CreateScanAndCaptureProcessor(data, length);
 
 	case PatternProcessorType::OnePass:
-		return PatternProcessor::CreateOnePassProcessor((DataBlock&&) dataBlock);
+		return PatternProcessor::CreateOnePassProcessor(data, length);
 
 	default:
 		JERROR("Invalid processor type!");
@@ -103,9 +103,11 @@ Pattern::Pattern(const String& pattern, int options) // Can throw PatternExcepti
 	compiler.Compile(options);
 
 	numberOfCaptures = compiler.GetNumberOfCaptures();
-	const DataBlock& dataBlock = compiler.GetByteCode();
+	byteCode = compiler.TakeByteCode();
 
-	const ByteCodeHeader* header = (ByteCodeHeader*) dataBlock.GetData();
+	const void* data = byteCode.GetData();
+	size_t length = byteCode.GetNumberOfBytes();
+	const ByteCodeHeader* header = (const ByteCodeHeader*) data;
 	SetAnchoredByteFilter(header);
 	flags = header->flags.value;
 	minimumMatchLength = header->minimumMatchLength;
@@ -113,19 +115,17 @@ Pattern::Pattern(const String& pattern, int options) // Can throw PatternExcepti
 	matchLengthCheck = GetMaximumLength() - GetMinimumLength();
 	JASSERT(GetMatchLengthCheck() == GetMaximumLength() - GetMinimumLength());
 
-	const void* data = dataBlock.GetData();
-	size_t length = dataBlock.GetNumberOfBytes();
 	if(minimumMatchLength == 0 || header->flags.hasResetCapture)
 		notEmptyAtStartProcessor = PatternProcessor::CreateNotEmptyAtStartProcessor(data, length);
 
-	partialMatchProcessor = CreateProcessor((DataBlock&&) dataBlock, header->flags.partialMatchProcessorType);
+	partialMatchProcessor = CreateProcessor(data, length, header->flags.partialMatchProcessorType);
 	if(header->flags.partialMatchProcessorType == header->flags.fullMatchProcessorType)
 	{
 		fullMatchProcessor = partialMatchProcessor;
 	}
 	else
 	{
-		fullMatchProcessor = CreateProcessor(data, length, false, header->flags.fullMatchProcessorType);
+		fullMatchProcessor = CreateProcessor(data, length, header->flags.fullMatchProcessorType);
 	}
 	PatternProcessor* filtered = CreateLiteralPrefilterProcessor(partialMatchProcessor, compiler.TakeLiteralPrefilter(), numberOfCaptures);
 	filtered = CreateMultiLiteralPrefilterProcessor(filtered, compiler.TakeMultiLiteralPrefilter());
@@ -144,37 +144,15 @@ JINLINE size_t Pattern::GetMatchLengthCheck() const
 	return size_t(ssize_t(matchLengthCheck));
 }
 
-PatternProcessor* Pattern::CreateProcessor(const void* data, size_t length, bool makeCopy, PatternProcessorType type)
-{
-	switch(type)
-	{
-	case PatternProcessorType::BackTracking:
-		return PatternProcessor::CreateBackTrackingProcessor(data, length, makeCopy);
-
-	case PatternProcessorType::ConsistencyCheck:
-		return PatternProcessor::CreateConsistencyCheckProcessor(data, length, makeCopy);
-
-	case PatternProcessorType::Nfa:
-		return PatternProcessor::CreateNfaProcessor(data, length, makeCopy);
-
-	case PatternProcessorType::NfaOrBitStateBackTracking:
-		return PatternProcessor::CreateNfaOrBitStateProcessor(data, length, makeCopy);
-
-	case PatternProcessorType::ScanAndCapture:
-		return PatternProcessor::CreateScanAndCaptureProcessor(data, length, makeCopy);
-
-	case PatternProcessorType::OnePass:
-		return PatternProcessor::CreateOnePassProcessor(data, length, makeCopy);
-
-	default:
-		JERROR("Invalid processor type!");
-		return nullptr;
-	}
-}
-
 void Pattern::Set(const void* data, size_t length, bool makeCopy)
 {
-	const ByteCodeHeader* header = (ByteCodeHeader*) data;
+	if(makeCopy)
+	{
+		byteCode = DataBlock(data, length);
+		data = byteCode.GetData();
+	}
+
+	const ByteCodeHeader* header = (const ByteCodeHeader*) data;
 	JVERIFY(header->IsValid());
 	SetAnchoredByteFilter(header);
 
@@ -185,7 +163,7 @@ void Pattern::Set(const void* data, size_t length, bool makeCopy)
 	matchLengthCheck = GetMaximumLength() - GetMinimumLength();
 	JASSERT(GetMatchLengthCheck() == GetMaximumLength() - GetMinimumLength());
 
-	partialMatchProcessor = CreateProcessor(data, length, makeCopy, header->flags.partialMatchProcessorType);
+	partialMatchProcessor = CreateProcessor(data, length, header->flags.partialMatchProcessorType);
 	if(minimumMatchLength == 0 || header->flags.hasResetCapture)
 		notEmptyAtStartProcessor = PatternProcessor::CreateNotEmptyAtStartProcessor(data, length);
 
@@ -195,7 +173,7 @@ void Pattern::Set(const void* data, size_t length, bool makeCopy)
 	}
 	else
 	{
-		fullMatchProcessor = CreateProcessor(data, length, makeCopy, header->flags.fullMatchProcessorType);
+		fullMatchProcessor = CreateProcessor(data, length, header->flags.fullMatchProcessorType);
 	}
 }
 

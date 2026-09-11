@@ -478,7 +478,7 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
 		case SearchHandlerEnum::SearchBytePair2:
 			{
 				const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
-				const ByteCodeSearchMultiByteData* smbd = (const ByteCodeSearchMultiByteData*) &sbd->bytes[4];
+				const ByteCodeSearchMultiByteData* smbd = (const ByteCodeSearchMultiByteData*) &sbd->bytes[8];
 
 				if(smbd->numberOfNibbleMasks == 2)
 				{
@@ -496,7 +496,7 @@ Amd64DfaPatternProcessor::SearchHandler Amd64DfaPatternProcessor::GetSearchHandl
 		case SearchHandlerEnum::SearchBytePair2WithAssert:
 			{
 				const ByteCodeSearchByteData* sbd = (const ByteCodeSearchByteData*) state->searchData;
-				const ByteCodeSearchMultiByteData* smbd = (const ByteCodeSearchMultiByteData*) &sbd->bytes[4];
+				const ByteCodeSearchMultiByteData* smbd = (const ByteCodeSearchMultiByteData*) &sbd->bytes[8];
 
 				if(smbd->numberOfNibbleMasks == 2)
 				{

@@ -13,7 +13,6 @@ class NfaPatternProcessor final : public PatternProcessor
 {
 public:
 	NfaPatternProcessor(const void* data, size_t length);
-	NfaPatternProcessor(DataBlock&& dataBlock);
 	~NfaPatternProcessor();
 
 	virtual const void* FullMatch(const void* data, size_t length) const;
@@ -24,7 +23,6 @@ public:
 	virtual const void* PopulateCaptures(const void* data, size_t length, size_t offset, const char **captures) const;
 
 private:
-	DataBlock				dataStore;
 	PatternProcessor*		nonCapturingProcessor;
 	PatternProcessor*		capturingProcessor;
 
@@ -36,12 +34,6 @@ private:
 NfaPatternProcessor::NfaPatternProcessor(const void* data, size_t length)
 {
 	Set(data, length);
-}
-
-NfaPatternProcessor::NfaPatternProcessor(DataBlock&& dataBlock)
-: dataStore((DataBlock&&) dataBlock)
-{
-	Set(dataStore.GetData(), dataStore.GetCount());
 }
 
 void NfaPatternProcessor::Set(const void* data, size_t length)
@@ -90,22 +82,9 @@ const void* NfaPatternProcessor::PopulateCaptures(const void* data, size_t lengt
 
 //============================================================================
 
-PatternProcessor* PatternProcessor::CreateNfaProcessor(DataBlock&& dataBlock)
+PatternProcessor* PatternProcessor::CreateNfaProcessor(const void* data, size_t length)
 {
-	return new NfaPatternProcessor((DataBlock&&) dataBlock);
-}
-
-PatternProcessor* PatternProcessor::CreateNfaProcessor(const void* data, size_t length, bool makeCopy)
-{
-	if(makeCopy)
-	{
-		DataBlock dataBlock(data, length);
-		return new NfaPatternProcessor((DataBlock&&) dataBlock);
-	}
-	else
-	{
-		return new NfaPatternProcessor(data, length);
-	}
+	return new NfaPatternProcessor(data, length);
 }
 
 //============================================================================

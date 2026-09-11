@@ -46,22 +46,13 @@ namespace Javelin
 				return nullptr;
 			}
 
-			static PatternProcessor* CreateBackTrackingProcessor(DataBlock&& dataBlock);
-			static PatternProcessor* CreateBackTrackingProcessor(const void* data, size_t length, bool makeCopy);
-			// Portable retry processor used after an empty match. Owns its bytecode.
-			static PatternProcessor* CreateNotEmptyAtStartProcessor(const void* data, size_t length);
-			static PatternProcessor* CreateConsistencyCheckProcessor(DataBlock&& dataBlock);
-			static PatternProcessor* CreateConsistencyCheckProcessor(const void* data, size_t length, bool makeCopy);
-			static PatternProcessor* CreateNfaProcessor(DataBlock&& dataBlock);
-			static PatternProcessor* CreateNfaProcessor(const void* data, size_t length, bool makeCopy);
-			static PatternProcessor* CreateNfaOrBitStateProcessor(DataBlock&& dataBlock);
-			static PatternProcessor* CreateNfaOrBitStateProcessor(const void* data, size_t length, bool makeCopy);
-			static PatternProcessor* CreateOnePassProcessor(DataBlock&& dataBlock);
-			static PatternProcessor* CreateOnePassProcessor(const void* data, size_t length, bool makeCopy);
-			static PatternProcessor* CreateScanAndCaptureProcessor(DataBlock&& dataBlock);
-			static PatternProcessor* CreateScanAndCaptureProcessor(const void* data, size_t length, bool makeCopy);
-
-			// These never make a copy of the data
+			// These never copy or take ownership of the bytecode.
+			static PatternProcessor* CreateBackTrackingProcessor(const void* data, size_t length);
+			static PatternProcessor* CreateConsistencyCheckProcessor(const void* data, size_t length);
+			static PatternProcessor* CreateNfaProcessor(const void* data, size_t length);
+			static PatternProcessor* CreateNfaOrBitStateProcessor(const void* data, size_t length);
+			static PatternProcessor* CreateOnePassProcessor(const void* data, size_t length);
+			static PatternProcessor* CreateScanAndCaptureProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateBitFieldGlushkovProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateBitStateProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateDfaProcessor(const void* data, size_t length);
@@ -69,6 +60,8 @@ namespace Javelin
 			static PatternProcessor* CreatePikeNfaProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateSimplePikeNfaProcessor(const void* data, size_t length);
 			static PatternProcessor* CreateThompsonNfaProcessor(const void* data, size_t length);
+			// Portable retry processor used after an empty match. Owns its bytecode.
+			static PatternProcessor* CreateNotEmptyAtStartProcessor(const void* data, size_t length);
 			// Capture-free anchored candidate verification, preserving input bounds.
 			static CandidatePatternProcessor* CreateAnchoredThompsonNfaProcessor(const void* data, size_t length);
 

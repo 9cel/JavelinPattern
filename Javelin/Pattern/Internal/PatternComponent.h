@@ -230,6 +230,7 @@ namespace Javelin
 			Instruction* BuildMinimumInstructions(InstructionList &instructionList) const;
 			void BuildMinimalInstructions(InstructionList &instructionList) const;
 			void BuildMaximalInstructions(InstructionList &instructionList) const;
+			void BuildNullableLoop(InstructionList &instructionList, bool greedy) const;
 
 			uint32_t	minimum;
 			uint32_t	maximum;

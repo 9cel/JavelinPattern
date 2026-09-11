@@ -49,11 +49,13 @@ namespace Javelin::PatternInternal
 
 		// Used for decoding character classes, eg. [a-z\n\t]
 		Character 	GetCharacter();
+		Character	GetUtf8Character();
 		Character	GetEscapedCharacter();
 		void		AddUnicodeProperty();
 
 		char 		PeekCharacter();
 		inline void ConsumeCharacter();
+		template<size_t N> inline bool ConsumeIfMatch(const char (&s)[N]);
 	};
 
 //============================================================================

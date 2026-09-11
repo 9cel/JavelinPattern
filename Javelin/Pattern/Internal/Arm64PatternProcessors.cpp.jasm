@@ -1992,12 +1992,7 @@ static PatternProcessor *CreateArm64PatternProcessor(const void* data, size_t le
 
 //============================================================================
 
-PatternProcessor* PatternProcessor::CreateOnePassProcessor(DataBlock&& dataBlock)
-{
-	return CreateArm64PatternProcessor(dataBlock.GetData(), dataBlock.GetCount(), PatternProcessorType::OnePass, 0);
-}
-
-PatternProcessor* PatternProcessor::CreateOnePassProcessor(const void* data, size_t length, bool makeCopy)
+PatternProcessor* PatternProcessor::CreateOnePassProcessor(const void* data, size_t length)
 {
 	return CreateArm64PatternProcessor(data, length, PatternProcessorType::OnePass, 0);
 }
@@ -2007,12 +2002,7 @@ PatternProcessor* PatternProcessor::CreateBitStateProcessor(const void* data, si
 	return CreateArm64PatternProcessor(data, length, PatternProcessorType::BitState, 0);
 }
 
-PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(DataBlock&& dataBlock)
-{
-	return CreateArm64PatternProcessor(dataBlock.GetData(), dataBlock.GetCount(), PatternProcessorType::BackTracking, 0);
-}
-
-PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(const void* data, size_t length, bool makeCopy)
+PatternProcessor* PatternProcessor::CreateBackTrackingProcessor(const void* data, size_t length)
 {
 	return CreateArm64PatternProcessor(data, length, PatternProcessorType::BackTracking, 0);
 }

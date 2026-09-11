@@ -429,7 +429,7 @@ void Amd64ProcessorBase::ExpandedJumpTables::Populate(const PatternData& pattern
 				if(p)
 				{
 					const ByteCodeSearchByteData* searchData = patternData.GetData<ByteCodeSearchByteData>(instruction.data);
-					const ByteCodeSearchMultiByteData* multiByteData = (ByteCodeSearchMultiByteData*) &searchData->bytes[instruction.type >= InstructionType::SearchBytePair3 ? 8 : 4];
+					const ByteCodeSearchMultiByteData* multiByteData = (ByteCodeSearchMultiByteData*) &searchData->bytes[8];
 					if(multiByteData->numberOfNibbleMasks == 2)
 					{
 						memcpy(p, multiByteData->nibbleMask, 64);
@@ -3006,7 +3006,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 				const void* nibbleMask = expandedJumpTables.GetData(pc);
 				if(nibbleMask)
 				{
-					const ByteCodeSearchMultiByteData* multiByteData = (ByteCodeSearchMultiByteData*) &data->bytes[instruction.type >= InstructionType::SearchBytePair3 ? 8 : 4];
+					const ByteCodeSearchMultiByteData* multiByteData = (ByteCodeSearchMultiByteData*) &data->bytes[8];
 
 					void* searchFunction = multiByteData->isPath ?
 											Machine::SupportsAvx2() ?
@@ -3083,7 +3083,7 @@ void Amd64ProcessorBase::Set(const void* data, size_t length, PatternProcessorTy
 																		AVX_FUNCTION_TABLE :
 																		SSE_FUNCTION_TABLE;
 
-					const ByteCodeSearchMultiByteData* multiByteData = (ByteCodeSearchMultiByteData*) &data->bytes[instruction.type >= InstructionType::SearchBytePair3 ? 8 : 4];
+					const ByteCodeSearchMultiByteData* multiByteData = (ByteCodeSearchMultiByteData*) &data->bytes[8];
 
 					JASSERT(FUNCTION_TABLE[numberOfBytePairs-1] != nullptr);
 					program.LoadConstantPointer((void*) FUNCTION_TABLE[numberOfBytePairs-1][multiByteData->isPath]);

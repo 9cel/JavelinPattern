@@ -1413,18 +1413,6 @@ void SearchByteInstruction::BuildByteCode(ByteCodeBuilder& builder) const
 		data->offset = offset;
 
 		size_t sizeOfData = sizeof(ByteCodeSearchByteData);
-		static constexpr EnumSet<InstructionType, uint64_t> SMALLER_DATA
-		{
-			InstructionType::SearchByteEitherOf2,
-			InstructionType::SearchByteEitherOf3,
-			InstructionType::SearchByteEitherOf4,
-			InstructionType::SearchBytePair,
-			InstructionType::SearchBytePair2,
-			InstructionType::SearchByteRange,
-			InstructionType::SearchByteRangePair,
-			InstructionType::SearchByteTriplet,
-		};
-		if(SMALLER_DATA.Contains(type)) sizeOfData -= 4;
 
 		static constexpr EnumSet<InstructionType, uint64_t> MULTI_BYTE_SEARCH
 		{

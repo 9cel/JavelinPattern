@@ -14,7 +14,6 @@ class ScanAndCapturePatternProcessor final : public PatternProcessor
 {
 public:
 	ScanAndCapturePatternProcessor(const void* data, size_t length);
-	ScanAndCapturePatternProcessor(DataBlock&& dataBlock);
 	~ScanAndCapturePatternProcessor();
 
 	virtual const void* FullMatch(const void* data, size_t length) const;
@@ -29,13 +28,13 @@ private:
 	bool					smallAnchoredCaptureProgram;
 	bool					reverseMatchRequiresStartOfSearch;
 	uint8_t					numberOfCaptures;
-	DataBlock				dataStore;
 	PatternProcessor*		scanProcessor;
 	ReverseProcessor*		reverseProcessor;
 	PatternProcessor*		populateCaptureProcessor;
 
 	void Set(const void* data, size_t length);
 	JNOINLINE Interval<const void*> LocateWithCaptures(const void* data, size_t length, size_t offset, const void* result) const;
+	JNOINLINE Interval<const void*> LocateWithPopulatedCaptures(const void* data, size_t length, size_t offset) const;
 };
 
 //============================================================================
@@ -43,12 +42,6 @@ private:
 ScanAndCapturePatternProcessor::ScanAndCapturePatternProcessor(const void* data, size_t length)
 {
 	Set(data, length);
-}
-
-ScanAndCapturePatternProcessor::ScanAndCapturePatternProcessor(DataBlock&& dataBlock)
-: dataStore((DataBlock&&) dataBlock)
-{
-	Set(dataStore.GetData(), dataStore.GetCount());
 }
 
 void ScanAndCapturePatternProcessor::Set(const void* data, size_t length)
@@ -72,11 +65,11 @@ void ScanAndCapturePatternProcessor::Set(const void* data, size_t length)
 
 	if(header->flags.fullMatchProcessorType == PatternProcessorType::OnePass)
 	{
-		populateCaptureProcessor = PatternProcessor::CreateOnePassProcessor(data, length, false);
+		populateCaptureProcessor = PatternProcessor::CreateOnePassProcessor(data, length);
 	}
 	else
 	{
-		populateCaptureProcessor = PatternProcessor::CreateNfaOrBitStateProcessor(data, length, false);
+		populateCaptureProcessor = PatternProcessor::CreateNfaOrBitStateProcessor(data, length);
 	}
 }
 
@@ -132,6 +125,9 @@ const void* ScanAndCapturePatternProcessor::PartialMatch(const void* data, size_
 	if(!result) return nullptr;
 
 	const void* start = reverseProcessor->Match(data, length, offset, result, captures, reverseMatchRequiresStartOfSearch);
+	// A dispatch-based reverse program cannot always stop at the search start.
+	if(!start && !preferReverseProcessorForFullMatchCapture)
+		return populateCaptureProcessor->PartialMatch(data, length, offset, captures);
 	if(start)
 	{
 		if(numberOfCaptures == 1)
@@ -164,8 +160,20 @@ Interval<const void*> ScanAndCapturePatternProcessor::LocatePartialMatch(const v
 		return {result, result};
 	// Only the one-pass reverse processor writes captures.
 	if(!preferReverseProcessorForFullMatchCapture)
-		return {reverseProcessor->Match(data, length, offset, result, nullptr, reverseMatchRequiresStartOfSearch), result};
+	{
+		const void* start = reverseProcessor->Match(data, length, offset, result, nullptr, reverseMatchRequiresStartOfSearch);
+		if(start) return {start, result};
+		return LocateWithPopulatedCaptures(data, length, offset);
+	}
 	return LocateWithCaptures(data, length, offset, result);
+}
+
+Interval<const void*> ScanAndCapturePatternProcessor::LocateWithPopulatedCaptures(const void* data, size_t length, size_t offset) const
+{
+	const char* captures[numberOfCaptures*2];
+	const void* result = populateCaptureProcessor->PartialMatch(data, length, offset, captures);
+	if(!result) return {nullptr, nullptr};
+	return {captures[0], result};
 }
 
 Interval<const void*> ScanAndCapturePatternProcessor::LocateWithCaptures(const void* data, size_t length, size_t offset, const void* result) const
@@ -183,22 +191,9 @@ const void* ScanAndCapturePatternProcessor::PopulateCaptures(const void* data, s
 
 //============================================================================
 
-PatternProcessor* PatternProcessor::CreateScanAndCaptureProcessor(DataBlock&& dataBlock)
+PatternProcessor* PatternProcessor::CreateScanAndCaptureProcessor(const void* data, size_t length)
 {
-	return new ScanAndCapturePatternProcessor((DataBlock&&) dataBlock);
-}
-
-PatternProcessor* PatternProcessor::CreateScanAndCaptureProcessor(const void* data, size_t length, bool makeCopy)
-{
-	if(makeCopy)
-	{
-		DataBlock dataBlock(data, length);
-		return new ScanAndCapturePatternProcessor((DataBlock&&) dataBlock);
-	}
-	else
-	{
-		return new ScanAndCapturePatternProcessor(data, length);
-	}
+	return new ScanAndCapturePatternProcessor(data, length);
 }
 
 //============================================================================

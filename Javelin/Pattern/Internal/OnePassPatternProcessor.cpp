@@ -19,7 +19,6 @@ class OnePassPatternProcessor final : public PatternProcessor
 {
 public:
 	OnePassPatternProcessor(const void* data, size_t length);
-	OnePassPatternProcessor(DataBlock&& dataBlock);
 	~OnePassPatternProcessor();
 
 	virtual const void* FullMatch(const void* data, size_t length) const;
@@ -55,7 +54,6 @@ private:
 	PatternData			patternData;
 	uint32_t			partialMatchStartingInstruction;
 	uint32_t			fullMatchStartingInstruction;
-	DataBlock			dataStore;
 	ExpandedJumpTables	expandedJumpTables;
 
 	const void* Process(uint32_t pc, const unsigned char* p, const ProcessData& processData) const;
@@ -68,12 +66,6 @@ private:
 OnePassPatternProcessor::OnePassPatternProcessor(const void* data, size_t length)
 {
 	Set(data, length);
-}
-
-OnePassPatternProcessor::OnePassPatternProcessor(DataBlock&& dataBlock)
-: dataStore((DataBlock&&) dataBlock)
-{
-	Set(dataStore.GetData(), dataStore.GetCount());
 }
 
 void OnePassPatternProcessor::Set(const void* data, size_t length)
@@ -740,22 +732,9 @@ const void* OnePassPatternProcessor::PopulateCaptures(const void* data, size_t l
 
 //============================================================================
 
-PatternProcessor* PatternProcessor::CreateOnePassProcessor(DataBlock&& dataBlock)
+PatternProcessor* PatternProcessor::CreateOnePassProcessor(const void* data, size_t length)
 {
-	return new OnePassPatternProcessor((DataBlock&&) dataBlock);
-}
-
-PatternProcessor* PatternProcessor::CreateOnePassProcessor(const void* data, size_t length, bool makeCopy)
-{
-	if(makeCopy)
-	{
-		DataBlock dataBlock(data, length);
-		return new OnePassPatternProcessor((DataBlock&&) dataBlock);
-	}
-	else
-	{
-		return new OnePassPatternProcessor(data, length);
-	}
+	return new OnePassPatternProcessor(data, length);
 }
 
 //============================================================================

@@ -1031,6 +1031,8 @@ Instruction* CounterComponent::BuildMinimumInstructions(InstructionList &instruc
 			instructionList.AllowSaveInstructions();
 			content->BuildInstructions(instructionList);
 		}
+		// Content that emits nothing leaves the reference to this frame pending.
+		if(result == nullptr) instructionList.RemovePatchReference(&result);
 	}
 
 	return result;
@@ -1044,7 +1046,11 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 	{
 		if(maximum == TypeData<uint32_t>::Maximum())
 		{
-			if(content->HasSpecificRepeatInstruction() || lastContent == nullptr || content->GetMinimumLength() == 0)
+			if(content->GetMinimumLength() == 0)
+			{
+				BuildNullableLoop(instructionList, false);
+			}
+			else if(content->HasSpecificRepeatInstruction() || lastContent == nullptr)
 			{
 				SplitInstruction* split = new SplitInstruction;
 				JumpInstruction* jump = new JumpInstruction;
@@ -1052,11 +1058,6 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 				split->targetList.SetCount(2);
 				instructionList.AddInstruction(jump);
 				instructionList.AddPatchReference(&split->targetList[1]);
-				// An empty iteration must exit the loop.
-				if(content->GetMinimumLength() == 0)
-				{
-					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
-				}
 				// A lazy repetition may stop after any iteration. In UTF-8 mode,
 				// each iteration must consume a whole character, even for [^\n].
 				content->BuildInstructions(instructionList);
@@ -1069,11 +1070,6 @@ void CounterComponent::BuildMinimalInstructions(InstructionList &instructionList
 				SplitInstruction* split = new SplitInstruction;
 				split->targetList.SetCount(2);
 				split->targetList[1] = lastContent;
-
-				if(content->GetMinimumLength() == 0)
-				{
-					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
-				}
 
 				instructionList.AddInstruction(split);
 				instructionList.AddPatchReference(&split->targetList[0]);
@@ -1110,7 +1106,11 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 	{
 		if(maximum == TypeData<uint32_t>::Maximum())
 		{
-			if(content->HasSpecificRepeatInstruction() || lastContent == nullptr || content->GetMinimumLength() == 0)
+			if(content->GetMinimumLength() == 0)
+			{
+				BuildNullableLoop(instructionList, true);
+			}
+			else if(content->HasSpecificRepeatInstruction() || lastContent == nullptr)
 			{
 				SplitInstruction* split = new SplitInstruction;
 				JumpInstruction* jump = new JumpInstruction;
@@ -1118,10 +1118,6 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 				split->targetList.SetCount(2);
 				instructionList.AddInstruction(jump);
 				instructionList.AddPatchReference(&split->targetList[0]);
-				if(content->GetMinimumLength() == 0)
-				{
-					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
-				}
 				content->BuildRepeatInstructions(instructionList);
 
 				instructionList.AddInstruction(split);
@@ -1132,11 +1128,6 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 				SplitInstruction* split = new SplitInstruction;
 				split->targetList.SetCount(2);
 				split->targetList[0] = lastContent;
-
-				if(content->GetMinimumLength() == 0)
-				{
-					instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
-				}
 
 				instructionList.AddInstruction(split);
 				instructionList.AddPatchReference(&split->targetList[1]);
@@ -1179,6 +1170,48 @@ void CounterComponent::BuildMaximalInstructions(InstructionList &instructionList
 			instructionList.DecrementAssertCounter();
 		}
 	}
+}
+
+void CounterComponent::BuildNullableLoop(InstructionList &instructionList, bool greedy) const
+{
+	SplitInstruction* split = new SplitInstruction;
+	JumpInstruction* jump = new JumpInstruction;
+	jump->target = split;
+	split->targetList.SetCount(2);
+	Instruction** loopTarget = &split->targetList[greedy ? 0 : 1];
+	Instruction** exitTarget = &split->targetList[greedy ? 1 : 0];
+	instructionList.AddInstruction(jump);
+
+	// An empty iteration must exit the loop.
+	if(instructionList.UsesProgressChecks())
+	{
+		instructionList.AddPatchReference(loopTarget);
+		instructionList.AddInstruction(new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot()));
+		content->BuildInstructions(instructionList);
+		instructionList.AddInstruction(split);
+		instructionList.AddPatchReference(exitTarget);
+		return;
+	}
+
+	InstructionList::NullableIteration iteration(instructionList);
+	content->BuildInstructions(instructionList);
+	if(iteration.RequiresProgressCheck())
+	{
+		ProgressCheckInstruction* progressCheck = new ProgressCheckInstruction(instructionList.GetNextProgessCheckSlot());
+		if(iteration.consumedCopy.HasData()) InstructionList::InsertBeforeInstruction(iteration.consumedCopy.Front(), progressCheck);
+		else instructionList.AddInstruction(progressCheck);
+		*loopTarget = progressCheck;
+		instructionList.AddInstruction(split);
+		instructionList.AddPatchReference(exitTarget);
+		return;
+	}
+
+	instructionList.AddInstruction(split);
+	iteration.BeginUnconsumedCopy(split);
+	instructionList.AddPatchReference(loopTarget);
+	content->BuildInstructions(instructionList);
+	iteration.Finish();
+	instructionList.AddPatchReference(exitTarget);
 }
 
 bool CounterComponent::RequiresAnyByteMinimalForPartialMatch() const

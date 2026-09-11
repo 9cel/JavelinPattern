@@ -12,7 +12,6 @@ using namespace Javelin::PatternInternal;
 class NfaOrBitStateBackTrackingPatternProcessor final : public PatternProcessor
 {
 public:
-	NfaOrBitStateBackTrackingPatternProcessor(DataBlock&& dataBlock);
 	NfaOrBitStateBackTrackingPatternProcessor(const void* data, size_t length);
 	~NfaOrBitStateBackTrackingPatternProcessor();
 
@@ -26,7 +25,6 @@ public:
 private:
 	PatternProcessor*		pikeNfaProcessor;
 	PatternProcessor*		bitStateBackTrackingProcessor;
-	DataBlock				dataStore;
 
 	void Set(const void* data, size_t length);
 };
@@ -36,12 +34,6 @@ private:
 NfaOrBitStateBackTrackingPatternProcessor::NfaOrBitStateBackTrackingPatternProcessor(const void* data, size_t length)
 {
 	Set(data, length);
-}
-
-NfaOrBitStateBackTrackingPatternProcessor::NfaOrBitStateBackTrackingPatternProcessor(DataBlock&& dataBlock)
-: dataStore((DataBlock&&) dataBlock)
-{
-	Set(dataStore.GetData(), dataStore.GetCount());
 }
 
 void NfaOrBitStateBackTrackingPatternProcessor::Set(const void* data, size_t length)
@@ -132,22 +124,9 @@ const void* NfaOrBitStateBackTrackingPatternProcessor::PopulateCaptures(const vo
 
 //============================================================================
 
-PatternProcessor* PatternProcessor::CreateNfaOrBitStateProcessor(DataBlock&& dataBlock)
+PatternProcessor* PatternProcessor::CreateNfaOrBitStateProcessor(const void* data, size_t length)
 {
-	return new NfaOrBitStateBackTrackingPatternProcessor((DataBlock&&) dataBlock);
-}
-
-PatternProcessor* PatternProcessor::CreateNfaOrBitStateProcessor(const void* data, size_t length, bool makeCopy)
-{
-	if(makeCopy)
-	{
-		DataBlock dataBlock(data, length);
-		return new NfaOrBitStateBackTrackingPatternProcessor((DataBlock&&) dataBlock);
-	}
-	else
-	{
-		return new NfaOrBitStateBackTrackingPatternProcessor(data, length);
-	}
+	return new NfaOrBitStateBackTrackingPatternProcessor(data, length);
 }
 
 //============================================================================

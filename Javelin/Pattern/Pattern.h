@@ -75,6 +75,7 @@
 
 #pragma once
 #include "Javelin/Container/Table.h"
+#include "Javelin/Type/DataBlock.h"
 #include "Javelin/Type/Exception.h"
 #include "Javelin/Type/String.h"
 
@@ -84,7 +85,6 @@ namespace Javelin
 {
 //============================================================================
 
-	class DataBlock;
 	class ICharacterWriter;
 	class String;
 
@@ -277,6 +277,7 @@ namespace Javelin
 
 		uint16_t							flags;
 		int32_t								matchLengthCheck;
+		DataBlock							byteCode;
 		PatternInternal::PatternProcessor* 	partialMatchProcessor;
 		PatternInternal::PatternProcessor* 	fullMatchProcessor;
 		PatternInternal::PatternProcessor* 	notEmptyAtStartProcessor = nullptr;
@@ -312,8 +313,7 @@ namespace Javelin
 
 		static void DumpInstructionList(IWriter& output, const PatternInternal::ByteCodeInstruction* instructions, size_t numberOfInstructions, size_t offset);
 
-		static PatternInternal::PatternProcessor* CreateProcessor(DataBlock&& dataBlock, PatternInternal::PatternProcessorType type);
-		static PatternInternal::PatternProcessor* CreateProcessor(const void* data, size_t length, bool makeCopy, PatternInternal::PatternProcessorType type);
+		static PatternInternal::PatternProcessor* CreateProcessor(const void* data, size_t length, PatternInternal::PatternProcessorType type);
 
 		friend class PatternInternal::Compiler;
 	};

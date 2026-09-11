@@ -124,7 +124,7 @@ Character Tokenizer::GetEscapedCharacter()
 		if(useUtf8 && c >= 128)
 		{
 			--pUC;
-			return *p++;
+			return GetUtf8Character();
 		}
 		return Character(c);
 	}
@@ -172,6 +172,14 @@ void Tokenizer::AddUnicodeProperty()
 	currentToken.unicodeProperties.Append(property);
 }
 
+Character Tokenizer::GetUtf8Character()
+{
+	JPATTERN_VERIFY(p < end, UnexpectedEndOfPattern, nullptr);
+	size_t byteCount = p->GetNumberOfBytes();
+	JPATTERN_VERIFY(byteCount <= size_t(pUCEnd - pUC), UnexpectedEndOfPattern, pUC);
+	return *p++;
+}
+
 Character Tokenizer::GetCharacter()
 {
 	JPATTERN_VERIFY(p < end, UnexpectedEndOfPattern, nullptr);
@@ -179,7 +187,7 @@ Character Tokenizer::GetCharacter()
 	Character c;
 	if(useUtf8)
 	{
-		c = *p++;
+		c = GetUtf8Character();
 		if(c != '\\') return c;
 	}
 	else
@@ -193,14 +201,21 @@ Character Tokenizer::GetCharacter()
 
 JINLINE char Tokenizer::PeekCharacter()
 {
-	// Since input strings are guaranteed to be null terminated, we can peek past the end! It'll just return '\0'
-	return *reinterpret_cast<const char*>(p.GetCharPointer());
+	return p < end ? *pUC : '\0';
 }
 
 JINLINE void Tokenizer::ConsumeCharacter()
 {
 	if(useUtf8) ++p;
 	else ++pUC;
+}
+
+template<size_t N> JINLINE bool Tokenizer::ConsumeIfMatch(const char (&s)[N])
+{
+	constexpr size_t length = N-1;
+	if(size_t(pUCEnd - pUC) < length || memcmp(pUC, s, length) != 0) return false;
+	pUC += length;
+	return true;
 }
 
 //============================================================================
@@ -291,21 +306,18 @@ void Tokenizer::ProcessTokens()
 				{
 				case '*':
 					ConsumeCharacter();
-					if(memcmp(pUC, "ACCEPT)", 7) == 0)
+					if(ConsumeIfMatch("ACCEPT)"))
 					{
-						pUC += 7;
 						currentToken.type = TokenType::Accept;
 						return;
 					}
-					if(memcmp(pUC, "FAIL)", 5) == 0)
+					if(ConsumeIfMatch("FAIL)"))
 					{
-						pUC += 5;
 						currentToken.type = TokenType::Fail;
 						return;
 					}
-					if(memcmp(pUC, "F)", 2) == 0)
+					if(ConsumeIfMatch("F)"))
 					{
-						pUC += 2;
 						currentToken.type = TokenType::Fail;
 						return;
 					}
@@ -495,76 +507,64 @@ void Tokenizer::ProcessTokens()
 				while(PeekCharacter() != ']')
 				{
 					JPATTERN_VERIFY(pUC < pUCEnd, UnexpectedEndOfPattern, pUC);
-					if(pUC[0] == '[' && pUC[1] == ':')
+					if(pUCEnd - pUC >= 2 && pUC[0] == '[' && pUC[1] == ':')
 					{
-						if(memcmp(pUC, "[:alnum:]", 9) == 0)
+						if(ConsumeIfMatch("[:alnum:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('0', '9');
 							currentToken.rangeList.Add('A', 'Z');
 							currentToken.rangeList.Add('a', 'z');
 						}
-						else if (memcmp(pUC, "[:alpha:]", 9) == 0)
+						else if(ConsumeIfMatch("[:alpha:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('A', 'Z');
 							currentToken.rangeList.Add('a', 'z');
 						}
-						else if (memcmp(pUC, "[:blank:]", 9) == 0)
+						else if(ConsumeIfMatch("[:blank:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('\t');
 							currentToken.rangeList.Add(' ');
 						}
-						else if (memcmp(pUC, "[:cntrl:]", 9) == 0)
+						else if(ConsumeIfMatch("[:cntrl:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('\x00', '\x1f');
 							currentToken.rangeList.Add('\x7f');
 						}
-						else if (memcmp(pUC, "[:digit:]", 9) == 0)
+						else if(ConsumeIfMatch("[:digit:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('0', '9');
 						}
-						else if (memcmp(pUC, "[:graph:]", 9) == 0)
+						else if(ConsumeIfMatch("[:graph:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('!', '~');
 						}
-						else if (memcmp(pUC, "[:lower:]", 9) == 0)
+						else if(ConsumeIfMatch("[:lower:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('a', 'z');
 						}
-						else if (memcmp(pUC, "[:print:]", 9) == 0)
+						else if(ConsumeIfMatch("[:print:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add(' ', '~');
 						}
-						else if (memcmp(pUC, "[:punct:]", 9) == 0)
+						else if(ConsumeIfMatch("[:punct:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('!', '/');
 							currentToken.rangeList.Add(':', '@');
 							currentToken.rangeList.Add('\\');
 							currentToken.rangeList.Add('[', '`');
 							currentToken.rangeList.Add('{', '~');
 						}
-						else if (memcmp(pUC, "[:space:]", 9) == 0)
+						else if(ConsumeIfMatch("[:space:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('\t', '\r');
 							currentToken.rangeList.Add(' ');
 						}
-						else if (memcmp(pUC, "[:upper:]", 9) == 0)
+						else if(ConsumeIfMatch("[:upper:]"))
 						{
-							pUC += 9;
 							currentToken.rangeList.Add('A', 'Z');
 						}
-						else if (memcmp(pUC, "[:xdigit:]", 10) == 0)
+						else if(ConsumeIfMatch("[:xdigit:]"))
 						{
-							pUC += 10;
 							currentToken.rangeList.Add('0', '9');
 							currentToken.rangeList.Add('A', 'F');
 							currentToken.rangeList.Add('a', 'f');
@@ -921,19 +921,19 @@ void Tokenizer::ProcessTokens()
 			LiteralCharacter:
 				if(useUtf8)
 				{
-					// This could be a single character, or a utf8 sequence!
-					if(p->GetNumberOfBytes() == 1)
+					bool singleByte = p->GetNumberOfBytes() == 1;
+					Character c = GetUtf8Character();
+					if(singleByte)
 					{
 						currentToken.type = TokenType::Character;
-						currentToken.c = *p;
+						currentToken.c = c;
 					}
 					else
 					{
 						currentToken.type = TokenType::Range;
 						currentToken.rangeList.SetCount(0);
-						currentToken.rangeList.Append(*p);
+						currentToken.rangeList.Append(c);
 					}
-					++p;
 				}
 				else
 				{

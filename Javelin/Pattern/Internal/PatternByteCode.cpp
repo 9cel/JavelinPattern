@@ -467,6 +467,10 @@ void ByteCodeBuilder::AppendByteCode(DataBlockWriter& writer) const
 {
 	ByteCodeHeader* header = (ByteCodeHeader*) writer.GetData();
 
+	uint32_t numberOfProgressChecks = Maximum<uint32_t>(header->numberOfProgressChecks, GetMaximumOfProgressCheckInstructions());
+	JPATTERN_VERIFY(numberOfProgressChecks <= TypeData<uint8_t>::Maximum(), TooManyProgressCheckInstructions, nullptr);
+	header->numberOfProgressChecks = numberOfProgressChecks;
+
 	if(processorType == PatternProcessorType::Default)
 	{
 		uint32_t maximumInstructionForSinglePassFullMatch = GetMaximumInstructionForSinglePass(0, true);
